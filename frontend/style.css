@@ -884,6 +884,7 @@ body {
 .product-card:nth-child(4) { animation-delay: 0.15s; }
 .product-card:nth-child(5) { animation-delay: 0.2s; }
 .product-card:nth-child(6) { animation-delay: 0.25s; }
+
 /* ===== КНОПКА НАЗАД ===== */
 .logo-wrapper {
     display: flex;
@@ -910,6 +911,7 @@ body {
 .back-btn i {
     font-size: 20px;
 }
+
 /* ===== УТОЧНЕНИЕ НАЛИЧИЯ ===== */
 .check-stock-info {
     background: var(--bg-card);
@@ -968,31 +970,55 @@ body {
 }
 
 /* ============================================================
-   === СПИСОК ВКУСОВ (вместо карточек) ===
+   === СПИСОК ВКУСОВ — НОВЫЙ ДИЗАЙН ===
    ============================================================ */
 
 .flavor-item {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 12px 16px;
+    padding: 14px 16px;
     background: var(--bg-card);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
-    transition: all 0.3s;
-    margin-bottom: 8px;
+    border-left: 4px solid var(--accent);
+    border-right: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.25s ease;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.flavor-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.03), transparent 60%);
+    pointer-events: none;
 }
 
 .flavor-item:hover {
     border-color: var(--accent);
     background: var(--bg-card-hover);
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(108, 92, 231, 0.08);
 }
 
 .flavor-icon {
     font-size: 28px;
-    width: 40px;
-    text-align: center;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: 10px;
     flex-shrink: 0;
+    border: 1px solid var(--border-color);
 }
 
 .flavor-info {
@@ -1004,6 +1030,7 @@ body {
     font-size: 15px;
     font-weight: 600;
     color: var(--text-primary);
+    letter-spacing: -0.2px;
 }
 
 .flavor-description {
@@ -1027,47 +1054,50 @@ body {
     font-size: 16px;
     font-weight: 700;
     color: var(--accent);
+    background: rgba(108, 92, 231, 0.1);
+    padding: 2px 12px;
+    border-radius: 20px;
+    letter-spacing: -0.2px;
 }
 
 .flavor-stock {
     font-size: 12px;
     font-weight: 500;
-    padding: 2px 10px;
+    padding: 2px 12px;
     border-radius: 20px;
-}
-
-.flavor-stock.in-stock {
+    background: rgba(81, 207, 102, 0.12);
     color: #51cf66;
-    background: rgba(81, 207, 102, 0.15);
 }
 
 .flavor-stock.out-stock {
+    background: rgba(255, 107, 107, 0.12);
     color: #ff6b6b;
-    background: rgba(255, 107, 107, 0.15);
 }
 
 .flavor-actions {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
 .flavor-actions .add-btn {
-    padding: 8px 16px;
+    padding: 8px 18px;
     background: var(--accent);
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: 30px;
     color: white;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.25s ease;
     white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(108, 92, 231, 0.2);
 }
 
 .flavor-actions .add-btn:hover {
     background: var(--accent-hover);
-    transform: scale(1.05);
+    transform: scale(1.04);
+    box-shadow: 0 4px 16px rgba(108, 92, 231, 0.3);
 }
 
 .flavor-actions .add-btn:active {
@@ -1076,12 +1106,14 @@ body {
 
 .flavor-actions .add-btn.added {
     background: var(--success);
+    box-shadow: 0 2px 8px rgba(81, 207, 102, 0.3);
 }
 
 .flavor-actions .add-btn.disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
     background: var(--text-secondary);
+    box-shadow: none;
 }
 
 .flavor-actions .add-btn.disabled:hover {
@@ -1091,20 +1123,20 @@ body {
 
 .flavor-actions .check-stock-btn {
     padding: 8px 12px;
-    background: rgba(108, 92, 231, 0.15);
-    border: 1px solid rgba(108, 92, 231, 0.3);
-    border-radius: var(--radius-sm);
+    background: rgba(108, 92, 231, 0.08);
+    border: 1px solid rgba(108, 92, 231, 0.15);
+    border-radius: 30px;
     color: var(--accent-light);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.25s ease;
     white-space: nowrap;
 }
 
 .flavor-actions .check-stock-btn:hover {
-    background: rgba(108, 92, 231, 0.25);
-    transform: scale(1.05);
+    background: rgba(108, 92, 231, 0.18);
+    transform: scale(1.04);
 }
 
 /* ============================================================
@@ -1113,45 +1145,68 @@ body {
 
 @media (max-width: 480px) {
     .flavor-item {
-        padding: 10px 12px;
+        padding: 12px 14px;
         gap: 10px;
         flex-wrap: wrap;
+        border-left-width: 3px;
     }
-    
+
     .flavor-icon {
-        font-size: 24px;
-        width: 32px;
+        font-size: 22px;
+        width: 36px;
+        height: 36px;
     }
-    
+
     .flavor-name {
         font-size: 14px;
     }
-    
+
     .flavor-description {
         font-size: 12px;
         white-space: normal;
     }
-    
+
     .flavor-meta {
-        gap: 8px;
+        gap: 6px;
+        margin-top: 2px;
     }
-    
+
     .flavor-price {
         font-size: 14px;
+        padding: 1px 10px;
     }
-    
+
+    .flavor-stock {
+        font-size: 11px;
+        padding: 1px 10px;
+    }
+
     .flavor-actions {
         width: 100%;
         justify-content: flex-end;
+        margin-top: 4px;
     }
-    
+
     .flavor-actions .add-btn {
-        padding: 6px 14px;
-        font-size: 12px;
+        padding: 6px 16px;
+        font-size: 13px;
     }
-    
+
     .flavor-actions .check-stock-btn {
         padding: 6px 10px;
-        font-size: 12px;
+        font-size: 13px;
+    }
+
+    .flavor-item:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .flavor-actions .add-btn:hover {
+        transform: none;
+    }
+
+    .flavor-actions .check-stock-btn:hover {
+        transform: none;
     }
 }
