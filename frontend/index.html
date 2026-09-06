@@ -194,6 +194,50 @@
             </button>
         </div>
     </div>
+    <!-- Модальное окно "Уточнить наличие" -->
+    <div class="modal" id="checkStockModal">
+        <div class="modal-overlay" id="checkStockOverlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-question-circle"></i> Уточнить наличие</h2>
+                <button class="modal-close" id="checkStockClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="check-stock-info" id="checkStockProductInfo">
+                    <!-- Товар подставится из JS -->
+                </div>
+                <form id="checkStockForm">
+                    <div class="form-group">
+                        <label for="checkStockName">Ваше имя</label>
+                        <input type="text" id="checkStockName" placeholder="Введите ваше имя" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkStockContact">
+                            <i class="fab fa-telegram"></i> Telegram никнейм (рекомендуется)
+                        </label>
+                        <input type="text" id="checkStockContact" placeholder="Например: @vapeboss">
+                        <div class="form-hint">Мы сможем быстро ответить вам в Telegram</div>
+                    </div>
+                    <div class="form-divider">или</div>
+                    <div class="form-group">
+                        <label for="checkStockPhone">Номер телефона</label>
+                        <input type="tel" id="checkStockPhone" placeholder="+7 (999) 123-45-67">
+                        <div class="form-hint">Укажите телефон, если не используете Telegram</div>
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label for="checkStockComment">Комментарий (необязательно)</label>
+                        <textarea id="checkStockComment" rows="2" placeholder="Что именно хотите уточнить о товаре?"></textarea>
+                    </div>
+                    <button type="submit" class="submit-order-btn" style="margin-top: 16px;">
+                        <i class="fas fa-paper-plane"></i>
+                        Отправить запрос
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>
