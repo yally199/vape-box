@@ -1005,6 +1005,87 @@ function submitCheckStock(e) {
         showToast('📱 Укажите Telegram в комментарии для быстрого ответа', 'success');
     }, 2000);
 }
+// ===== УПРАВЛЕНИЕ КОЛИЧЕСТВОМ =====
+
+// Добавить N единиц товара (или убрать, если delta < 0)
+function addToCart(productId, delta = 1) {
+    let product = null;
+    for (const cat of categories) {
+        if (cat.brands) {
+            for (const b of cat.brands) {
+                if (b.series) {
+                    for (const s of b.series) {
+                        const found = s.flavors.find(f => f.id === productId);
+                        if (found) {
+                            product = found;
+                            break;
+                        }
+                    }
+                }
+                if (product) break;
+            }
+        }
+        if (product) break;
+    }
+
+    if (!product) return;
+
+    // Проверяем остаток
+    if (delta > 0 && product.stock < delta) {
+        showToast('❌ Недостаточно товара на складе', 'error');
+        return;
+    }
+
+    const index = cart.findIndex(item => item.id === productId);
+
+    if (index === -1) {
+        // Товара нет в корзине — добавляем
+        if (delta <= 0) return;
+        if (product.stock <= 0) {
+            showToast('❌ Товар закончился на складе', 'error');
+            return;
+        }
+        cart.push({ ...product, quantity: delta });
+        product.stock -= delta;
+        showToast(`✅ Добавлено ${delta} шт`, 'success');
+    } else {
+        // Товар уже есть — меняем количество
+        const newQty = cart[index].quantity + delta;
+        if (newQty <= 0) {
+            // Удаляем товар из корзины
+            product.stock += cart[index].quantity;
+            cart.splice(index, 1);
+            showToast('🗑️ Товар удалён из корзины', 'error');
+        } else {
+            cart[index].quantity = newQty;
+            product.stock -= delta;
+            if (delta > 0) {
+                showToast(`✅ Добавлено ${delta} шт`, 'success');
+            } else {
+                showToast(`➖ Убрано ${Math.abs(delta)} шт`, 'error');
+            }
+        }
+    }
+
+    updateCartUI();
+    refreshCurrentView();
+}
+
+// Удалить товар из корзины полностью
+function removeFromCart(productId) {
+    const index = cart.findIndex(item => item.id === productId);
+    if (index === -1) return;
+
+    const product = findProduct(productId);
+    if (product) {
+        product.stock += cart[index].quantity;
+    }
+    cart.splice(index, 1);
+    updateCartUI();
+    refreshCurrentView();
+    showToast('🗑️ Товар удалён из корзины', 'error');
+}
+
 
 // ===== КНОПКИ =====
 if (modalOverlay) modalOverlay.addEventListener('click', closeCart);
