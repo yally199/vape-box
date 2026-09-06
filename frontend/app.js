@@ -5,7 +5,7 @@ if (tg) {
     tg.expand();
 }
 
-// ===== КАТЕГОРИИ С БРЕНДАМИ (ТОЛЬКО ЖИДКОСТИ ДЛЯ ПРИМЕРА) =====
+// ===== КАТЕГОРИИ С БРЕНДАМИ =====
 const categories = [
     {
         id: 'all',
@@ -50,19 +50,45 @@ const categories = [
                 ]
             }
         ]
+    },
+    {
+        id: 'pods',
+        name: 'Под-системы',
+        icon: '📱',
+        brands: []
+    },
+    {
+        id: 'consumables',
+        name: 'Расходники',
+        icon: '🧰',
+        brands: []
+    },
+    {
+        id: 'pouches',
+        name: 'Шайбы/Пэки',
+        icon: '🎮',
+        brands: []
+    },
+    {
+        id: 'nicotine',
+        name: 'Никотиновые',
+        icon: '💊',
+        brands: []
     }
 ];
 
 // ===== СОСТОЯНИЕ =====
 let cart = [];
-let currentView = 'catalog';
+let currentView = 'catalog'; // catalog, brands, flavors, search
 let currentCategoryId = 'all';
 let currentBrandId = null;
 let currentSearch = '';
+let isSearchMode = false;
 
 // ===== DOM ЭЛЕМЕНТЫ =====
 const productsContainer = document.getElementById('productsContainer');
 const emptyState = document.getElementById('emptyState');
+const categoriesContainer = document.getElementById('categoriesContainer');
 const searchInput = document.getElementById('searchInput');
 const searchClear = document.getElementById('searchClear');
 const cartCount = document.getElementById('cartCount');
@@ -78,15 +104,13 @@ const checkoutBtn = document.getElementById('checkoutBtn');
 const pageTitle = document.getElementById('pageTitle');
 const backBtn = document.getElementById('backBtn');
 
-// Модалка заказа
+// Модалки
 const orderModal = document.getElementById('orderModal');
 const orderModalOverlay = document.getElementById('orderModalOverlay');
 const orderModalClose = document.getElementById('orderModalClose');
 const orderForm = document.getElementById('orderForm');
 const orderItemsList = document.getElementById('orderItemsList');
 const orderTotalPrice = document.getElementById('orderTotalPrice');
-
-// Модалка успеха
 const successModal = document.getElementById('successModal');
 const successModalOverlay = document.getElementById('successModalOverlay');
 const successBtn = document.getElementById('successBtn');
@@ -124,20 +148,40 @@ function getAllFlavors() {
     return all;
 }
 
+function getFilteredFlavors() {
+    let all = getAllFlavors();
+    
+    if (currentSearch.trim()) {
+        const query = currentSearch.toLowerCase().trim();
+        all = all.filter(f => 
+            f.name.toLowerCase().includes(query) ||
+            f.description.toLowerCase().includes(query) ||
+            f.brandName.toLowerCase().includes(query)
+        );
+    }
+    
+    return all;
+}
+
 // ===== ОТОБРАЖЕНИЕ =====
 function renderCatalog() {
     currentView = 'catalog';
     currentCategoryId = 'all';
     currentBrandId = null;
+    isSearchMode = false;
     if (backBtn) backBtn.style.display = 'none';
     if (pageTitle) pageTitle.textContent = 'Магазин вейп-товаров';
+    
+    // Подсвечиваем кнопку "Все"
+    document.querySelectorAll('.category').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.category === 'all');
+    });
     
     if (!productsContainer) return;
     productsContainer.innerHTML = '';
     if (emptyState) emptyState.style.display = 'none';
     productsContainer.style.display = 'grid';
     
-    // Показываем категории (пропускаем "Все товары")
     categories.forEach((cat, index) => {
         if (cat.id === 'all') return;
         
@@ -145,12 +189,9 @@ function renderCatalog() {
         card.className = 'product-card brand-card';
         card.style.animationDelay = `${index * 0.05}s`;
         
-        // Подсчёт товаров в категории
         let count = 0;
         if (cat.brands) {
-            cat.brands.forEach(b => {
-                count += b.flavors.length;
-            });
+            cat.brands.forEach(b => { count += b.flavors.length; });
         }
         
         card.innerHTML = `
@@ -161,9 +202,7 @@ function renderCatalog() {
                 <div class="product-name">${cat.name}</div>
                 <div class="product-description">${count} товаров</div>
                 <div class="product-bottom" style="justify-content: flex-end;">
-                    <span style="color: var(--text-secondary); font-size: 14px;">
-                        → Открыть
-                    </span>
+                    <span style="color: var(--text-secondary); font-size: 14px;">→ Открыть</span>
                 </div>
             </div>
         `;
@@ -184,10 +223,16 @@ function showBrands(categoryId) {
     currentView = 'brands';
     currentCategoryId = categoryId;
     currentBrandId = null;
+    isSearchMode = false;
     if (backBtn) backBtn.style.display = 'flex';
     
     const cat = getCategory(categoryId);
     if (pageTitle) pageTitle.textContent = cat.name;
+    
+    // Подсвечиваем выбранную категорию
+    document.querySelectorAll('.category').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.category === categoryId);
+    });
     
     if (!productsContainer) return;
     productsContainer.innerHTML = '';
@@ -213,9 +258,7 @@ function showBrands(categoryId) {
                 <div class="product-name">${brand.name}</div>
                 <div class="product-description">${brand.flavors.length} вкусов</div>
                 <div class="product-bottom" style="justify-content: flex-end;">
-                    <span style="color: var(--text-secondary); font-size: 14px;">
-                        → Выбрать
-                    </span>
+                    <span style="color: var(--text-secondary); font-size: 14px;">→ Выбрать</span>
                 </div>
             </div>
         `;
@@ -232,6 +275,7 @@ function showFlavors(categoryId, brandId) {
     currentView = 'flavors';
     currentCategoryId = categoryId;
     currentBrandId = brandId;
+    isSearchMode = false;
     if (backBtn) backBtn.style.display = 'flex';
     
     const brand = getBrand(categoryId, brandId);
@@ -292,6 +336,75 @@ function showFlavors(categoryId, brandId) {
     });
 }
 
+function renderSearchResults() {
+    currentView = 'search';
+    isSearchMode = true;
+    if (backBtn) backBtn.style.display = 'flex';
+    if (pageTitle) pageTitle.textContent = 'Результаты поиска';
+    
+    const results = getFilteredFlavors();
+    
+    if (!productsContainer) return;
+    productsContainer.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'none';
+    productsContainer.style.display = 'grid';
+    
+    if (results.length === 0) {
+        if (emptyState) emptyState.style.display = 'block';
+        productsContainer.style.display = 'none';
+        return;
+    }
+    
+    results.forEach((flavor, index) => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.style.animationDelay = `${index * 0.05}s`;
+        
+        const isInCart = cart.some(item => item.id === flavor.id);
+        const hasStock = flavor.stock > 0;
+        
+        const stockText = hasStock 
+            ? `<span class="stock-badge in-stock">✅ ${flavor.stock} шт</span>`
+            : `<span class="stock-badge out-stock">❌ Нет в наличии</span>`;
+        
+        let addButton;
+        if (!hasStock) {
+            addButton = `<button class="add-btn disabled" disabled>Нет в наличии</button>`;
+        } else if (isInCart) {
+            addButton = `<button class="add-btn added" data-id="${flavor.id}">✓ В корзине</button>`;
+        } else {
+            addButton = `<button class="add-btn" data-id="${flavor.id}">+ Добавить</button>`;
+        }
+        
+        card.innerHTML = `
+            <div class="product-image" style="font-size: 48px;">
+                ${flavor.brandIcon || '📦'}
+            </div>
+            <div class="product-info">
+                <div class="product-name">${flavor.name}</div>
+                <div class="product-description">${flavor.brandName} • ${flavor.description || ''}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                    ${stockText}
+                </div>
+                <div class="product-bottom">
+                    <span class="product-price">${flavor.price} ₽</span>
+                    ${addButton}
+                </div>
+            </div>
+        `;
+        
+        const addBtn = card.querySelector('.add-btn:not(.disabled)');
+        if (addBtn) {
+            addBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleCart(flavor.id);
+            });
+        }
+        
+        productsContainer.appendChild(card);
+    });
+}
+
 // ===== КОРЗИНА =====
 function toggleCart(productId) {
     let product = null;
@@ -330,153 +443,12 @@ function toggleCart(productId) {
     }
     
     updateCartUI();
-    
-    if (currentView === 'flavors' && currentBrandId) {
-        showFlavors(currentCategoryId, currentBrandId);
-    }
+    refreshCurrentView();
 }
 
 function updateCartUI() {
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     if (cartCount) cartCount.textContent = totalItems;
-}
-
-// ===== НАВИГАЦИЯ =====
-if (backBtn) {
-    backBtn.addEventListener('click', function() {
-        if (currentView === 'flavors') {
-            showBrands(currentCategoryId);
-        } else if (currentView === 'brands') {
-            renderCatalog();
-        }
-    });
-}
-
-// ===== ПОИСК =====
-if (searchInput) {
-    searchInput.addEventListener('input', function() {
-        currentSearch = this.value;
-        if (searchClear) {
-            searchClear.style.display = currentSearch ? 'block' : 'none';
-        }
-    });
-}
-
-// ===== МОДАЛКИ =====
-function openCart() {
-    renderCart();
-    if (cartModal) cartModal.classList.add('active');
-}
-
-function closeCart() {
-    if (cartModal) cartModal.classList.remove('active');
-}
-
-function closeOrderModal() {
-    if (orderModal) orderModal.classList.remove('active');
-    if (cartModal) cartModal.classList.add('active');
-}
-
-function closeSuccessModal() {
-    if (successModal) successModal.classList.remove('active');
-}
-
-function openOrderModal() {
-    if (cart.length === 0) {
-        showToast('⚠️ Корзина пуста', 'error');
-        return;
-    }
-    
-    if (orderItemsList) orderItemsList.innerHTML = '';
-    let total = 0;
-    cart.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'order-item';
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-        div.textContent = `${item.name} × ${item.quantity} = ${itemTotal} ₽`;
-        if (orderItemsList) orderItemsList.appendChild(div);
-    });
-    
-    if (orderTotalPrice) orderTotalPrice.textContent = total + ' ₽';
-    
-    if (cartModal) cartModal.classList.remove('active');
-    if (orderModal) orderModal.classList.add('active');
-}
-
-function renderCart() {
-    if (!cartItems || !cartEmpty || !cartFooter) return;
-    
-    if (cart.length === 0) {
-        cartItems.style.display = 'none';
-        cartEmpty.style.display = 'block';
-        cartFooter.style.display = 'none';
-        return;
-    }
-    
-    cartItems.style.display = 'block';
-    cartEmpty.style.display = 'none';
-    cartFooter.style.display = 'block';
-    
-    cartItems.innerHTML = '';
-    let total = 0;
-    
-    cart.forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'cart-item';
-        
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-        
-        div.innerHTML = `
-            <div class="cart-item-image">📦</div>
-            <div class="cart-item-info">
-                <div class="cart-item-name">${item.name}</div>
-                <div style="font-size: 12px; color: var(--text-secondary);">${item.brandName || ''}</div>
-                <div class="cart-item-price">${itemTotal} ₽</div>
-            </div>
-            <div class="cart-item-actions">
-                <button class="decrease-btn" data-id="${item.id}">−</button>
-                <span class="quantity">${item.quantity}</span>
-                <button class="increase-btn" data-id="${item.id}">+</button>
-                <button class="remove-btn" data-id="${item.id}">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `;
-        
-        cartItems.appendChild(div);
-        
-        div.querySelector('.increase-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            changeQuantity(item.id, 1);
-        });
-        
-        div.querySelector('.decrease-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            changeQuantity(item.id, -1);
-        });
-        
-        div.querySelector('.remove-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            const idx = cart.findIndex(c => c.id === item.id);
-            if (idx !== -1) {
-                const product = findProduct(item.id);
-                if (product) {
-                    product.stock += item.quantity;
-                }
-                cart.splice(idx, 1);
-                updateCartUI();
-                renderCart();
-                if (currentView === 'flavors' && currentBrandId) {
-                    showFlavors(currentCategoryId, currentBrandId);
-                }
-                showToast('🗑️ Товар удалён', 'error');
-            }
-        });
-    });
-    
-    if (cartTotalPrice) cartTotalPrice.textContent = total + ' ₽';
 }
 
 function findProduct(productId) {
@@ -494,7 +466,6 @@ function findProduct(productId) {
 function changeQuantity(productId, delta) {
     const item = cart.find(c => c.id === productId);
     const product = findProduct(productId);
-    
     if (!item || !product) return;
     
     if (delta > 0 && product.stock <= 0) {
@@ -503,12 +474,8 @@ function changeQuantity(productId, delta) {
     }
     
     item.quantity += delta;
-    
-    if (delta > 0) {
-        product.stock -= 1;
-    } else {
-        product.stock += 1;
-    }
+    if (delta > 0) product.stock -= 1;
+    else product.stock += 1;
     
     if (item.quantity <= 0) {
         const idx = cart.findIndex(c => c.id === productId);
@@ -517,9 +484,197 @@ function changeQuantity(productId, delta) {
     
     updateCartUI();
     renderCart();
-    if (currentView === 'flavors' && currentBrandId) {
+    refreshCurrentView();
+}
+
+function refreshCurrentView() {
+    if (isSearchMode) {
+        renderSearchResults();
+    } else if (currentView === 'catalog') {
+        renderCatalog();
+    } else if (currentView === 'brands') {
+        showBrands(currentCategoryId);
+    } else if (currentView === 'flavors' && currentBrandId) {
         showFlavors(currentCategoryId, currentBrandId);
     }
+}
+
+// ===== КАТЕГОРИИ (ГОРИЗОНТАЛЬНЫЕ КНОПКИ) =====
+if (categoriesContainer) {
+    categoriesContainer.addEventListener('click', function(e) {
+        const btn = e.target.closest('.category');
+        if (!btn) return;
+        
+        const categoryId = btn.dataset.category;
+        
+        // Обновляем активный класс
+        document.querySelectorAll('.category').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        if (categoryId === 'all') {
+            // Очищаем поиск
+            if (searchInput) {
+                searchInput.value = '';
+                currentSearch = '';
+                if (searchClear) searchClear.style.display = 'none';
+            }
+            renderCatalog();
+        } else {
+            // Показываем бренды выбранной категории
+            const cat = getCategory(categoryId);
+            if (cat && cat.brands && cat.brands.length > 0) {
+                showBrands(categoryId);
+            } else {
+                showToast('В этой категории пока нет товаров', 'error');
+            }
+        }
+    });
+}
+
+// ===== НАВИГАЦИЯ (КНОПКА НАЗАД) =====
+if (backBtn) {
+    backBtn.addEventListener('click', function() {
+        if (isSearchMode) {
+            // Выходим из поиска
+            if (searchInput) {
+                searchInput.value = '';
+                currentSearch = '';
+                if (searchClear) searchClear.style.display = 'none';
+            }
+            isSearchMode = false;
+            renderCatalog();
+        } else if (currentView === 'flavors') {
+            showBrands(currentCategoryId);
+        } else if (currentView === 'brands') {
+            renderCatalog();
+        }
+    });
+}
+
+// ===== ПОИСК =====
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        currentSearch = this.value;
+        if (searchClear) {
+            searchClear.style.display = currentSearch ? 'block' : 'none';
+        }
+        
+        if (currentSearch.trim()) {
+            renderSearchResults();
+        } else {
+            isSearchMode = false;
+            // Возвращаемся к предыдущему виду
+            if (currentView === 'search') {
+                renderCatalog();
+            } else {
+                refreshCurrentView();
+            }
+        }
+    });
+}
+
+if (searchClear) {
+    searchClear.addEventListener('click', function() {
+        if (searchInput) {
+            searchInput.value = '';
+            currentSearch = '';
+            this.style.display = 'none';
+            isSearchMode = false;
+            renderCatalog();
+        }
+    });
+}
+
+// ===== КОРЗИНА — ОТРИСОВКА =====
+function renderCart() {
+    if (!cartItems || !cartEmpty || !cartFooter) return;
+    
+    if (cart.length === 0) {
+        cartItems.style.display = 'none';
+        cartEmpty.style.display = 'block';
+        cartFooter.style.display = 'none';
+        return;
+    }
+    
+    cartItems.style.display = 'block';
+    cartEmpty.style.display = 'none';
+    cartFooter.style.display = 'block';
+    cartItems.innerHTML = '';
+    let total = 0;
+    
+    cart.forEach((item) => {
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        
+        div.innerHTML = `
+            <div class="cart-item-image">📦</div>
+            <div class="cart-item-info">
+                <div class="cart-item-name">${item.name}</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">${item.brandName || ''}</div>
+                <div class="cart-item-price">${itemTotal} ₽</div>
+            </div>
+            <div class="cart-item-actions">
+                <button class="decrease-btn" data-id="${item.id}">−</button>
+                <span class="quantity">${item.quantity}</span>
+                <button class="increase-btn" data-id="${item.id}">+</button>
+                <button class="remove-btn" data-id="${item.id}"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+        
+        cartItems.appendChild(div);
+        
+        div.querySelector('.increase-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            changeQuantity(item.id, 1);
+        });
+        div.querySelector('.decrease-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            changeQuantity(item.id, -1);
+        });
+        div.querySelector('.remove-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = cart.findIndex(c => c.id === item.id);
+            if (idx !== -1) {
+                const product = findProduct(item.id);
+                if (product) product.stock += item.quantity;
+                cart.splice(idx, 1);
+                updateCartUI();
+                renderCart();
+                refreshCurrentView();
+                showToast('🗑️ Товар удалён', 'error');
+            }
+        });
+    });
+    
+    if (cartTotalPrice) cartTotalPrice.textContent = total + ' ₽';
+}
+
+// ===== МОДАЛКИ =====
+function openCart() { renderCart(); if (cartModal) cartModal.classList.add('active'); }
+function closeCart() { if (cartModal) cartModal.classList.remove('active'); }
+function closeOrderModal() { if (orderModal) orderModal.classList.remove('active'); if (cartModal) cartModal.classList.add('active'); }
+function closeSuccessModal() { if (successModal) successModal.classList.remove('active'); }
+
+function openOrderModal() {
+    if (cart.length === 0) {
+        showToast('⚠️ Корзина пуста', 'error');
+        return;
+    }
+    if (orderItemsList) orderItemsList.innerHTML = '';
+    let total = 0;
+    cart.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'order-item';
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        div.textContent = `${item.name} × ${item.quantity} = ${itemTotal} ₽`;
+        if (orderItemsList) orderItemsList.appendChild(div);
+    });
+    if (orderTotalPrice) orderTotalPrice.textContent = total + ' ₽';
+    if (cartModal) cartModal.classList.remove('active');
+    if (orderModal) orderModal.classList.add('active');
 }
 
 function generateOrderNumber() {
@@ -530,7 +685,6 @@ function generateOrderNumber() {
 
 function submitOrder(e) {
     e.preventDefault();
-    
     const name = document.getElementById('customerName').value.trim();
     const phone = document.getElementById('customerPhone').value.trim();
     const address = document.getElementById('customerAddress').value.trim();
@@ -569,20 +723,11 @@ function submitOrder(e) {
     
     cart = [];
     updateCartUI();
-    if (currentView === 'flavors' && currentBrandId) {
-        showFlavors(currentCategoryId, currentBrandId);
-    } else if (currentView === 'brands') {
-        showBrands(currentCategoryId);
-    } else {
-        renderCatalog();
-    }
+    refreshCurrentView();
     if (orderForm) orderForm.reset();
     
     if (tg) {
-        tg.sendData(JSON.stringify({
-            type: 'order',
-            order: order
-        }));
+        tg.sendData(JSON.stringify({ type: 'order', order: order }));
     }
     
     showToast(`✅ Заказ №${orderNumber} оформлен!`, 'success');
@@ -603,13 +748,11 @@ if (orderForm) orderForm.addEventListener('submit', submitOrder);
 function showToast(message, type = 'success') {
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
-    
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     const icon = type === 'success' ? '✅' : type === 'error' ? '⚠️' : 'ℹ️';
     toast.innerHTML = `${icon} ${message}`;
     document.body.appendChild(toast);
-    
     setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transform = 'translateX(-50%) translateY(-20px)';
@@ -620,6 +763,4 @@ function showToast(message, type = 'success') {
 // ===== ЗАПУСК =====
 renderCatalog();
 updateCartUI();
-
-console.log('🛍️ VAPE BOX с брендами загружен!');
-console.log(`📂 Категорий: ${categories.length - 1}`);
+console.log('🛍️ VAPE BOX с категориями и поиском загружен!');
