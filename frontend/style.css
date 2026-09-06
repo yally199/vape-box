@@ -1074,46 +1074,50 @@ body {
     color: #ff6b6b;
 }
 
+/* ===== ДЕЙСТВИЯ (КНОПКИ) — ВСЁ В ОДНУ СТРОКУ ===== */
 .flavor-actions {
     display: flex;
+    align-items: center;
     gap: 8px;
     flex-shrink: 0;
+    flex-wrap: nowrap; /* ← НЕ ПЕРЕНОСИТЬ НА НОВУЮ СТРОКУ */
 }
 
-.flavor-actions .add-btn {
-    padding: 8px 18px;
+/* КНОПКА "ДОБАВИТЬ" */
+.flavor-actions .add-btn.add-to-cart {
+    padding: 10px 20px;
     background: var(--accent);
     border: none;
     border-radius: 30px;
     color: white;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s ease;
     white-space: nowrap;
     box-shadow: 0 2px 8px rgba(108, 92, 231, 0.2);
+    min-width: 110px;
 }
 
-.flavor-actions .add-btn:hover {
+.flavor-actions .add-btn.add-to-cart:hover {
     background: var(--accent-hover);
     transform: scale(1.04);
     box-shadow: 0 4px 16px rgba(108, 92, 231, 0.3);
 }
 
-.flavor-actions .add-btn:active {
-    transform: scale(0.95);
-}
-
-.flavor-actions .add-btn.added {
-    background: var(--success);
-    box-shadow: 0 2px 8px rgba(81, 207, 102, 0.3);
-}
-
+/* КНОПКА "НЕТ В НАЛИЧИИ" */
 .flavor-actions .add-btn.disabled {
     opacity: 0.4;
     cursor: not-allowed;
     background: var(--text-secondary);
     box-shadow: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    border: none;
+    min-width: 110px;
 }
 
 .flavor-actions .add-btn.disabled:hover {
@@ -1121,17 +1125,96 @@ body {
     background: var(--text-secondary);
 }
 
+/* === УПРАВЛЕНИЕ КОЛИЧЕСТВОМ === */
+.btn-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.qty-controls {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--bg-secondary);
+    border-radius: 30px;
+    padding: 3px 4px;
+    border: 1px solid var(--border-color);
+}
+
+.qty-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qty-btn:hover {
+    background: var(--accent);
+    color: white;
+    transform: scale(1.05);
+}
+
+.qty-btn:active {
+    transform: scale(0.92);
+}
+
+.qty-number {
+    font-size: 16px;
+    font-weight: 600;
+    min-width: 28px;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+/* КНОПКА УДАЛИТЬ ИЗ КОРЗИНЫ (✕) */
+.remove-from-cart {
+    background: rgba(255, 107, 107, 0.15) !important;
+    color: var(--danger) !important;
+    padding: 8px 14px !important;
+    border-radius: 30px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    min-width: 40px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-from-cart:hover {
+    background: rgba(255, 107, 107, 0.3) !important;
+    transform: scale(1.05);
+}
+
+/* КНОПКА УТОЧНИТЬ (❓) */
 .flavor-actions .check-stock-btn {
-    padding: 8px 12px;
+    padding: 10px 14px;
     background: rgba(108, 92, 231, 0.08);
     border: 1px solid rgba(108, 92, 231, 0.15);
     border-radius: 30px;
     color: var(--accent-light);
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.25s ease;
     white-space: nowrap;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .flavor-actions .check-stock-btn:hover {
@@ -1181,20 +1264,45 @@ body {
         padding: 1px 10px;
     }
 
+    /* НА ТЕЛЕФОНЕ КНОПКИ СТАНОВЯТСЯ ЧУТЬ МЕНЬШЕ, НО ВСЁ В ОДНУ СТРОКУ */
     .flavor-actions {
-        width: 100%;
-        justify-content: flex-end;
-        margin-top: 4px;
+        gap: 6px;
+        flex-wrap: nowrap;
     }
 
-    .flavor-actions .add-btn {
-        padding: 6px 16px;
+    .flavor-actions .add-btn.add-to-cart {
+        padding: 8px 14px;
         font-size: 13px;
+        min-width: 80px;
+    }
+
+    .flavor-actions .add-btn.disabled {
+        padding: 8px 14px;
+        font-size: 13px;
+        min-width: 80px;
+    }
+
+    .qty-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+
+    .qty-number {
+        font-size: 14px;
+        min-width: 22px;
+    }
+
+    .remove-from-cart {
+        padding: 6px 10px !important;
+        font-size: 14px !important;
+        min-width: 34px;
     }
 
     .flavor-actions .check-stock-btn {
-        padding: 6px 10px;
-        font-size: 13px;
+        padding: 8px 10px;
+        font-size: 14px;
+        min-width: 38px;
     }
 
     .flavor-item:hover {
@@ -1202,9 +1310,11 @@ body {
         box-shadow: none;
     }
 
-    .flavor-actions .add-btn:hover {
+    .flavor-actions .add-btn.add-to-cart:hover {
         transform: none;
     }
 
     .flavor-actions .check-stock-btn:hover {
-        transform: 
+        transform: none;
+    }
+}
