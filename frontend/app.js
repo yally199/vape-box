@@ -732,6 +732,122 @@ function submitOrder(e) {
     
     showToast(`✅ Заказ №${orderNumber} оформлен!`, 'success');
 }
+// ===== УТОЧНЕНИЕ НАЛИЧИЯ =====
+const checkStockModal = document.getElementById('checkStockModal');
+const checkStockOverlay = document.getElementById('checkStockOverlay');
+const checkStockClose = document.getElementById('checkStockClose');
+const checkStockForm = document.getElementById('checkStockForm');
+const checkStockProductInfo = document.getElementById('checkStockProductInfo');
+
+let currentCheckStockProduct = null;
+
+// Открыть модалку уточнения
+function openCheckStock(productId) {
+    // Находим товар
+    let product = null;
+    let brand = null;
+    
+    for (const cat of categories) {
+        if (cat.brands) {
+            for (const b of cat.brands) {
+                const found = b.flavors.find(f => f.id === productId);
+                if (found) {
+                    product = found;
+                    brand = b;
+                    break;
+                }
+            }
+        }
+        if (product) break;
+    }
+    
+    if (!product) return;
+    
+    currentCheckStockProduct = { product, brand };
+    
+    // Заполняем информацию о товаре
+    checkStockProductInfo.innerHTML = `
+        <div class="product-name">${product.name}</div>
+        <div class="product-meta">${brand?.name || ''} • ${product.price} ₽</div>
+        <div class="product-meta" style="color: var(--text-secondary); font-size: 13px;">
+            ${product.description || ''}
+        </div>
+    `;
+    
+    // Очищаем форму
+    document.getElementById('checkStockName').value = '';
+    document.getElementById('checkStockContact').value = '';
+    document.getElementById('checkStockPhone').value = '';
+    document.getElementById('checkStockComment').value = '';
+    
+    checkStockModal.classList.add('active');
+}
+
+// Закрыть модалку
+function closeCheckStock() {
+    checkStockModal.classList.remove('active');
+}
+
+// Отправка запроса
+function submitCheckStock(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('checkStockName').value.trim();
+    const contact = document.getElementById('checkStockContact').value.trim();
+    const phone = document.getElementById('checkStockPhone').value.trim();
+    const comment = document.getElementById('checkStockComment').value.trim();
+    
+    if (!name) {
+        showToast('⚠️ Введите ваше имя', 'error');
+        return;
+    }
+    
+    if (!contact && !phone) {
+        showToast('⚠️ Укажите Telegram или телефон', 'error');
+        return;
+    }
+    
+    const product = currentCheckStockProduct?.product;
+    const brand = currentCheckStockProduct?.brand;
+    
+    // Сохраняем запрос в localStorage
+    const requests = JSON.parse(localStorage.getItem('stockRequests') || '[]');
+    const request = {
+        id: `RQ-${Date.now().toString().slice(-6)}`,
+        product: product?.name || 'Неизвестный товар',
+        brand: brand?.name || '',
+        price: product?.price || 0,
+        customer: { name, contact, phone, comment },
+        date: new Date().toISOString(),
+        status: 'Новый'
+    };
+    requests.push(request);
+    localStorage.setItem('stockRequests', JSON.stringify(requests));
+    
+    // Отправка в Telegram (есть бот)
+    if (tg) {
+        tg.sendData(JSON.stringify({
+            type: 'stockRequest',
+            request: request
+        }));
+    }
+    
+    // Закрываем модалку
+    closeCheckStock();
+    
+    // Показываем уведомление
+    showToast('✅ Запрос отправлен! Менеджер свяжется с вами.', 'success');
+    
+    // Показываем дополнительное сообщение
+    setTimeout(() => {
+        showToast('📱 Укажите Telegram в комментарии для быстрого ответа', 'success');
+    }, 2000);
+}
+
+// Кнопки
+if (checkStockOverlay) checkStockOverlay.addEventListener('click', closeCheckStock);
+if (checkStockClose) checkStockClose.addEventListener('click', closeCheckStock);
+if (checkStockForm) checkStockForm.addEventListener('submit', submitCheckStock);
 
 // ===== КНОПКИ =====
 if (modalOverlay) modalOverlay.addEventListener('click', closeCart);
