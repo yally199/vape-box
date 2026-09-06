@@ -910,3 +910,59 @@ body {
 .back-btn i {
     font-size: 20px;
 }
+/* ===== УТОЧНЕНИЕ НАЛИЧИЯ ===== */
+.check-stock-info {
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.check-stock-info .product-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.check-stock-info .product-meta {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.form-divider {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 8px 0;
+    position: relative;
+}
+
+.form-divider::before,
+.form-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.form-divider::before {
+    left: 0;
+}
+
+.form-divider::after {
+    right: 0;
+}
+
+.form-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.form-group label i {
+    margin-right: 6px;
+    color: var(--accent);
+}
