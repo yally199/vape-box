@@ -966,3 +966,192 @@ body {
     margin-right: 6px;
     color: var(--accent);
 }
+
+/* ============================================================
+   === СПИСОК ВКУСОВ (вместо карточек) ===
+   ============================================================ */
+
+.flavor-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s;
+    margin-bottom: 8px;
+}
+
+.flavor-item:hover {
+    border-color: var(--accent);
+    background: var(--bg-card-hover);
+}
+
+.flavor-icon {
+    font-size: 28px;
+    width: 40px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.flavor-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.flavor-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.flavor-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.flavor-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.flavor-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.flavor-stock {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+
+.flavor-stock.in-stock {
+    color: #51cf66;
+    background: rgba(81, 207, 102, 0.15);
+}
+
+.flavor-stock.out-stock {
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.15);
+}
+
+.flavor-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.flavor-actions .add-btn {
+    padding: 8px 16px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.flavor-actions .add-btn:hover {
+    background: var(--accent-hover);
+    transform: scale(1.05);
+}
+
+.flavor-actions .add-btn:active {
+    transform: scale(0.95);
+}
+
+.flavor-actions .add-btn.added {
+    background: var(--success);
+}
+
+.flavor-actions .add-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--text-secondary);
+}
+
+.flavor-actions .add-btn.disabled:hover {
+    transform: none;
+    background: var(--text-secondary);
+}
+
+.flavor-actions .check-stock-btn {
+    padding: 8px 12px;
+    background: rgba(108, 92, 231, 0.15);
+    border: 1px solid rgba(108, 92, 231, 0.3);
+    border-radius: var(--radius-sm);
+    color: var(--accent-light);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.flavor-actions .check-stock-btn:hover {
+    background: rgba(108, 92, 231, 0.25);
+    transform: scale(1.05);
+}
+
+/* ============================================================
+   === АДАПТАЦИЯ ДЛЯ ТЕЛЕФОНОВ ===
+   ============================================================ */
+
+@media (max-width: 480px) {
+    .flavor-item {
+        padding: 10px 12px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .flavor-icon {
+        font-size: 24px;
+        width: 32px;
+    }
+    
+    .flavor-name {
+        font-size: 14px;
+    }
+    
+    .flavor-description {
+        font-size: 12px;
+        white-space: normal;
+    }
+    
+    .flavor-meta {
+        gap: 8px;
+    }
+    
+    .flavor-price {
+        font-size: 14px;
+    }
+    
+    .flavor-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .flavor-actions .add-btn {
+        padding: 6px 14px;
+        font-size: 12px;
+    }
+    
+    .flavor-actions .check-stock-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+}
