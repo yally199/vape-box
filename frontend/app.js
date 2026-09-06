@@ -394,17 +394,38 @@ function showFlavors(categoryId, brandId, seriesId) {
         const isInCart = cart.some(c => c.id === flavor.id);
         const hasStock = flavor.stock > 0;
 
+        // Находим текущее количество в корзине
+        const cartItem = cart.find(c => c.id === flavor.id);
+        const currentQty = cartItem ? cartItem.quantity : 0;
+
         const stockText = hasStock
             ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
             : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
+
+        // Кнопки управления количеством
+        let quantityControls = '';
+        if (hasStock && isInCart) {
+            quantityControls = `
+                <div class="qty-controls">
+                    <button class="qty-btn qty-minus" data-id="${flavor.id}">−</button>
+                    <span class="qty-number">${currentQty}</span>
+                    <button class="qty-btn qty-plus" data-id="${flavor.id}">+</button>
+                </div>
+            `;
+        }
 
         let addButton;
         if (!hasStock) {
             addButton = `<button class="add-btn disabled" disabled>Нет</button>`;
         } else if (isInCart) {
-            addButton = `<button class="add-btn added" data-id="${flavor.id}">✓</button>`;
+            addButton = `
+                <div class="btn-group">
+                    ${quantityControls}
+                    <button class="add-btn remove-from-cart" data-id="${flavor.id}" title="Удалить из корзины">✕</button>
+                </div>
+            `;
         } else {
-            addButton = `<button class="add-btn" data-id="${flavor.id}">+</button>`;
+            addButton = `<button class="add-btn add-to-cart" data-id="${flavor.id}">+ Добавить</button>`;
         }
 
         item.innerHTML = `
@@ -423,14 +444,45 @@ function showFlavors(categoryId, brandId, seriesId) {
             </div>
         `;
 
-        const addBtn = item.querySelector('.add-btn:not(.disabled)');
+        // === ОБРАБОТЧИКИ ===
+
+        // Кнопка "Добавить"
+        const addBtn = item.querySelector('.add-to-cart');
         if (addBtn) {
             addBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                toggleCart(flavor.id);
+                addToCart(flavor.id, 1);
             });
         }
 
+        // Кнопка "Удалить из корзины"
+        const removeBtn = item.querySelector('.remove-from-cart');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeFromCart(flavor.id);
+            });
+        }
+
+        // Кнопка "+"
+        const plusBtn = item.querySelector('.qty-plus');
+        if (plusBtn) {
+            plusBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addToCart(flavor.id, 1);
+            });
+        }
+
+        // Кнопка "−"
+        const minusBtn = item.querySelector('.qty-minus');
+        if (minusBtn) {
+            minusBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addToCart(flavor.id, -1);
+            });
+        }
+
+        // Кнопка "Уточнить"
         const checkBtn = item.querySelector('.check-stock-btn');
         if (checkBtn) {
             checkBtn.addEventListener('click', (e) => {
@@ -442,7 +494,6 @@ function showFlavors(categoryId, brandId, seriesId) {
         productsContainer.appendChild(item);
     });
 }
-
 function renderSearchResults() {
     currentView = 'search';
     isSearchMode = true;
