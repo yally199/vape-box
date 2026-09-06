@@ -397,10 +397,9 @@ function showFlavors(categoryId, brandId, seriesId) {
         const cartItem = cart.find(c => c.id === flavor.id);
         const currentQty = cartItem ? cartItem.quantity : 0;
 
-// Стало
-const stockText = hasStock
-    ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
-    : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
+        const stockText = hasStock
+            ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
+            : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
         
         let quantityControls = '';
         if (hasStock && isInCart) {
@@ -519,7 +518,7 @@ function renderSearchResults() {
         const currentQty = cartItem ? cartItem.quantity : 0;
 
         const stockText = hasStock
-            ? `<span class="flavor-stock in-stock">✅ ${flavor.stock} шт</span>`
+            ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
             : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
 
         let quantityControls = '';
@@ -898,12 +897,13 @@ function generateOrderNumber() {
 function submitOrder(e) {
     e.preventDefault();
     const name = document.getElementById('customerName').value.trim();
+    const telegram = document.getElementById('customerTelegram').value.trim();
     const phone = document.getElementById('customerPhone').value.trim();
     const address = document.getElementById('customerAddress').value.trim();
     const comment = document.getElementById('orderComment').value.trim();
 
-    if (!name || !phone) {
-        showToast('⚠️ Заполните имя и телефон', 'error');
+    if (!name || !telegram) {
+        showToast('⚠️ Заполните имя и Telegram', 'error');
         return;
     }
 
@@ -912,7 +912,7 @@ function submitOrder(e) {
 
     const order = {
         id: orderNumber,
-        customer: { name, phone, address, comment },
+        customer: { name, telegram, phone, address, comment },
         items: cart.map(item => ({
             name: item.name,
             brand: item.brandName || '',
