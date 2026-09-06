@@ -19,35 +19,26 @@
     
     <!-- Шапка -->
     <header class="header">
-        <div class="header-top">
+    <div class="header-top">
+        <div class="logo-wrapper">
+            <button class="back-btn" id="backBtn" style="display: none;">
+                <i class="fas fa-arrow-left"></i>
+            </button>
             <div class="logo">
                 <i class="fas fa-bolt"></i>
                 VAPE BOX
             </div>
-            <div class="header-actions">
-                <button class="cart-btn" id="cartBtn">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count" id="cartCount">0</span>
-                </button>
-            </div>
         </div>
-        <p class="header-subtitle">Магазин вейп-товаров</p>
-    </header>
-
-    <!-- Поиск -->
-    <div class="search-container">
-        <i class="fas fa-search search-icon"></i>
-        <input 
-            class="search-input" 
-            id="searchInput"
-            type="text" 
-            placeholder="Поиск товара..."
-        >
-        <button class="search-clear" id="searchClear" style="display: none;">
-            <i class="fas fa-times-circle"></i>
-        </button>
+        <div class="header-actions">
+            <button class="cart-btn" id="cartBtn">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count" id="cartCount">0</span>
+            </button>
+        </div>
     </div>
-
+    <p class="header-subtitle" id="pageTitle">Магазин вейп-товаров</p>
+</header>
+    
     <!-- Категории -->
     <div class="categories-wrapper">
         <div class="categories" id="categoriesContainer">
