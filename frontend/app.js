@@ -299,13 +299,31 @@ function showFlavors(categoryId, brandId) {
             : `<span class="stock-badge out-stock">❌ Нет в наличии</span>`;
         
         let addButton;
-        if (!hasStock) {
-            addButton = `<button class="add-btn disabled" disabled>Нет в наличии</button>`;
-        } else if (isInCart) {
-            addButton = `<button class="add-btn added" data-id="${flavor.id}">✓ В корзине</button>`;
-        } else {
-            addButton = `<button class="add-btn" data-id="${flavor.id}">+ Добавить</button>`;
-        }
+if (!hasStock) {
+    addButton = `
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="add-btn disabled" disabled>🚫 Недоступен</button>
+            <button class="check-stock-btn" data-id="${flavor.id}">❓ Уточнить</button>
+        </div>
+    `;
+} else if (isInCart) {
+    addButton = `<button class="add-btn added" data-id="${flavor.id}">✓ В корзине</button>`;
+} else {
+    addButton = `
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="add-btn" data-id="${flavor.id}">+ Добавить</button>
+            <button class="check-stock-btn" data-id="${flavor.id}">❓ Уточнить</button>
+        </div>
+    `;
+}
+        // Обработчик для кнопки "Уточнить наличие"
+const checkBtn = card.querySelector('.check-stock-btn');
+if (checkBtn) {
+    checkBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openCheckStock(flavor.id);
+    });
+}
         
         card.innerHTML = `
             <div class="product-image" style="font-size: 48px;">
