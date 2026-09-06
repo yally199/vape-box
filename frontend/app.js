@@ -21,17 +21,50 @@ const categories = [
                 id: 'angry-vape',
                 name: 'Angry Vape',
                 icon: '🍓',
-                flavors: [
-                    { id: 1, name: 'Клубничный джем 50мг', price: 325, stock: 15, description: 'Сладкий клубничный джем с ментолом' },
-                    { id: 2, name: 'Черника со сливками 20мг', price: 325, stock: 8, description: 'Нежная черника со сливочными нотками' }
+                series: [
+                    {
+                        id: 'angry-vape-50mg',
+                        name: 'Angry Vape 50mg',
+                        flavors: [
+                            { id: 1, name: 'Варан Комод (клубничный джем)', price: 325, stock: 1, description: 'Клубничный джем с ментолом' },
+                            { id: 2, name: 'Бегемот Брутто (черный виноград)', price: 325, stock: 1, description: 'Черный виноград' },
+                            { id: 3, name: 'Ворон Лут (груша с ананасом)', price: 325, stock: 1, description: 'Груша с ананасом' },
+                            { id: 4, name: 'Жираф Шпиль (манго)', price: 325, stock: 1, description: 'Сочное манго' },
+                            { id: 5, name: 'Ёж Кутёж (синяя малина)', price: 325, stock: 1, description: 'Синяя малина' },
+                            { id: 6, name: 'Геккон Пупырка (кислые конфеты)', price: 325, stock: 1, description: 'Кислые конфеты' },
+                            { id: 7, name: 'Енот щипач (чизкейк с клубникой и бананом)', price: 325, stock: 1, description: 'Чизкейк с клубникой и бананом' },
+                            { id: 8, name: 'Волк АУФ (вишня с лимоном)', price: 325, stock: 1, description: 'Вишня с лимоном' },
+                            { id: 9, name: 'Акула гарпун (черника со сливками)', price: 325, stock: 1, description: 'Черника со сливками' },
+                            { id: 10, name: 'Вомбат Батяня (виноградная газировка)', price: 325, stock: 1, description: 'Виноградная газировка' },
+                            { id: 11, name: 'Гадюка мамба (персик с малиной)', price: 325, stock: 1, description: 'Персик с малиной' }
+                        ]
+                    },
+                    {
+                        id: 'angry-vape-20mg',
+                        name: 'Angry Vape 20mg',
+                        flavors: [
+                            { id: 12, name: 'Акула гарпун (черника со сливками)', price: 325, stock: 1, description: 'Черника со сливками' },
+                            { id: 13, name: 'Жираф Шпиль (манго)', price: 325, stock: 1, description: 'Сочное манго' },
+                            { id: 14, name: 'Ёж Кутёж (синяя малина)', price: 325, stock: 1, description: 'Синяя малина' },
+                            { id: 15, name: 'Варан Комод (клубничный джем)', price: 325, stock: 1, description: 'Клубничный джем с ментолом' }
+                        ]
+                    }
                 ]
             },
             {
                 id: 'angry-ape',
                 name: 'ANGRY APE',
                 icon: '🍍',
-                flavors: [
-                    { id: 3, name: 'Ананасовая конфета 60mg', price: 360, stock: 12, description: 'Сладкая ананасовая конфета' }
+                series: [
+                    {
+                        id: 'angry-ape-ultra-60mg',
+                        name: 'ANGRY APE ULTRA 60mg',
+                        flavors: [
+                            { id: 16, name: 'Ананасовая конфета', price: 360, stock: 1, description: 'Сладкая ананасовая конфета' },
+                            { id: 17, name: 'Банан клубника', price: 360, stock: 1, description: 'Нежный банан с клубникой' },
+                            { id: 18, name: 'Ягодный микс', price: 360, stock: 1, description: 'Микс лесных ягод' }
+                        ]
+                    }
                 ]
             }
         ]
@@ -40,16 +73,7 @@ const categories = [
         id: 'disposable',
         name: 'Одноразки',
         icon: '⚡',
-        brands: [
-            {
-                id: 'elf-bar',
-                name: 'ELF BAR',
-                icon: '⚡',
-                flavors: [
-                    { id: 4, name: 'BC30000', price: 880, stock: 7, description: '30000 затяжек' }
-                ]
-            }
-        ]
+        brands: []
     },
     {
         id: 'pods',
@@ -79,9 +103,10 @@ const categories = [
 
 // ===== СОСТОЯНИЕ =====
 let cart = [];
-let currentView = 'catalog'; // catalog, brands, flavors, search
+let currentView = 'catalog';
 let currentCategoryId = 'all';
 let currentBrandId = null;
+let currentSeriesId = null;
 let currentSearch = '';
 let isSearchMode = false;
 
@@ -116,6 +141,14 @@ const successModalOverlay = document.getElementById('successModalOverlay');
 const successBtn = document.getElementById('successBtn');
 const orderNumberEl = document.getElementById('orderNumber');
 
+// Модалка уточнения наличия
+const checkStockModal = document.getElementById('checkStockModal');
+const checkStockOverlay = document.getElementById('checkStockOverlay');
+const checkStockClose = document.getElementById('checkStockClose');
+const checkStockForm = document.getElementById('checkStockForm');
+const checkStockProductInfo = document.getElementById('checkStockProductInfo');
+let currentCheckStockProduct = null;
+
 // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
 function getCategory(id) {
     return categories.find(c => c.id === id);
@@ -127,21 +160,33 @@ function getBrand(categoryId, brandId) {
     return cat.brands.find(b => b.id === brandId);
 }
 
+function getSeries(categoryId, brandId, seriesId) {
+    const brand = getBrand(categoryId, brandId);
+    if (!brand || !brand.series) return null;
+    return brand.series.find(s => s.id === seriesId);
+}
+
 function getAllFlavors() {
     const all = [];
     categories.forEach(cat => {
         if (cat.brands) {
             cat.brands.forEach(brand => {
-                brand.flavors.forEach(flavor => {
-                    all.push({
-                        ...flavor,
-                        categoryId: cat.id,
-                        categoryName: cat.name,
-                        brandId: brand.id,
-                        brandName: brand.name,
-                        brandIcon: brand.icon
+                if (brand.series) {
+                    brand.series.forEach(series => {
+                        series.flavors.forEach(flavor => {
+                            all.push({
+                                ...flavor,
+                                categoryId: cat.id,
+                                categoryName: cat.name,
+                                brandId: brand.id,
+                                brandName: brand.name,
+                                brandIcon: brand.icon,
+                                seriesId: series.id,
+                                seriesName: series.name
+                            });
+                        });
                     });
-                });
+                }
             });
         }
     });
@@ -150,16 +195,14 @@ function getAllFlavors() {
 
 function getFilteredFlavors() {
     let all = getAllFlavors();
-    
     if (currentSearch.trim()) {
         const query = currentSearch.toLowerCase().trim();
-        all = all.filter(f => 
+        all = all.filter(f =>
             f.name.toLowerCase().includes(query) ||
             f.description.toLowerCase().includes(query) ||
             f.brandName.toLowerCase().includes(query)
         );
     }
-    
     return all;
 }
 
@@ -168,36 +211,38 @@ function renderCatalog() {
     currentView = 'catalog';
     currentCategoryId = 'all';
     currentBrandId = null;
+    currentSeriesId = null;
     isSearchMode = false;
     if (backBtn) backBtn.style.display = 'none';
     if (pageTitle) pageTitle.textContent = 'Магазин вейп-товаров';
-    
-    // Подсвечиваем кнопку "Все"
+
     document.querySelectorAll('.category').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.category === 'all');
     });
-    
+
     if (!productsContainer) return;
     productsContainer.innerHTML = '';
     if (emptyState) emptyState.style.display = 'none';
     productsContainer.style.display = 'grid';
-    
+    productsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+
     categories.forEach((cat, index) => {
         if (cat.id === 'all') return;
-        
         const card = document.createElement('div');
         card.className = 'product-card brand-card';
         card.style.animationDelay = `${index * 0.05}s`;
-        
+
         let count = 0;
         if (cat.brands) {
-            cat.brands.forEach(b => { count += b.flavors.length; });
+            cat.brands.forEach(b => {
+                if (b.series) {
+                    b.series.forEach(s => { count += s.flavors.length; });
+                }
+            });
         }
-        
+
         card.innerHTML = `
-            <div class="product-image" style="font-size: 48px;">
-                ${cat.icon || '📁'}
-            </div>
+            <div class="product-image" style="font-size: 48px;">${cat.icon || '📁'}</div>
             <div class="product-info">
                 <div class="product-name">${cat.name}</div>
                 <div class="product-description">${count} товаров</div>
@@ -206,7 +251,7 @@ function renderCatalog() {
                 </div>
             </div>
         `;
-        
+
         card.addEventListener('click', () => {
             if (cat.brands && cat.brands.length > 0) {
                 showBrands(cat.id);
@@ -214,7 +259,7 @@ function renderCatalog() {
                 showToast('В этой категории пока нет товаров', 'error');
             }
         });
-        
+
         productsContainer.appendChild(card);
     });
 }
@@ -223,134 +268,178 @@ function showBrands(categoryId) {
     currentView = 'brands';
     currentCategoryId = categoryId;
     currentBrandId = null;
+    currentSeriesId = null;
     isSearchMode = false;
     if (backBtn) backBtn.style.display = 'flex';
-    
+
     const cat = getCategory(categoryId);
     if (pageTitle) pageTitle.textContent = cat.name;
-    
-    // Подсвечиваем выбранную категорию
+
     document.querySelectorAll('.category').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.category === categoryId);
     });
-    
+
     if (!productsContainer) return;
     productsContainer.innerHTML = '';
     if (emptyState) emptyState.style.display = 'none';
     productsContainer.style.display = 'grid';
-    
+    productsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+
     if (!cat.brands || cat.brands.length === 0) {
         if (emptyState) emptyState.style.display = 'block';
         productsContainer.style.display = 'none';
         return;
     }
-    
+
     cat.brands.forEach((brand, index) => {
         const card = document.createElement('div');
         card.className = 'product-card brand-card';
         card.style.animationDelay = `${index * 0.05}s`;
-        
+
+        let count = 0;
+        if (brand.series) {
+            brand.series.forEach(s => { count += s.flavors.length; });
+        }
+
         card.innerHTML = `
-            <div class="product-image" style="font-size: 48px;">
-                ${brand.icon || '📦'}
-            </div>
+            <div class="product-image" style="font-size: 48px;">${brand.icon || '📦'}</div>
             <div class="product-info">
                 <div class="product-name">${brand.name}</div>
-                <div class="product-description">${brand.flavors.length} вкусов</div>
+                <div class="product-description">${count} вкусов</div>
                 <div class="product-bottom" style="justify-content: flex-end;">
                     <span style="color: var(--text-secondary); font-size: 14px;">→ Выбрать</span>
                 </div>
             </div>
         `;
-        
+
         card.addEventListener('click', () => {
-            showFlavors(categoryId, brand.id);
+            if (brand.series && brand.series.length > 0) {
+                if (brand.series.length === 1) {
+                    showFlavors(categoryId, brand.id, brand.series[0].id);
+                } else {
+                    showSeries(categoryId, brand.id);
+                }
+            } else {
+                showToast('У этого бренда пока нет товаров', 'error');
+            }
         });
-        
+
         productsContainer.appendChild(card);
     });
 }
 
-function showFlavors(categoryId, brandId) {
-    currentView = 'flavors';
+function showSeries(categoryId, brandId) {
+    currentView = 'series';
     currentCategoryId = categoryId;
     currentBrandId = brandId;
+    currentSeriesId = null;
     isSearchMode = false;
     if (backBtn) backBtn.style.display = 'flex';
-    
+
     const brand = getBrand(categoryId, brandId);
     if (pageTitle) pageTitle.textContent = brand.name;
-    
+
     if (!productsContainer) return;
     productsContainer.innerHTML = '';
     if (emptyState) emptyState.style.display = 'none';
     productsContainer.style.display = 'grid';
-    
-    brand.flavors.forEach((flavor, index) => {
+    productsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+
+    brand.series.forEach((series, index) => {
         const card = document.createElement('div');
-        card.className = 'product-card';
+        card.className = 'product-card brand-card';
         card.style.animationDelay = `${index * 0.05}s`;
-        
-        const isInCart = cart.some(item => item.id === flavor.id);
-        const hasStock = flavor.stock > 0;
-        
-        const stockText = hasStock 
-            ? `<span class="stock-badge in-stock">✅ ${flavor.stock} шт</span>`
-            : `<span class="stock-badge out-stock">❌ Нет в наличии</span>`;
-        
-        let addButton;
-if (!hasStock) {
-    addButton = `
-        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button class="add-btn disabled" disabled>🚫 Недоступен</button>
-            <button class="check-stock-btn" data-id="${flavor.id}">❓ Уточнить</button>
-        </div>
-    `;
-} else if (isInCart) {
-    addButton = `<button class="add-btn added" data-id="${flavor.id}">✓ В корзине</button>`;
-} else {
-    addButton = `
-        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button class="add-btn" data-id="${flavor.id}">+ Добавить</button>
-            <button class="check-stock-btn" data-id="${flavor.id}">❓ Уточнить</button>
-        </div>
-    `;
-}
-        // Обработчик для кнопки "Уточнить наличие"
-const checkBtn = card.querySelector('.check-stock-btn');
-if (checkBtn) {
-    checkBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openCheckStock(flavor.id);
-    });
-}
-        
+
         card.innerHTML = `
-            <div class="product-image" style="font-size: 48px;">
-                ${brand.icon || '📦'}
-            </div>
+            <div class="product-image" style="font-size: 36px;">📦</div>
             <div class="product-info">
-                <div class="product-name">${flavor.name}</div>
-                <div class="product-description">${flavor.description || ''}</div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-                    ${stockText}
-                </div>
-                <div class="product-bottom">
-                    <span class="product-price">${flavor.price} ₽</span>
-                    ${addButton}
+                <div class="product-name">${series.name}</div>
+                <div class="product-description">${series.flavors.length} вкусов</div>
+                <div class="product-bottom" style="justify-content: flex-end;">
+                    <span style="color: var(--text-secondary); font-size: 14px;">→ Выбрать</span>
                 </div>
             </div>
         `;
-        
-        const addBtn = card.querySelector('.add-btn:not(.disabled)');
+
+        card.addEventListener('click', () => {
+            showFlavors(categoryId, brandId, series.id);
+        });
+
+        productsContainer.appendChild(card);
+    });
+}
+
+function showFlavors(categoryId, brandId, seriesId) {
+    currentView = 'flavors';
+    currentCategoryId = categoryId;
+    currentBrandId = brandId;
+    currentSeriesId = seriesId;
+    isSearchMode = false;
+    if (backBtn) backBtn.style.display = 'flex';
+
+    const series = getSeries(categoryId, brandId, seriesId);
+    if (pageTitle) pageTitle.textContent = series.name;
+
+    if (!productsContainer) return;
+    productsContainer.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'none';
+    productsContainer.style.display = 'block';
+    productsContainer.style.gridTemplateColumns = 'none';
+
+    series.flavors.forEach((flavor, index) => {
+        const item = document.createElement('div');
+        item.className = 'flavor-item';
+        item.style.animationDelay = `${index * 0.03}s`;
+
+        const isInCart = cart.some(c => c.id === flavor.id);
+        const hasStock = flavor.stock > 0;
+
+        const stockText = hasStock
+            ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
+            : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
+
+        let addButton;
+        if (!hasStock) {
+            addButton = `<button class="add-btn disabled" disabled>Нет</button>`;
+        } else if (isInCart) {
+            addButton = `<button class="add-btn added" data-id="${flavor.id}">✓</button>`;
+        } else {
+            addButton = `<button class="add-btn" data-id="${flavor.id}">+</button>`;
+        }
+
+        item.innerHTML = `
+            <div class="flavor-icon">${getBrand(categoryId, brandId)?.icon || '📦'}</div>
+            <div class="flavor-info">
+                <div class="flavor-name">${flavor.name}</div>
+                <div class="flavor-description">${flavor.description || ''}</div>
+                <div class="flavor-meta">
+                    <span class="flavor-price">${flavor.price} ₽</span>
+                    ${stockText}
+                </div>
+            </div>
+            <div class="flavor-actions">
+                ${addButton}
+                <button class="check-stock-btn" data-id="${flavor.id}">❓</button>
+            </div>
+        `;
+
+        const addBtn = item.querySelector('.add-btn:not(.disabled)');
         if (addBtn) {
             addBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleCart(flavor.id);
             });
         }
-        
-        productsContainer.appendChild(card);
+
+        const checkBtn = item.querySelector('.check-stock-btn');
+        if (checkBtn) {
+            checkBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openCheckStock(flavor.id);
+            });
+        }
+
+        productsContainer.appendChild(item);
     });
 }
 
@@ -359,99 +448,109 @@ function renderSearchResults() {
     isSearchMode = true;
     if (backBtn) backBtn.style.display = 'flex';
     if (pageTitle) pageTitle.textContent = 'Результаты поиска';
-    
+
     const results = getFilteredFlavors();
-    
+
     if (!productsContainer) return;
     productsContainer.innerHTML = '';
     if (emptyState) emptyState.style.display = 'none';
-    productsContainer.style.display = 'grid';
-    
+    productsContainer.style.display = 'block';
+    productsContainer.style.gridTemplateColumns = 'none';
+
     if (results.length === 0) {
         if (emptyState) emptyState.style.display = 'block';
         productsContainer.style.display = 'none';
         return;
     }
-    
+
     results.forEach((flavor, index) => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.style.animationDelay = `${index * 0.05}s`;
-        
-        const isInCart = cart.some(item => item.id === flavor.id);
+        const item = document.createElement('div');
+        item.className = 'flavor-item';
+        item.style.animationDelay = `${index * 0.03}s`;
+
+        const isInCart = cart.some(c => c.id === flavor.id);
         const hasStock = flavor.stock > 0;
-        
-        const stockText = hasStock 
-            ? `<span class="stock-badge in-stock">✅ ${flavor.stock} шт</span>`
-            : `<span class="stock-badge out-stock">❌ Нет в наличии</span>`;
-        
+
+        const stockText = hasStock
+            ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
+            : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
+
         let addButton;
         if (!hasStock) {
-            addButton = `<button class="add-btn disabled" disabled>Нет в наличии</button>`;
+            addButton = `<button class="add-btn disabled" disabled>Нет</button>`;
         } else if (isInCart) {
-            addButton = `<button class="add-btn added" data-id="${flavor.id}">✓ В корзине</button>`;
+            addButton = `<button class="add-btn added" data-id="${flavor.id}">✓</button>`;
         } else {
-            addButton = `<button class="add-btn" data-id="${flavor.id}">+ Добавить</button>`;
+            addButton = `<button class="add-btn" data-id="${flavor.id}">+</button>`;
         }
-        
-        card.innerHTML = `
-            <div class="product-image" style="font-size: 48px;">
-                ${flavor.brandIcon || '📦'}
-            </div>
-            <div class="product-info">
-                <div class="product-name">${flavor.name}</div>
-                <div class="product-description">${flavor.brandName} • ${flavor.description || ''}</div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+
+        item.innerHTML = `
+            <div class="flavor-icon">${flavor.brandIcon || '📦'}</div>
+            <div class="flavor-info">
+                <div class="flavor-name">${flavor.name}</div>
+                <div class="flavor-description">${flavor.brandName} • ${flavor.description || ''}</div>
+                <div class="flavor-meta">
+                    <span class="flavor-price">${flavor.price} ₽</span>
                     ${stockText}
                 </div>
-                <div class="product-bottom">
-                    <span class="product-price">${flavor.price} ₽</span>
-                    ${addButton}
-                </div>
+            </div>
+            <div class="flavor-actions">
+                ${addButton}
+                <button class="check-stock-btn" data-id="${flavor.id}">❓</button>
             </div>
         `;
-        
-        const addBtn = card.querySelector('.add-btn:not(.disabled)');
+
+        const addBtn = item.querySelector('.add-btn:not(.disabled)');
         if (addBtn) {
             addBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleCart(flavor.id);
             });
         }
-        
-        productsContainer.appendChild(card);
+
+        const checkBtn = item.querySelector('.check-stock-btn');
+        if (checkBtn) {
+            checkBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openCheckStock(flavor.id);
+            });
+        }
+
+        productsContainer.appendChild(item);
     });
 }
 
 // ===== КОРЗИНА =====
 function toggleCart(productId) {
     let product = null;
-    let brand = null;
-    
     for (const cat of categories) {
         if (cat.brands) {
             for (const b of cat.brands) {
-                const found = b.flavors.find(f => f.id === productId);
-                if (found) {
-                    product = found;
-                    brand = b;
-                    break;
+                if (b.series) {
+                    for (const s of b.series) {
+                        const found = s.flavors.find(f => f.id === productId);
+                        if (found) {
+                            product = found;
+                            break;
+                        }
+                    }
                 }
+                if (product) break;
             }
         }
         if (product) break;
     }
-    
+
     if (!product) return;
-    
+
     const index = cart.findIndex(item => item.id === productId);
-    
+
     if (index === -1) {
         if (product.stock <= 0) {
             showToast('❌ Товар закончился на складе', 'error');
             return;
         }
-        cart.push({ ...product, quantity: 1, brandName: brand?.name || '' });
+        cart.push({ ...product, quantity: 1 });
         product.stock -= 1;
         showToast('✅ Товар добавлен в корзину', 'success');
     } else {
@@ -459,7 +558,7 @@ function toggleCart(productId) {
         product.stock += 1;
         showToast('🗑️ Товар удалён из корзины', 'error');
     }
-    
+
     updateCartUI();
     refreshCurrentView();
 }
@@ -473,8 +572,12 @@ function findProduct(productId) {
     for (const cat of categories) {
         if (cat.brands) {
             for (const b of cat.brands) {
-                const found = b.flavors.find(f => f.id === productId);
-                if (found) return found;
+                if (b.series) {
+                    for (const s of b.series) {
+                        const found = s.flavors.find(f => f.id === productId);
+                        if (found) return found;
+                    }
+                }
             }
         }
     }
@@ -485,21 +588,21 @@ function changeQuantity(productId, delta) {
     const item = cart.find(c => c.id === productId);
     const product = findProduct(productId);
     if (!item || !product) return;
-    
+
     if (delta > 0 && product.stock <= 0) {
         showToast('❌ Недостаточно товара на складе', 'error');
         return;
     }
-    
+
     item.quantity += delta;
     if (delta > 0) product.stock -= 1;
     else product.stock += 1;
-    
+
     if (item.quantity <= 0) {
         const idx = cart.findIndex(c => c.id === productId);
         cart.splice(idx, 1);
     }
-    
+
     updateCartUI();
     renderCart();
     refreshCurrentView();
@@ -512,8 +615,10 @@ function refreshCurrentView() {
         renderCatalog();
     } else if (currentView === 'brands') {
         showBrands(currentCategoryId);
-    } else if (currentView === 'flavors' && currentBrandId) {
-        showFlavors(currentCategoryId, currentBrandId);
+    } else if (currentView === 'series' && currentBrandId) {
+        showSeries(currentCategoryId, currentBrandId);
+    } else if (currentView === 'flavors' && currentBrandId && currentSeriesId) {
+        showFlavors(currentCategoryId, currentBrandId, currentSeriesId);
     }
 }
 
@@ -522,15 +627,13 @@ if (categoriesContainer) {
     categoriesContainer.addEventListener('click', function(e) {
         const btn = e.target.closest('.category');
         if (!btn) return;
-        
+
         const categoryId = btn.dataset.category;
-        
-        // Обновляем активный класс
+
         document.querySelectorAll('.category').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
+
         if (categoryId === 'all') {
-            // Очищаем поиск
             if (searchInput) {
                 searchInput.value = '';
                 currentSearch = '';
@@ -538,7 +641,6 @@ if (categoriesContainer) {
             }
             renderCatalog();
         } else {
-            // Показываем бренды выбранной категории
             const cat = getCategory(categoryId);
             if (cat && cat.brands && cat.brands.length > 0) {
                 showBrands(categoryId);
@@ -553,7 +655,6 @@ if (categoriesContainer) {
 if (backBtn) {
     backBtn.addEventListener('click', function() {
         if (isSearchMode) {
-            // Выходим из поиска
             if (searchInput) {
                 searchInput.value = '';
                 currentSearch = '';
@@ -562,6 +663,13 @@ if (backBtn) {
             isSearchMode = false;
             renderCatalog();
         } else if (currentView === 'flavors') {
+            const brand = getBrand(currentCategoryId, currentBrandId);
+            if (brand && brand.series && brand.series.length > 1) {
+                showSeries(currentCategoryId, currentBrandId);
+            } else {
+                showBrands(currentCategoryId);
+            }
+        } else if (currentView === 'series') {
             showBrands(currentCategoryId);
         } else if (currentView === 'brands') {
             renderCatalog();
@@ -576,12 +684,11 @@ if (searchInput) {
         if (searchClear) {
             searchClear.style.display = currentSearch ? 'block' : 'none';
         }
-        
+
         if (currentSearch.trim()) {
             renderSearchResults();
         } else {
             isSearchMode = false;
-            // Возвращаемся к предыдущему виду
             if (currentView === 'search') {
                 renderCatalog();
             } else {
@@ -606,26 +713,26 @@ if (searchClear) {
 // ===== КОРЗИНА — ОТРИСОВКА =====
 function renderCart() {
     if (!cartItems || !cartEmpty || !cartFooter) return;
-    
+
     if (cart.length === 0) {
         cartItems.style.display = 'none';
         cartEmpty.style.display = 'block';
         cartFooter.style.display = 'none';
         return;
     }
-    
+
     cartItems.style.display = 'block';
     cartEmpty.style.display = 'none';
     cartFooter.style.display = 'block';
     cartItems.innerHTML = '';
     let total = 0;
-    
+
     cart.forEach((item) => {
         const div = document.createElement('div');
         div.className = 'cart-item';
         const itemTotal = item.price * item.quantity;
         total += itemTotal;
-        
+
         div.innerHTML = `
             <div class="cart-item-image">📦</div>
             <div class="cart-item-info">
@@ -640,9 +747,9 @@ function renderCart() {
                 <button class="remove-btn" data-id="${item.id}"><i class="fas fa-trash"></i></button>
             </div>
         `;
-        
+
         cartItems.appendChild(div);
-        
+
         div.querySelector('.increase-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             changeQuantity(item.id, 1);
@@ -665,7 +772,7 @@ function renderCart() {
             }
         });
     });
-    
+
     if (cartTotalPrice) cartTotalPrice.textContent = total + ' ₽';
 }
 
@@ -707,15 +814,15 @@ function submitOrder(e) {
     const phone = document.getElementById('customerPhone').value.trim();
     const address = document.getElementById('customerAddress').value.trim();
     const comment = document.getElementById('orderComment').value.trim();
-    
+
     if (!name || !phone) {
         showToast('⚠️ Заполните имя и телефон', 'error');
         return;
     }
-    
+
     const orderNumber = generateOrderNumber();
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    
+
     const order = {
         id: orderNumber,
         customer: { name, phone, address, comment },
@@ -730,60 +837,55 @@ function submitOrder(e) {
         status: 'Новый',
         date: new Date().toISOString()
     };
-    
+
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     orders.push(order);
     localStorage.setItem('orders', JSON.stringify(orders));
-    
+
     if (orderModal) orderModal.classList.remove('active');
     if (orderNumberEl) orderNumberEl.textContent = `№ ${orderNumber}`;
     if (successModal) successModal.classList.add('active');
-    
+
     cart = [];
     updateCartUI();
     refreshCurrentView();
     if (orderForm) orderForm.reset();
-    
+
     if (tg) {
         tg.sendData(JSON.stringify({ type: 'order', order: order }));
     }
-    
+
     showToast(`✅ Заказ №${orderNumber} оформлен!`, 'success');
 }
+
 // ===== УТОЧНЕНИЕ НАЛИЧИЯ =====
-const checkStockModal = document.getElementById('checkStockModal');
-const checkStockOverlay = document.getElementById('checkStockOverlay');
-const checkStockClose = document.getElementById('checkStockClose');
-const checkStockForm = document.getElementById('checkStockForm');
-const checkStockProductInfo = document.getElementById('checkStockProductInfo');
-
-let currentCheckStockProduct = null;
-
-// Открыть модалку уточнения
 function openCheckStock(productId) {
-    // Находим товар
     let product = null;
     let brand = null;
-    
+
     for (const cat of categories) {
         if (cat.brands) {
             for (const b of cat.brands) {
-                const found = b.flavors.find(f => f.id === productId);
-                if (found) {
-                    product = found;
-                    brand = b;
-                    break;
+                if (b.series) {
+                    for (const s of b.series) {
+                        const found = s.flavors.find(f => f.id === productId);
+                        if (found) {
+                            product = found;
+                            brand = b;
+                            break;
+                        }
+                    }
                 }
+                if (product) break;
             }
         }
         if (product) break;
     }
-    
+
     if (!product) return;
-    
+
     currentCheckStockProduct = { product, brand };
-    
-    // Заполняем информацию о товаре
+
     checkStockProductInfo.innerHTML = `
         <div class="product-name">${product.name}</div>
         <div class="product-meta">${brand?.name || ''} • ${product.price} ₽</div>
@@ -791,44 +893,40 @@ function openCheckStock(productId) {
             ${product.description || ''}
         </div>
     `;
-    
-    // Очищаем форму
+
     document.getElementById('checkStockName').value = '';
     document.getElementById('checkStockContact').value = '';
     document.getElementById('checkStockPhone').value = '';
     document.getElementById('checkStockComment').value = '';
-    
+
     checkStockModal.classList.add('active');
 }
 
-// Закрыть модалку
 function closeCheckStock() {
     checkStockModal.classList.remove('active');
 }
 
-// Отправка запроса
 function submitCheckStock(e) {
     e.preventDefault();
-    
+
     const name = document.getElementById('checkStockName').value.trim();
     const contact = document.getElementById('checkStockContact').value.trim();
     const phone = document.getElementById('checkStockPhone').value.trim();
     const comment = document.getElementById('checkStockComment').value.trim();
-    
+
     if (!name) {
         showToast('⚠️ Введите ваше имя', 'error');
         return;
     }
-    
+
     if (!contact && !phone) {
         showToast('⚠️ Укажите Telegram или телефон', 'error');
         return;
     }
-    
+
     const product = currentCheckStockProduct?.product;
     const brand = currentCheckStockProduct?.brand;
-    
-    // Сохраняем запрос в localStorage
+
     const requests = JSON.parse(localStorage.getItem('stockRequests') || '[]');
     const request = {
         id: `RQ-${Date.now().toString().slice(-6)}`,
@@ -841,31 +939,21 @@ function submitCheckStock(e) {
     };
     requests.push(request);
     localStorage.setItem('stockRequests', JSON.stringify(requests));
-    
-    // Отправка в Telegram (есть бот)
+
     if (tg) {
         tg.sendData(JSON.stringify({
             type: 'stockRequest',
             request: request
         }));
     }
-    
-    // Закрываем модалку
+
     closeCheckStock();
-    
-    // Показываем уведомление
     showToast('✅ Запрос отправлен! Менеджер свяжется с вами.', 'success');
-    
-    // Показываем дополнительное сообщение
+
     setTimeout(() => {
         showToast('📱 Укажите Telegram в комментарии для быстрого ответа', 'success');
     }, 2000);
 }
-
-// Кнопки
-if (checkStockOverlay) checkStockOverlay.addEventListener('click', closeCheckStock);
-if (checkStockClose) checkStockClose.addEventListener('click', closeCheckStock);
-if (checkStockForm) checkStockForm.addEventListener('submit', submitCheckStock);
 
 // ===== КНОПКИ =====
 if (modalOverlay) modalOverlay.addEventListener('click', closeCart);
@@ -877,6 +965,11 @@ if (successBtn) successBtn.addEventListener('click', closeSuccessModal);
 if (cartBtn) cartBtn.addEventListener('click', openCart);
 if (checkoutBtn) checkoutBtn.addEventListener('click', openOrderModal);
 if (orderForm) orderForm.addEventListener('submit', submitOrder);
+
+// ===== УТОЧНЕНИЕ НАЛИЧИЯ — КНОПКИ =====
+if (checkStockOverlay) checkStockOverlay.addEventListener('click', closeCheckStock);
+if (checkStockClose) checkStockClose.addEventListener('click', closeCheckStock);
+if (checkStockForm) checkStockForm.addEventListener('submit', submitCheckStock);
 
 // ===== УВЕДОМЛЕНИЯ =====
 function showToast(message, type = 'success') {
