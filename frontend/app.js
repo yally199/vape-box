@@ -397,10 +397,11 @@ function showFlavors(categoryId, brandId, seriesId) {
         const cartItem = cart.find(c => c.id === flavor.id);
         const currentQty = cartItem ? cartItem.quantity : 0;
 
-        const stockText = hasStock
-            ? `<span class="flavor-stock in-stock">✅ ${flavor.stock} шт</span>`
-            : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
-
+// Стало
+const stockText = hasStock
+    ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
+    : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
+        
         let quantityControls = '';
         if (hasStock && isInCart) {
             quantityControls = `
