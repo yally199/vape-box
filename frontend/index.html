@@ -145,35 +145,43 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="orderForm">
-                    <div class="form-group">
-                        <label for="customerName">Ваше имя</label>
-                        <input type="text" id="customerName" placeholder="Введите ваше имя" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="customerPhone">Телефон</label>
-                        <input type="tel" id="customerPhone" placeholder="+7 (999) 123-45-67" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="customerAddress">Адрес доставки</label>
-                        <input type="text" id="customerAddress" placeholder="Введите адрес доставки">
-                    </div>
-                    <div class="form-group">
-                        <label for="orderComment">Комментарий к заказу</label>
-                        <textarea id="orderComment" rows="2" placeholder="Дополнительная информация..."></textarea>
-                    </div>
-                    <div class="order-summary">
-                        <div class="order-items-list" id="orderItemsList"></div>
-                        <div class="order-total">
-                            <span>Итого к оплате:</span>
-                            <span id="orderTotalPrice">0 ₽</span>
-                        </div>
-                    </div>
-                    <button type="submit" class="submit-order-btn">
-                        <i class="fas fa-check"></i>
-                        Подтвердить заказ
-                    </button>
-                </form>
+              <form id="orderForm">
+    <div class="form-group">
+        <label for="customerName">Ваше имя <span style="color: var(--danger);">*</span></label>
+        <input type="text" id="customerName" placeholder="Введите ваше имя" required>
+    </div>
+    <div class="form-group">
+        <label for="customerTelegram">
+            <i class="fab fa-telegram"></i> Telegram никнейм <span style="color: var(--danger);">*</span>
+        </label>
+        <input type="text" id="customerTelegram" placeholder="Например: @vapeboss" required>
+        <div class="form-hint">Укажите ваш Telegram для быстрой связи</div>
+    </div>
+    <div class="form-group">
+        <label for="customerPhone">Телефон</label>
+        <input type="tel" id="customerPhone" placeholder="+7 (999) 123-45-67">
+        <div class="form-hint">Необязательно, если указали Telegram</div>
+    </div>
+    <div class="form-group">
+        <label for="customerAddress">Адрес доставки</label>
+        <input type="text" id="customerAddress" placeholder="Введите адрес доставки">
+    </div>
+    <div class="form-group">
+        <label for="orderComment">Комментарий к заказу</label>
+        <textarea id="orderComment" rows="2" placeholder="Дополнительная информация..."></textarea>
+    </div>
+    <div class="order-summary">
+        <div class="order-items-list" id="orderItemsList"></div>
+        <div class="order-total">
+            <span>Итого к оплате:</span>
+            <span id="orderTotalPrice">0 ₽</span>
+        </div>
+    </div>
+    <button type="submit" class="submit-order-btn">
+        <i class="fas fa-check"></i>
+        Подтвердить заказ
+    </button>
+</form>
             </div>
         </div>
     </div>
