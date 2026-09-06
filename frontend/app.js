@@ -26,27 +26,27 @@ const categories = [
                         id: 'angry-vape-50mg',
                         name: 'Angry Vape 50mg',
                         flavors: [
-                            { id: 1, name: 'Варан Комод (клубничный джем)', price: 325, stock: 1, description: 'Клубничный джем с ментолом' },
-                            { id: 2, name: 'Бегемот Брутто (черный виноград)', price: 325, stock: 1, description: 'Черный виноград' },
-                            { id: 3, name: 'Ворон Лут (груша с ананасом)', price: 325, stock: 1, description: 'Груша с ананасом' },
-                            { id: 4, name: 'Жираф Шпиль (манго)', price: 325, stock: 1, description: 'Сочное манго' },
-                            { id: 5, name: 'Ёж Кутёж (синяя малина)', price: 325, stock: 1, description: 'Синяя малина' },
-                            { id: 6, name: 'Геккон Пупырка (кислые конфеты)', price: 325, stock: 1, description: 'Кислые конфеты' },
-                            { id: 7, name: 'Енот щипач (чизкейк с клубникой и бананом)', price: 325, stock: 1, description: 'Чизкейк с клубникой и бананом' },
-                            { id: 8, name: 'Волк АУФ (вишня с лимоном)', price: 325, stock: 1, description: 'Вишня с лимоном' },
-                            { id: 9, name: 'Акула гарпун (черника со сливками)', price: 325, stock: 1, description: 'Черника со сливками' },
-                            { id: 10, name: 'Вомбат Батяня (виноградная газировка)', price: 325, stock: 1, description: 'Виноградная газировка' },
-                            { id: 11, name: 'Гадюка мамба (персик с малиной)', price: 325, stock: 1, description: 'Персик с малиной' }
+                            { id: 1, name: 'Варан Комод (клубничный джем)', price: 325, stock: 99, description: 'Клубничный джем с ментолом' },
+                            { id: 2, name: 'Бегемот Брутто (черный виноград)', price: 325, stock: 99, description: 'Черный виноград' },
+                            { id: 3, name: 'Ворон Лут (груша с ананасом)', price: 325, stock: 99, description: 'Груша с ананасом' },
+                            { id: 4, name: 'Жираф Шпиль (манго)', price: 325, stock: 99, description: 'Сочное манго' },
+                            { id: 5, name: 'Ёж Кутёж (синяя малина)', price: 325, stock: 99, description: 'Синяя малина' },
+                            { id: 6, name: 'Геккон Пупырка (кислые конфеты)', price: 325, stock: 99, description: 'Кислые конфеты' },
+                            { id: 7, name: 'Енот щипач (чизкейк с клубникой и бананом)', price: 325, stock: 99, description: 'Чизкейк с клубникой и бананом' },
+                            { id: 8, name: 'Волк АУФ (вишня с лимоном)', price: 325, stock: 99, description: 'Вишня с лимоном' },
+                            { id: 9, name: 'Акула гарпун (черника со сливками)', price: 325, stock: 99, description: 'Черника со сливками' },
+                            { id: 10, name: 'Вомбат Батяня (виноградная газировка)', price: 325, stock: 99, description: 'Виноградная газировка' },
+                            { id: 11, name: 'Гадюка мамба (персик с малиной)', price: 325, stock: 99, description: 'Персик с малиной' }
                         ]
                     },
                     {
                         id: 'angry-vape-20mg',
                         name: 'Angry Vape 20mg',
                         flavors: [
-                            { id: 12, name: 'Акула гарпун (черника со сливками)', price: 325, stock: 1, description: 'Черника со сливками' },
-                            { id: 13, name: 'Жираф Шпиль (манго)', price: 325, stock: 1, description: 'Сочное манго' },
-                            { id: 14, name: 'Ёж Кутёж (синяя малина)', price: 325, stock: 1, description: 'Синяя малина' },
-                            { id: 15, name: 'Варан Комод (клубничный джем)', price: 325, stock: 1, description: 'Клубничный джем с ментолом' }
+                            { id: 12, name: 'Акула гарпун (черника со сливками)', price: 325, stock: 99, description: 'Черника со сливками' },
+                            { id: 13, name: 'Жираф Шпиль (манго)', price: 325, stock: 99, description: 'Сочное манго' },
+                            { id: 14, name: 'Ёж Кутёж (синяя малина)', price: 325, stock: 99, description: 'Синяя малина' },
+                            { id: 15, name: 'Варан Комод (клубничный джем)', price: 325, stock: 99, description: 'Клубничный джем с ментолом' }
                         ]
                     }
                 ]
@@ -60,9 +60,9 @@ const categories = [
                         id: 'angry-ape-ultra-60mg',
                         name: 'ANGRY APE ULTRA 60mg',
                         flavors: [
-                            { id: 16, name: 'Ананасовая конфета', price: 360, stock: 1, description: 'Сладкая ананасовая конфета' },
-                            { id: 17, name: 'Банан клубника', price: 360, stock: 1, description: 'Нежный банан с клубникой' },
-                            { id: 18, name: 'Ягодный микс', price: 360, stock: 1, description: 'Микс лесных ягод' }
+                            { id: 16, name: 'Ананасовая конфета', price: 360, stock: 99, description: 'Сладкая ананасовая конфета' },
+                            { id: 17, name: 'Банан клубника', price: 360, stock: 99, description: 'Нежный банан с клубникой' },
+                            { id: 18, name: 'Ягодный микс', price: 360, stock: 99, description: 'Микс лесных ягод' }
                         ]
                     }
                 ]
@@ -394,15 +394,13 @@ function showFlavors(categoryId, brandId, seriesId) {
         const isInCart = cart.some(c => c.id === flavor.id);
         const hasStock = flavor.stock > 0;
 
-        // Находим текущее количество в корзине
         const cartItem = cart.find(c => c.id === flavor.id);
         const currentQty = cartItem ? cartItem.quantity : 0;
 
         const stockText = hasStock
-            ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
+            ? `<span class="flavor-stock in-stock">✅ ${flavor.stock} шт</span>`
             : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
 
-        // Кнопки управления количеством
         let quantityControls = '';
         if (hasStock && isInCart) {
             quantityControls = `
@@ -444,9 +442,6 @@ function showFlavors(categoryId, brandId, seriesId) {
             </div>
         `;
 
-        // === ОБРАБОТЧИКИ ===
-
-        // Кнопка "Добавить"
         const addBtn = item.querySelector('.add-to-cart');
         if (addBtn) {
             addBtn.addEventListener('click', (e) => {
@@ -455,7 +450,6 @@ function showFlavors(categoryId, brandId, seriesId) {
             });
         }
 
-        // Кнопка "Удалить из корзины"
         const removeBtn = item.querySelector('.remove-from-cart');
         if (removeBtn) {
             removeBtn.addEventListener('click', (e) => {
@@ -464,7 +458,6 @@ function showFlavors(categoryId, brandId, seriesId) {
             });
         }
 
-        // Кнопка "+"
         const plusBtn = item.querySelector('.qty-plus');
         if (plusBtn) {
             plusBtn.addEventListener('click', (e) => {
@@ -473,7 +466,6 @@ function showFlavors(categoryId, brandId, seriesId) {
             });
         }
 
-        // Кнопка "−"
         const minusBtn = item.querySelector('.qty-minus');
         if (minusBtn) {
             minusBtn.addEventListener('click', (e) => {
@@ -482,7 +474,6 @@ function showFlavors(categoryId, brandId, seriesId) {
             });
         }
 
-        // Кнопка "Уточнить"
         const checkBtn = item.querySelector('.check-stock-btn');
         if (checkBtn) {
             checkBtn.addEventListener('click', (e) => {
@@ -494,6 +485,7 @@ function showFlavors(categoryId, brandId, seriesId) {
         productsContainer.appendChild(item);
     });
 }
+
 function renderSearchResults() {
     currentView = 'search';
     isSearchMode = true;
@@ -522,17 +514,36 @@ function renderSearchResults() {
         const isInCart = cart.some(c => c.id === flavor.id);
         const hasStock = flavor.stock > 0;
 
+        const cartItem = cart.find(c => c.id === flavor.id);
+        const currentQty = cartItem ? cartItem.quantity : 0;
+
         const stockText = hasStock
-            ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
+            ? `<span class="flavor-stock in-stock">✅ ${flavor.stock} шт</span>`
             : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
+
+        let quantityControls = '';
+        if (hasStock && isInCart) {
+            quantityControls = `
+                <div class="qty-controls">
+                    <button class="qty-btn qty-minus" data-id="${flavor.id}">−</button>
+                    <span class="qty-number">${currentQty}</span>
+                    <button class="qty-btn qty-plus" data-id="${flavor.id}">+</button>
+                </div>
+            `;
+        }
 
         let addButton;
         if (!hasStock) {
             addButton = `<button class="add-btn disabled" disabled>Нет</button>`;
         } else if (isInCart) {
-            addButton = `<button class="add-btn added" data-id="${flavor.id}">✓</button>`;
+            addButton = `
+                <div class="btn-group">
+                    ${quantityControls}
+                    <button class="add-btn remove-from-cart" data-id="${flavor.id}" title="Удалить">✕</button>
+                </div>
+            `;
         } else {
-            addButton = `<button class="add-btn" data-id="${flavor.id}">+</button>`;
+            addButton = `<button class="add-btn add-to-cart" data-id="${flavor.id}">+ Добавить</button>`;
         }
 
         item.innerHTML = `
@@ -551,11 +562,35 @@ function renderSearchResults() {
             </div>
         `;
 
-        const addBtn = item.querySelector('.add-btn:not(.disabled)');
+        const addBtn = item.querySelector('.add-to-cart');
         if (addBtn) {
             addBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                toggleCart(flavor.id);
+                addToCart(flavor.id, 1);
+            });
+        }
+
+        const removeBtn = item.querySelector('.remove-from-cart');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeFromCart(flavor.id);
+            });
+        }
+
+        const plusBtn = item.querySelector('.qty-plus');
+        if (plusBtn) {
+            plusBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addToCart(flavor.id, 1);
+            });
+        }
+
+        const minusBtn = item.querySelector('.qty-minus');
+        if (minusBtn) {
+            minusBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addToCart(flavor.id, -1);
             });
         }
 
@@ -1005,9 +1040,9 @@ function submitCheckStock(e) {
         showToast('📱 Укажите Telegram в комментарии для быстрого ответа', 'success');
     }, 2000);
 }
+
 // ===== УПРАВЛЕНИЕ КОЛИЧЕСТВОМ =====
 
-// Добавить N единиц товара (или убрать, если delta < 0)
 function addToCart(productId, delta = 1) {
     let product = null;
     for (const cat of categories) {
@@ -1030,16 +1065,14 @@ function addToCart(productId, delta = 1) {
 
     if (!product) return;
 
-    // Проверяем остаток
     if (delta > 0 && product.stock < delta) {
-        showToast('❌ Недостаточно товара на складе', 'error');
+        showToast(`❌ Осталось только ${product.stock} шт`, 'error');
         return;
     }
 
     const index = cart.findIndex(item => item.id === productId);
 
     if (index === -1) {
-        // Товара нет в корзине — добавляем
         if (delta <= 0) return;
         if (product.stock <= 0) {
             showToast('❌ Товар закончился на складе', 'error');
@@ -1047,22 +1080,24 @@ function addToCart(productId, delta = 1) {
         }
         cart.push({ ...product, quantity: delta });
         product.stock -= delta;
-        showToast(`✅ Добавлено ${delta} шт`, 'success');
+        showToast(`✅ Добавлено ${delta} шт (осталось ${product.stock})`, 'success');
     } else {
-        // Товар уже есть — меняем количество
         const newQty = cart[index].quantity + delta;
         if (newQty <= 0) {
-            // Удаляем товар из корзины
             product.stock += cart[index].quantity;
             cart.splice(index, 1);
             showToast('🗑️ Товар удалён из корзины', 'error');
         } else {
+            if (delta > 0 && product.stock < delta) {
+                showToast(`❌ Осталось только ${product.stock} шт`, 'error');
+                return;
+            }
             cart[index].quantity = newQty;
             product.stock -= delta;
             if (delta > 0) {
-                showToast(`✅ Добавлено ${delta} шт`, 'success');
+                showToast(`✅ Добавлено ${delta} шт (осталось ${product.stock})`, 'success');
             } else {
-                showToast(`➖ Убрано ${Math.abs(delta)} шт`, 'error');
+                showToast(`➖ Убрано ${Math.abs(delta)} шт (осталось ${product.stock})`, 'error');
             }
         }
     }
@@ -1071,7 +1106,6 @@ function addToCart(productId, delta = 1) {
     refreshCurrentView();
 }
 
-// Удалить товар из корзины полностью
 function removeFromCart(productId) {
     const index = cart.findIndex(item => item.id === productId);
     if (index === -1) return;
@@ -1085,7 +1119,6 @@ function removeFromCart(productId) {
     refreshCurrentView();
     showToast('🗑️ Товар удалён из корзины', 'error');
 }
-
 
 // ===== КНОПКИ =====
 if (modalOverlay) modalOverlay.addEventListener('click', closeCart);
