@@ -622,6 +622,75 @@ const categories = [
                             { id: 4065, name: 'Скитлс Лайм', price: 370, stock: 99, description: 'Скитлс лайм' }
                         ]
                     }
+                    },
+                    {
+                        id: 'podonki-last-hap',
+                        name: 'PODONKI LAST HAP',
+                        flavors: [
+                            { id: 4066, name: 'Baby I Was Born this Way (Яблочные черви)', price: 300, stock: 99, description: 'Яблочные черви' },
+                            { id: 4067, name: 'High Voltage (Малиновый энергетик)', price: 300, stock: 99, description: 'Малиновый энергетик' },
+                            { id: 4068, name: 'Bloody Valentine\'s Day (Апельсин манго гуава)', price: 300, stock: 99, description: 'Апельсин манго гуава' },
+                            { id: 4069, name: 'Blaze (Арбузный милкшейк)', price: 300, stock: 99, description: 'Арбузный милкшейк' },
+                            { id: 4070, name: 'Crash Test (Смородиновый скитлс)', price: 300, stock: 99, description: 'Смородиновый скитлс' },
+                            { id: 4071, name: 'Slaves Slayer (Вишня с варёной сгущенкой)', price: 300, stock: 99, description: 'Вишня с варёной сгущенкой' },
+                            { id: 4072, name: 'Insert Here (Кокосовое мороженное)', price: 300, stock: 99, description: 'Кокосовое мороженое' },
+                            { id: 4073, name: 'Kinda Lonely (Лемонграсс малина)', price: 300, stock: 99, description: 'Лемонграсс малина' },
+                            { id: 4074, name: 'Space Control (Черно смородиновый мармелад)', price: 300, stock: 99, description: 'Черно смородиновый мармелад' },
+                            { id: 4075, name: 'Watch (Вишня персик)', price: 300, stock: 99, description: 'Вишня персик' },
+                            { id: 4076, name: 'The End of Ownership (Грейпфрутовый лимонад)', price: 300, stock: 99, description: 'Грейпфрутовый лимонад' },
+                            { id: 4077, name: 'You\'re My Desert (Вафли с клубничным сиропом)', price: 300, stock: 99, description: 'Вафли с клубничным сиропом' },
+                            { id: 4078, name: 'Poor Results (Зеленый манго и смородина)', price: 300, stock: 99, description: 'Зеленый манго и смородина' },
+                            { id: 4079, name: 'On Hold (Виноградные конфетки холс)', price: 300, stock: 99, description: 'Виноградные конфетки холс' },
+                            { id: 4080, name: 'Madness Week (Мятные конфетки холс)', price: 300, stock: 99, description: 'Мятные конфетки холс' }
+                        ]
+                    },
+                    {
+                        id: 'podonki-last-hap-2',
+                        name: 'PODONKI LAST HAP 2',
+                        flavors: [
+                            { id: 4081, name: 'Клубнично-земляничная жвачка', price: 420, stock: 99, description: 'Клубнично-земляничная жвачка' },
+                            { id: 4082, name: 'Виноградный холс', price: 420, stock: 99, description: 'Виноградный холс' },
+                            { id: 4083, name: 'Экзотические фрукты', price: 420, stock: 99, description: 'Экзотические фрукты' },
+                            { id: 4084, name: 'Вишня персик', price: 420, stock: 99, description: 'Вишня персик' },
+                            { id: 4085, name: 'Яблочный лимонад', price: 420, stock: 99, description: 'Яблочный лимонад' },
+                            { id: 4086, name: 'Мятный холс', price: 420, stock: 99, description: 'Мятный холс' },
+                            { id: 4087, name: 'Клубника малина жвачка', price: 420, stock: 99, description: 'Клубника малина жвачка' },
+                            { id: 4088, name: 'Лемонграсс малина', price: 420, stock: 99, description: 'Лемонграсс малина' },
+                            { id: 4089, name: 'Кокос малина', price: 420, stock: 99, description: 'Кокос малина' },
+                            { id: 4090, name: 'Арбузное мороженое', price: 420, stock: 99, description: 'Арбузное мороженое' },
+                            { id: 4091, name: 'Смородина манго', price: 420, stock: 99, description: 'Смородина манго' },
+                            { id: 4092, name: 'Микс ягод лед', price: 420, stock: 99, description: 'Микс ягод лед' },
+                            { id: 4093, name: 'Банан клубника лед', price: 420, stock: 99, description: 'Банан клубника лед' },
+                            { id: 4094, name: 'Кислый лимон лайм', price: 420, stock: 99, description: 'Кислый лимон лайм' },
+                            { id: 4095, name: 'Ежевичный лимонад', price: 420, stock: 99, description: 'Ежевичный лимонад' },
+                            { id: 4096, name: 'Манго апельсин гуава', price: 420, stock: 99, description: 'Манго апельсин гуава' },
+                            { id: 4097, name: 'Клубничное шампанское', price: 420, stock: 99, description: 'Клубничное шампанское' },
+                            { id: 4098, name: 'Лесные ягоды', price: 420, stock: 99, description: 'Лесные ягоды' },
+                            { id: 4099, name: 'Вишня лайм лед', price: 420, stock: 99, description: 'Вишня лайм лед' },
+                            { id: 4100, name: 'Дыня кокос', price: 420, stock: 99, description: 'Дыня кокос' },
+                            { id: 4101, name: 'Личи виноград мята', price: 420, stock: 99, description: 'Личи виноград мята' },
+                            { id: 4102, name: 'Энергетик', price: 420, stock: 99, description: 'Энергетик' },
+                            { id: 4103, name: 'Брусничный морс', price: 420, stock: 99, description: 'Брусничный морс' },
+                            { id: 4104, name: 'Черника малина мята', price: 420, stock: 99, description: 'Черника малина мята' },
+                            { id: 4105, name: 'Арбуз лед', price: 420, stock: 99, description: 'Арбуз лед' },
+                            { id: 4106, name: 'Смородиновый холс', price: 420, stock: 99, description: 'Смородиновый холс' },
+                            { id: 4107, name: 'Малиновый энергетик', price: 420, stock: 99, description: 'Малиновый энергетик' },
+                            { id: 4108, name: 'Арбузный милкшейк', price: 420, stock: 99, description: 'Арбузный милкшейк' },
+                            { id: 4109, name: 'Лимонные черви', price: 420, stock: 99, description: 'Лимонные черви' },
+                            { id: 4110, name: 'Кола сода лед', price: 420, stock: 99, description: 'Кола сода лед' },
+                            { id: 4111, name: 'Клубничное мороженое', price: 420, stock: 99, description: 'Клубничное мороженое' },
+                            { id: 4112, name: 'Банановый милкшейк', price: 420, stock: 99, description: 'Банановый милкшейк' },
+                            { id: 4113, name: 'Смородиновый лимонад', price: 420, stock: 99, description: 'Смородиновый лимонад' },
+                            { id: 4114, name: 'Кислая маракуйя', price: 420, stock: 99, description: 'Кислая маракуйя' },
+                            { id: 4115, name: 'Яблочные черви', price: 420, stock: 99, description: 'Яблочные черви' },
+                            { id: 4116, name: 'Смородиновый скитлз', price: 420, stock: 99, description: 'Смородиновый скитлз' },
+                            { id: 4117, name: 'Кола с вишней', price: 420, stock: 99, description: 'Кола с вишней' },
+                            { id: 4118, name: 'Абрикосовый йогурт', price: 420, stock: 99, description: 'Абрикосовый йогурт' },
+                            { id: 4119, name: 'Двойное яблоко', price: 420, stock: 99, description: 'Двойное яблоко' },
+                            { id: 4120, name: 'Мармелад черная смородина', price: 420, stock: 99, description: 'Мармелад черная смородина' },
+                            { id: 4121, name: 'Ягодный пунш', price: 420, stock: 99, description: 'Ягодный пунш' }
+                        ]
+                    }
                 ]
             }
         ]
