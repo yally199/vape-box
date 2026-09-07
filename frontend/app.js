@@ -526,7 +526,6 @@ const categories = [
                         ]
                     }
                 ]
-            }
             },
             {
                 id: 'podonki',
@@ -621,7 +620,6 @@ const categories = [
                             { id: 4064, name: 'Вишневый Энергетик', price: 370, stock: 99, description: 'Вишневый энергетик' },
                             { id: 4065, name: 'Скитлс Лайм', price: 370, stock: 99, description: 'Скитлс лайм' }
                         ]
-                    }
                     },
                     {
                         id: 'podonki-last-hap',
