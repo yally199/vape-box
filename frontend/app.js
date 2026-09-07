@@ -811,7 +811,6 @@ const categories = [
                             { id: 4219, name: 'Малина гранат', price: 300, stock: 99, description: 'Малина гранат' },
                             { id: 4220, name: 'Малиновый лимонад', price: 300, stock: 99, description: 'Малиновый лимонад' }
                         ]
-                    }
                     },
                     {
                         id: 'podonki-v1v2',
