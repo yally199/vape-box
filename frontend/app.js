@@ -202,6 +202,51 @@ const categories = [
                             { id: 1094, name: 'Малиновый мохито', price: 410, stock: 99, description: 'Малиновый мохито' },
                             { id: 1095, name: 'Смородина гранат', price: 410, stock: 99, description: 'Смородина гранат' }
                         ]
+                    },
+                    {
+                id: 'blood',
+                name: 'BLOOD',
+                icon: '🩸',
+                series: [
+                    {
+                        id: 'blood-50mg',
+                        name: 'BLOOD 50mg',
+                        flavors: [
+                            { id: 2001, name: 'Вишня лайм', price: 230, stock: 99, description: 'Таркая вишня с лаймом' },
+                            { id: 2002, name: 'Банановый милкшейк', price: 230, stock: 99, description: 'Густой банановый милкшейк' },
+                            { id: 2003, name: 'Конфеты смородина мята', price: 230, stock: 99, description: 'Конфеты смородина мята' },
+                            { id: 2004, name: 'Малиновый лимонад', price: 230, stock: 99, description: 'Освежающий малиновый лимонад' },
+                            { id: 2005, name: 'Клюквенный лимонад', price: 230, stock: 99, description: 'Клюквенный лимонад' },
+                            { id: 2006, name: 'Банан клубника', price: 230, stock: 99, description: 'Банан с клубникой' },
+                            { id: 2007, name: 'Виноград черника', price: 230, stock: 99, description: 'Виноград с черникой' },
+                            { id: 2008, name: 'Дыня', price: 230, stock: 99, description: 'Сочная дыня' },
+                            { id: 2009, name: 'Брусничный морс', price: 230, stock: 99, description: 'Брусничный морс' },
+                            { id: 2010, name: 'Классический бабл гам', price: 230, stock: 99, description: 'Классический бабл гам' },
+                            { id: 2011, name: 'Малина гранат', price: 230, stock: 99, description: 'Малина с гранатом' },
+                            { id: 2012, name: 'Лесные ягоды', price: 230, stock: 99, description: 'Лесные ягоды' },
+                            { id: 2013, name: 'Сочный лимон', price: 230, stock: 99, description: 'Сочный лимон' },
+                            { id: 2014, name: 'Черная смородина', price: 230, stock: 99, description: 'Черная смородина' },
+                            { id: 2015, name: 'Черника малина', price: 230, stock: 99, description: 'Черника с малиной' },
+                            { id: 2016, name: 'Черный виноград', price: 230, stock: 99, description: 'Черный виноград' },
+                            { id: 2017, name: 'Персиковый лимонад', price: 230, stock: 99, description: 'Персиковый лимонад' },
+                            { id: 2018, name: 'Сладкий ананас', price: 230, stock: 99, description: 'Сладкий ананас' },
+                            { id: 2019, name: 'Сочная малина', price: 230, stock: 99, description: 'Сочная малина' },
+                            { id: 2020, name: 'Тропический микс', price: 230, stock: 99, description: 'Тропический микс' }
+                        ]
+                    },
+                    {
+                        id: 'blood-classic',
+                        name: 'BLOOD Classic',
+                        flavors: [
+                            { id: 2021, name: 'Raspberry Pomegranate (Малина и гранат)', price: 1240, stock: 99, description: 'Малина и гранат' },
+                            { id: 2022, name: 'Lime lemon (Лимон лайм)', price: 1240, stock: 99, description: 'Лимон лайм' },
+                            { id: 2023, name: 'Needle rasberry (Игольчатая малина)', price: 1240, stock: 99, description: 'Игольчатая малина' },
+                            { id: 2024, name: 'Mors Cowberry (Брусничный морс)', price: 1240, stock: 99, description: 'Брусничный морс' },
+                            { id: 2025, name: 'Wild Strawberry Currant Mors (Морс из клубн. и смородины)', price: 1240, stock: 99, description: 'Морс из клубники и смородины' },
+                            { id: 2026, name: 'Green apple (Яблоко)', price: 1240, stock: 99, description: 'Яблоко' },
+                            { id: 2027, name: 'Juicy mango (Сочный манго)', price: 1240, stock: 99, description: 'Сочный манго' },
+                            { id: 2028, name: 'Sweet pineapple (Сладкий ананас)', price: 1240, stock: 99, description: 'Сладкий ананас' }
+                        ]
                     }
                 ]
             }
