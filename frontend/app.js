@@ -527,8 +527,106 @@ const categories = [
                     }
                 ]
             }
+            },
+            {
+                id: 'podonki',
+                name: 'PODONKI',
+                icon: '🎯',
+                series: [
+                    {
+                        id: 'podonki-v1',
+                        name: 'PODONKI V1',
+                        flavors: [
+                            { id: 4001, name: 'Black Currant Lemonade (Смородиновый лимонад)', price: 380, stock: 99, description: 'Смородиновый лимонад' },
+                            { id: 4002, name: 'Strawberry Banana Ice (Банан, Клубника, Лёд)', price: 380, stock: 99, description: 'Банан, клубника, лёд' },
+                            { id: 4003, name: 'Cola Soda Ice (Классическая Кола со Льдом)', price: 380, stock: 99, description: 'Классическая кола со льдом' },
+                            { id: 4004, name: 'Cowberry Cranberry Raspberries (Брусника клюква малина)', price: 380, stock: 99, description: 'Брусника клюква малина' },
+                            { id: 4005, name: 'Wood & Berries on Ice (Хвоя, Лесные Ягоды, Лёд)', price: 380, stock: 99, description: 'Хвоя, лесные ягоды, лёд' },
+                            { id: 4006, name: 'Bubble Gum Apricot (Абрикосовый бабл гам)', price: 380, stock: 99, description: 'Абрикосовый бабл гам' },
+                            { id: 4007, name: 'Cherry Lime Ice (Вишня, Лайм, Лёд)', price: 380, stock: 99, description: 'Вишня, лайм, лёд' },
+                            { id: 4008, name: 'Raspberry Lemonade (Малиновый Лимонад со Льдом)', price: 380, stock: 99, description: 'Малиновый лимонад со льдом' },
+                            { id: 4009, name: 'Exotic Tropic Ice (Тропические Фрукты со Льдом)', price: 380, stock: 99, description: 'Тропические фрукты со льдом' },
+                            { id: 4010, name: 'Frozen Blue Razz (Черника, Малина, Мята, Лёд)', price: 380, stock: 99, description: 'Черника, малина, мята, лёд' },
+                            { id: 4011, name: 'Lychee Grape Mint (Ледяной Личи, Виноград и Мята)', price: 380, stock: 99, description: 'Ледяной личи, виноград и мята' },
+                            { id: 4012, name: 'Iced Double Apple (Двойное Яблоко и Лёд)', price: 380, stock: 99, description: 'Двойное яблоко и лёд' },
+                            { id: 4013, name: 'Mixed Berries Ice (Лесные Ягоды со Льдом)', price: 380, stock: 99, description: 'Лесные ягоды со льдом' },
+                            { id: 4014, name: 'Lush Ice (Баблгам с Арбузом и мятой)', price: 380, stock: 99, description: 'Баблгам с арбузом и мятой' },
+                            { id: 4015, name: 'Apple Cherry (Яблоко вишня)', price: 380, stock: 99, description: 'Яблоко вишня' },
+                            { id: 4016, name: 'Raspberry Cherry (Малина вишня)', price: 380, stock: 99, description: 'Малина вишня' },
+                            { id: 4017, name: 'Raspberry Strawberry Gum (Клубнично-малиновая Жвачка)', price: 380, stock: 99, description: 'Клубнично-малиновая жвачка' }
+                        ]
+                    },
+                    {
+                        id: 'podonki-v2',
+                        name: 'PODONKI V2',
+                        flavors: [
+                            { id: 4018, name: 'Banana Milk (Банановое Молоко)', price: 380, stock: 99, description: 'Банановое молоко' },
+                            { id: 4019, name: 'Kiwi Lime Tarhoon (Тархун с Киви и Лаймом)', price: 380, stock: 99, description: 'Тархун с киви и лаймом' },
+                            { id: 4020, name: 'Strawberry Champagne (Клубника с Шампанским)', price: 380, stock: 99, description: 'Клубника с шампанским' },
+                            { id: 4021, name: 'Strawberry Ice Cream (Клубничное Мороженное)', price: 380, stock: 99, description: 'Клубничное мороженое' },
+                            { id: 4022, name: 'Watermelon Ice Cream (Арбузное Мороженое)', price: 380, stock: 99, description: 'Арбузное мороженое' },
+                            { id: 4023, name: 'Blackcurrant Halls (Смородиновый Холс)', price: 380, stock: 99, description: 'Смородиновый холс' },
+                            { id: 4024, name: 'Cactus Grape Gum (Виноградно Кактусовая Жвачка)', price: 380, stock: 99, description: 'Виноградно кактусовая жвачка' },
+                            { id: 4025, name: 'Pineapple Energy (Ананасовый Энергетик)', price: 380, stock: 99, description: 'Ананасовый энергетик' }
+                        ]
+                    },
+                    {
+                        id: 'podonki-critical',
+                        name: 'PODONKI CRITIKAL',
+                        flavors: [
+                            { id: 4026, name: 'Манго апельсин', price: 420, stock: 99, description: 'Манго апельсин' },
+                            { id: 4027, name: 'Ягодный смузи', price: 420, stock: 99, description: 'Ягодный смузи' },
+                            { id: 4028, name: 'Кислый скитлс', price: 420, stock: 99, description: 'Кислый скитлс' },
+                            { id: 4029, name: 'Кислые лесные ягоды', price: 420, stock: 99, description: 'Кислые лесные ягоды' },
+                            { id: 4030, name: 'Кола сода айс', price: 420, stock: 99, description: 'Кола сода айс' },
+                            { id: 4031, name: 'Смородина виноград', price: 420, stock: 99, description: 'Смородина виноград' },
+                            { id: 4032, name: 'Лимонные червячки', price: 420, stock: 99, description: 'Лимонные червячки' },
+                            { id: 4033, name: 'Кислый малиновый лимонад', price: 420, stock: 99, description: 'Кислый малиновый лимонад' },
+                            { id: 4034, name: 'Виноградная конфета', price: 420, stock: 99, description: 'Виноградная конфета' },
+                            { id: 4035, name: 'Яблочный холс', price: 420, stock: 99, description: 'Яблочный холс' },
+                            { id: 4036, name: 'Ягодный энергетик', price: 420, stock: 99, description: 'Ягодный энергетик' },
+                            { id: 4037, name: 'Малина ежевика лед', price: 420, stock: 99, description: 'Малина ежевика лед' },
+                            { id: 4038, name: 'Апельсиновое драже', price: 420, stock: 99, description: 'Апельсиновое драже' },
+                            { id: 4039, name: 'Бабл гам', price: 420, stock: 99, description: 'Бабл гам' },
+                            { id: 4040, name: 'Кислый киви', price: 420, stock: 99, description: 'Кислый киви' },
+                            { id: 4041, name: 'Кислая смородина с черникой', price: 420, stock: 99, description: 'Кислая смородина с черникой' },
+                            { id: 4042, name: 'Кислые вишневые червячки', price: 420, stock: 99, description: 'Кислые вишневые червячки' },
+                            { id: 4043, name: 'Земляника груша', price: 420, stock: 99, description: 'Земляника груша' },
+                            { id: 4044, name: 'Дыня кокос', price: 420, stock: 99, description: 'Дыня кокос' },
+                            { id: 4045, name: 'Ледяной ананас', price: 420, stock: 99, description: 'Ледяной ананас' }
+                        ]
+                    },
+                    {
+                        id: 'podonki-arcada',
+                        name: 'PODONKI ARCADA',
+                        flavors: [
+                            { id: 4046, name: 'Маунтедью яблоко', price: 370, stock: 99, description: 'Маунтедью яблоко' },
+                            { id: 4047, name: 'Черная Смородина Личи', price: 370, stock: 99, description: 'Черная смородина личи' },
+                            { id: 4048, name: 'Банан Дыня Клубника', price: 370, stock: 99, description: 'Банан дыня клубника' },
+                            { id: 4049, name: 'Барбарисовый Энергетик', price: 370, stock: 99, description: 'Барбарисовый энергетик' },
+                            { id: 4050, name: 'Кола Ягоды', price: 370, stock: 99, description: 'Кола ягоды' },
+                            { id: 4051, name: 'Лимонад Голубика', price: 370, stock: 99, description: 'Лимонад голубика' },
+                            { id: 4052, name: 'Клубника Ананасовые Кольца', price: 370, stock: 99, description: 'Клубника ананасовые кольца' },
+                            { id: 4053, name: 'Киви персик', price: 370, stock: 99, description: 'Киви персик' },
+                            { id: 4054, name: 'Сладкая Мятная Жвачка', price: 370, stock: 99, description: 'Сладкая мятная жвачка' },
+                            { id: 4055, name: 'Манго Маракуйя', price: 370, stock: 99, description: 'Манго маракуйя' },
+                            { id: 4056, name: 'Яблоко Вишня', price: 370, stock: 99, description: 'Яблоко вишня' },
+                            { id: 4057, name: 'Нектарин', price: 370, stock: 99, description: 'Нектарин' },
+                            { id: 4058, name: 'Лесные Ягоды', price: 370, stock: 99, description: 'Лесные ягоды' },
+                            { id: 4059, name: 'Виноград Ежевика', price: 370, stock: 99, description: 'Виноград ежевика' },
+                            { id: 4060, name: 'Малиновый Мармелад', price: 370, stock: 99, description: 'Малиновый мармелад' },
+                            { id: 4061, name: 'Цитрусовый Микс', price: 370, stock: 99, description: 'Цитрусовый микс' },
+                            { id: 4062, name: 'Арбузный Слаш', price: 370, stock: 99, description: 'Арбузный слаш' },
+                            { id: 4063, name: 'Малина Черника', price: 370, stock: 99, description: 'Малина черника' },
+                            { id: 4064, name: 'Вишневый Энергетик', price: 370, stock: 99, description: 'Вишневый энергетик' },
+                            { id: 4065, name: 'Скитлс Лайм', price: 370, stock: 99, description: 'Скитлс лайм' }
+                        ]
+                    }
+                ]
+            }
         ]
     },
+ 
     {
         id: 'disposable',
         name: 'Одноразки',
