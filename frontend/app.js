@@ -202,8 +202,10 @@ const categories = [
                             { id: 1094, name: 'Малиновый мохито', price: 410, stock: 99, description: 'Малиновый мохито' },
                             { id: 1095, name: 'Смородина гранат', price: 410, stock: 99, description: 'Смородина гранат' }
                         ]
-                    },
-                    {
+                    }
+                ]
+            },
+            {
                 id: 'blood',
                 name: 'BLOOD',
                 icon: '🩸',
