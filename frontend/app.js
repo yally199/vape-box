@@ -66,10 +66,8 @@ const categories = [
                         ]
                     }
                 ]
-            }
-        ]
-    },
-    {
+            },
+            {
     id: 'annima',
     name: 'ANNIMA',
     icon: '🍇',
@@ -207,6 +205,7 @@ const categories = [
         }
     ]
 },
+   
     {
         id: 'disposable',
         name: 'Одноразки',
