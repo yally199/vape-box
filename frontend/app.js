@@ -193,176 +193,234 @@ const categories = [
                         { "id": 126, "name": "Малина Апельсин", "price": 390, "stock": 11, "description": "Малина апельсин" }
                        ]
                     },
-                    {
-                        id: 'annima-love-gold-edition-80mg',
-                        name: 'ANNIMA LOVE gold edition 80mg',
-                        flavors: [
-                            { id: 1041, name: 'Blueberry Pomegranate (Черника-Гранат)', price: 420, stock: 99, description: 'Черника-гранат' },
-                            { id: 1042, name: 'Juice Peach (Сок Персиковый)', price: 420, stock: 99, description: 'Сок персиковый' },
-                            { id: 1043, name: 'Sour Cherry (Кислая вишня)', price: 420, stock: 99, description: 'Кислая вишня' },
-                            { id: 1044, name: 'Ice grape (морозный виноград)', price: 420, stock: 99, description: 'Морозный виноград' },
-                            { id: 1045, name: 'Sour Skittles (Кислый Скитлс)', price: 420, stock: 99, description: 'Кислый скитлс' },
-                            { id: 1046, name: 'Frosty Energy (Ледяная Энергия)', price: 420, stock: 99, description: 'Ледяная энергия' },
-                            { id: 1047, name: 'Cherry Juice (Вишневый Сок)', price: 420, stock: 99, description: 'Вишневый сок' },
-                            { id: 1048, name: 'Frosty Wild Berries (Морозные лесные ягоды)', price: 420, stock: 99, description: 'Морозные лесные ягоды' },
-                            { id: 1049, name: 'Wild Berries Juice (Сок из лесных ягод)', price: 420, stock: 99, description: 'Сок из лесных ягод' },
-                            { id: 1050, name: 'Strawberry Mohito (Клубничный Мохито)', price: 420, stock: 99, description: 'Клубничный мохито' },
-                            { id: 1051, name: 'Blueberry Melon (Черничная Дыня)', price: 420, stock: 99, description: 'Черничная дыня' },
-                            { id: 1052, name: 'Blueberry Blackberry (Черника Ежевика)', price: 420, stock: 99, description: 'Черника ежевика' },
-                            { id: 1053, name: 'Strawberry Banana (Клубника-Банан)', price: 420, stock: 99, description: 'Клубника-банан' },
-                            { id: 1054, name: 'Currant Lemonade (Смородиновый Лимонад)', price: 420, stock: 99, description: 'Смородиновый лимонад' },
-                            { id: 1055, name: 'Strawberry Kiwi (Клубника-Киви)', price: 420, stock: 99, description: 'Клубника-киви' }
-                        ]
-                    },
-                    {
-                        id: 'annima-love',
-                        name: 'ANNIMA LOVE',
-                        flavors: [
-                            { id: 1056, name: 'Морозный редбулл', price: 440, stock: 99, description: 'Морозный редбулл' },
-                            { id: 1057, name: 'Энергетик ягоды', price: 440, stock: 99, description: 'Энергетик ягоды' },
-                            { id: 1058, name: 'Вишневый сок', price: 440, stock: 99, description: 'Вишневый сок' },
-                            { id: 1059, name: 'Малиновый лимонад', price: 440, stock: 99, description: 'Малиновый лимонад' },
-                            { id: 1060, name: 'Кислая вишня', price: 440, stock: 99, description: 'Кислая вишня' },
-                            { id: 1061, name: 'Кислый скитлс', price: 440, stock: 99, description: 'Кислый скитлс' },
-                            { id: 1062, name: 'Клубника киви', price: 440, stock: 99, description: 'Клубника киви' },
-                            { id: 1063, name: 'Ледяной виноград', price: 440, stock: 99, description: 'Ледяной виноград' },
-                            { id: 1064, name: 'Черника гранат', price: 440, stock: 99, description: 'Черника гранат' },
-                            { id: 1065, name: 'Сочный персик', price: 440, stock: 99, description: 'Сочный персик' },
-                            { id: 1066, name: 'Смородина вишня черника', price: 440, stock: 99, description: 'Смородина вишня черника' },
-                            { id: 1067, name: 'Смородиновый лимонад', price: 440, stock: 99, description: 'Смородиновый лимонад' },
-                            { id: 1068, name: 'Черника ежевика', price: 440, stock: 99, description: 'Черника ежевика' },
-                            { id: 1069, name: 'Клубника банан', price: 440, stock: 99, description: 'Клубника банан' },
-                            { id: 1070, name: 'Морс из диких ягод', price: 440, stock: 99, description: 'Морс из диких ягод' },
-                            { id: 1071, name: 'Морозные лесные ягоды', price: 440, stock: 99, description: 'Морозные лесные ягоды' },
-                            { id: 1072, name: 'Мохито с клубникой', price: 440, stock: 99, description: 'Мохито с клубникой' },
-                            { id: 1073, name: 'Энергетик малина', price: 440, stock: 99, description: 'Энергетик малина' },
-                            { id: 1074, name: 'Кислые ягодные червячки', price: 440, stock: 99, description: 'Кислые ягодные червячки' },
-                            { id: 1075, name: 'Дыня черника', price: 440, stock: 99, description: 'Дыня черника' }
-                        ]
-                    },
-                    {
-                        id: 'annima-love-miside-70mg',
-                        name: 'ANNIMA LOVE MISIDE 70мг',
-                        flavors: [
-                            { id: 1076, name: 'БЕЗУМНАЯ ВИШНЯ', price: 340, stock: 99, description: 'Безумная вишня' },
-                            { id: 1077, name: 'ВЕСЁЛАЯ МАЛИНА', price: 340, stock: 99, description: 'Весёлая малина' },
-                            { id: 1078, name: 'МИЛЫЙ КИВИ', price: 340, stock: 99, description: 'Милый киви' },
-                            { id: 1079, name: 'СОННАЯ ДЫНЯ', price: 340, stock: 99, description: 'Сонная дыня' },
-                            { id: 1080, name: 'ДВОЙНОЙ АРБУЗ', price: 340, stock: 99, description: 'Двойной арбуз' }
-                        ]
-                    },
-                    {
-                        id: 'annima-love-toyz-hard',
-                        name: 'ANNIMA LOVE & TOYZ (HARD)',
-                        flavors: [
-                            { id: 1081, name: 'Виноградный микс', price: 410, stock: 99, description: 'Виноградный микс' },
-                            { id: 1082, name: 'Киви маракуйя лайм', price: 410, stock: 99, description: 'Киви маракуйя лайм' },
-                            { id: 1083, name: 'Фруктовый Red Bull', price: 410, stock: 99, description: 'Фруктовый ред булл' },
-                            { id: 1084, name: 'Клюква вишня', price: 410, stock: 99, description: 'Клюква вишня' },
-                            { id: 1085, name: 'Классическая Fanta', price: 410, stock: 99, description: 'Классическая фанта' },
-                            { id: 1086, name: 'Малина ежевика арбуз', price: 410, stock: 99, description: 'Малина ежевика арбуз' },
-                            { id: 1087, name: 'Ягодные мармеладные червячки', price: 410, stock: 99, description: 'Ягодные мармеладные червячки' },
-                            { id: 1088, name: 'Тропический коктейль', price: 410, stock: 99, description: 'Тропический коктейль' },
-                            { id: 1089, name: 'Спелое яблоко', price: 410, stock: 99, description: 'Спелое яблоко' },
-                            { id: 1090, name: 'Tutti Frutti', price: 410, stock: 99, description: 'Тутти фрутти' },
-                            { id: 1091, name: 'Вишневый Red Bull', price: 410, stock: 99, description: 'Вишневый ред булл' },
-                            { id: 1092, name: 'Skittles цитрусовый', price: 410, stock: 99, description: 'Скитлс цитрусовый' },
-                            { id: 1093, name: 'Виноградный Chupaa Chups', price: 410, stock: 99, description: 'Виноградный чупа-чупс' },
-                            { id: 1094, name: 'Малиновый мохито', price: 410, stock: 99, description: 'Малиновый мохито' },
-                            { id: 1095, name: 'Смородина гранат', price: 410, stock: 99, description: 'Смородина гранат' }
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 'blood',
-                name: 'BLOOD',
-                icon: '🩸',
-                series: [
-                    {
-                        id: 'blood-50mg',
-                        name: 'BLOOD 50mg',
-                        flavors: [
-                            { id: 2001, name: 'Вишня лайм', price: 230, stock: 99, description: 'Таркая вишня с лаймом' },
-                            { id: 2002, name: 'Банановый милкшейк', price: 230, stock: 99, description: 'Густой банановый милкшейк' },
-                            { id: 2003, name: 'Конфеты смородина мята', price: 230, stock: 99, description: 'Конфеты смородина мята' },
-                            { id: 2004, name: 'Малиновый лимонад', price: 230, stock: 99, description: 'Освежающий малиновый лимонад' },
-                            { id: 2005, name: 'Клюквенный лимонад', price: 230, stock: 99, description: 'Клюквенный лимонад' },
-                            { id: 2006, name: 'Банан клубника', price: 230, stock: 99, description: 'Банан с клубникой' },
-                            { id: 2007, name: 'Виноград черника', price: 230, stock: 99, description: 'Виноград с черникой' },
-                            { id: 2008, name: 'Дыня', price: 230, stock: 99, description: 'Сочная дыня' },
-                            { id: 2009, name: 'Брусничный морс', price: 230, stock: 99, description: 'Брусничный морс' },
-                            { id: 2010, name: 'Классический бабл гам', price: 230, stock: 99, description: 'Классический бабл гам' },
-                            { id: 2011, name: 'Малина гранат', price: 230, stock: 99, description: 'Малина с гранатом' },
-                            { id: 2012, name: 'Лесные ягоды', price: 230, stock: 99, description: 'Лесные ягоды' },
-                            { id: 2013, name: 'Сочный лимон', price: 230, stock: 99, description: 'Сочный лимон' },
-                            { id: 2014, name: 'Черная смородина', price: 230, stock: 99, description: 'Черная смородина' },
-                            { id: 2015, name: 'Черника малина', price: 230, stock: 99, description: 'Черника с малиной' },
-                            { id: 2016, name: 'Черный виноград', price: 230, stock: 99, description: 'Черный виноград' },
-                            { id: 2017, name: 'Персиковый лимонад', price: 230, stock: 99, description: 'Персиковый лимонад' },
-                            { id: 2018, name: 'Сладкий ананас', price: 230, stock: 99, description: 'Сладкий ананас' },
-                            { id: 2019, name: 'Сочная малина', price: 230, stock: 99, description: 'Сочная малина' },
-                            { id: 2020, name: 'Тропический микс', price: 230, stock: 99, description: 'Тропический микс' }
-                        ]
-                    },
-                    {
-                        id: 'blood-classic',
-                        name: 'BLOOD Classic',
-                        flavors: [
-                            { id: 2021, name: 'Raspberry Pomegranate (Малина и гранат)', price: 1240, stock: 99, description: 'Малина и гранат' },
-                            { id: 2022, name: 'Lime lemon (Лимон лайм)', price: 1240, stock: 99, description: 'Лимон лайм' },
-                            { id: 2023, name: 'Needle rasberry (Игольчатая малина)', price: 1240, stock: 99, description: 'Игольчатая малина' },
-                            { id: 2024, name: 'Mors Cowberry (Брусничный морс)', price: 1240, stock: 99, description: 'Брусничный морс' },
-                            { id: 2025, name: 'Wild Strawberry Currant Mors (Морс из клубн. и смородины)', price: 1240, stock: 99, description: 'Морс из клубники и смородины' },
-                            { id: 2026, name: 'Green apple (Яблоко)', price: 1240, stock: 99, description: 'Яблоко' },
-                            { id: 2027, name: 'Juicy mango (Сочный манго)', price: 1240, stock: 99, description: 'Сочный манго' },
-                            { id: 2028, name: 'Sweet pineapple (Сладкий ананас)', price: 1240, stock: 99, description: 'Сладкий ананас' }
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 'catswill',
-                name: 'CATSWILL',
-                icon: '🐱',
-                series: [
-                    {
-                        id: 'catswill-20mg',
-                        name: 'CATSWILL 20mg',
-                        flavors: [
-                            { id: 3001, name: 'Клубника арбуз жвачка 20mg', price: 370, stock: 99, description: 'Клубника арбуз жвачка' },
-                            { id: 3002, name: 'Клубника виноград мята 20mg', price: 370, stock: 99, description: 'Клубника виноград мята' },
-                            { id: 3003, name: 'Клубнично вишневая конфета 20mg', price: 370, stock: 99, description: 'Клубнично вишневая конфета' },
-                            { id: 3004, name: 'Мамба кислое яблоко киви 20mg', price: 370, stock: 99, description: 'Мамба кислое яблоко киви' },
-                            { id: 3005, name: 'Морозные лесные ягоды 20mg', price: 370, stock: 99, description: 'Морозные лесные ягоды' },
-                            { id: 3006, name: 'Лимонад черника лайм 20mg', price: 370, stock: 99, description: 'Лимонад черника лайм' },
-                            { id: 3007, name: 'Клубника черника фрэш 20mg', price: 370, stock: 99, description: 'Клубника черника фрэш' },
-                            { id: 3008, name: 'Черника малина лимонад 20mg', price: 370, stock: 99, description: 'Черника малина лимонад' },
-                            { id: 3009, name: 'Клубника киви 20mg', price: 370, stock: 99, description: 'Клубника киви' },
-                            { id: 3010, name: 'Мамба манго апельсин 20mg', price: 370, stock: 99, description: 'Мамба манго апельсин' },
-                            { id: 3011, name: 'Имбирный лимонад с малиной 20mg', price: 370, stock: 99, description: 'Имбирный лимонад с малиной' },
-                            { id: 3012, name: 'Йогурт клубника маракуйя 20mg', price: 370, stock: 99, description: 'Йогурт клубника маракуйя' },
-                            { id: 3013, name: 'Вишня персик мята 20mg', price: 370, stock: 99, description: 'Вишня персик мята' },
-                            { id: 3014, name: 'Малина ежевика лед 20mg', price: 370, stock: 99, description: 'Малина ежевика лед' },
-                            { id: 3015, name: 'Алоэ виноград 20mg', price: 370, stock: 99, description: 'Алоэ виноград' },
-                            { id: 3016, name: 'Вишневые леденцы 20mg', price: 370, stock: 99, description: 'Вишневые леденцы' },
-                            { id: 3017, name: 'Кислые червячки с малиной и черешней 20mg', price: 370, stock: 99, description: 'Кислые червячки с малиной и черешней' },
-                            { id: 3018, name: 'Кислые яблочные червички 20mg', price: 370, stock: 99, description: 'Кислые яблочные червички' },
-                            { id: 3019, name: 'Кислый виноградный Чупа-чупс 20mg', price: 370, stock: 99, description: 'Кислый виноградный Чупа-чупс' },
-                            { id: 3020, name: 'Кислый малиновый скитлс 20mg', price: 370, stock: 99, description: 'Кислый малиновый скитлс' },
-                            { id: 3021, name: 'Мятная жвачка 20mg', price: 370, stock: 99, description: 'Мятная жвачка' },
-                            { id: 3022, name: 'Ананасовый сироп виноград 20mg', price: 370, stock: 99, description: 'Ананасовый сироп виноград' },
-                            { id: 3023, name: 'Кислый скитлс 20mg', price: 370, stock: 99, description: 'Кислый скитлс' },
-                            { id: 3024, name: 'Клубника жвачка банан 20mg', price: 370, stock: 99, description: 'Клубника жвачка банан' },
-                            { id: 3025, name: 'Лимонад ежевика сироп 20mg', price: 370, stock: 99, description: 'Лимонад ежевика сироп' },
-                            { id: 3026, name: 'Скитлс виноград 20mg', price: 370, stock: 99, description: 'Скитлс виноград' },
-                            { id: 3027, name: 'Хайповый энергетик с черникой 20mg', price: 370, stock: 99, description: 'Хайповый энергетик с черникой' },
-                            { id: 3028, name: 'Черника лед ежевика 20mg', price: 370, stock: 99, description: 'Черника лед ежевика' },
-                            { id: 3029, name: 'Чернично арбузная жвачка 20mg', price: 370, stock: 99, description: 'Чернично арбузная жвачка' },
-                            { id: 3030, name: 'Киви лед кислинка 20mg', price: 370, stock: 99, description: 'Киви лед кислинка' },
-                            { id: 3031, name: 'Кислая фруктовая жвачка 20mg', price: 370, stock: 99, description: 'Кислая фруктовая жвачка' }
-                        ]
-                    },
+                 {
+                    "id": "annima-love-gold-edition-80mg",
+                    "name": "ANNIMA LOVE gold edition 80mg",
+                    "flavors": [
+                        { "id": 127, "name": "Blueberry Pomegranate (Черника-Гранат)", "price": 540, "stock": 3, "description": "Черника-гранат" },
+                        { "id": 128, "name": "Juice Peach (Сок Персиковый)", "price": 540, "stock": 9, "description": "Сок персиковый" },
+                        { "id": 129, "name": "Sour Cherry (Кислая вишня)", "price": 540, "stock": 10, "description": "Кислая вишня" },
+                        { "id": 130, "name": "Ice grape (морозный виноград)", "price": 540, "stock": 8, "description": "Морозный виноград" },
+                        { "id": 131, "name": "Sour Skittles (Кислый Скитлс)", "price": 540, "stock": 11, "description": "Кислый скитлс" },
+                        { "id": 132, "name": "Frosty Energy (Ледяная Энергия)", "price": 540, "stock": 6, "description": "Ледяная энергия" },
+                        { "id": 133, "name": "Cherry Juice (Вишневый Сок)", "price": 540, "stock": 4, "description": "Вишневый сок" },
+                        { "id": 134, "name": "Frosty Wild Berries (Морозные лесные ягоды)", "price": 540, "stock": 7, "description": "Морозные лесные ягоды" },
+                        { "id": 135, "name": "Wild Berries Juice (Сок из лесных ягод)", "price": 540, "stock": 15, "description": "Сок из лесных ягод" },
+                        { "id": 136, "name": "Strawberry Mohito (Клубничный Мохито)", "price": 540, "stock": 14, "description": "Клубничный мохито" },
+                        { "id": 137, "name": "Blueberry Melon (Черничная Дыня)", "price": 540, "stock": 2, "description": "Черничная дыня" },
+                        { "id": 138, "name": "Blueberry Blackberry (Черника Ежевика)", "price": 540, "stock": 1, "description": "Черника ежевика" },
+                        { "id": 139, "name": "Strawberry Banana (Клубника-Банан)", "price": 540, "stock": 12, "description": "Клубника-банан" },
+                        { "id": 140, "name": "Currant Lemonade (Смородиновый Лимонад)", "price": 540, "stock": 5, "description": "Смородиновый лимонад" },
+                        { "id": 141, "name": "Strawberry Kiwi (Клубника-Киви)", "price": 540, "stock": 13, "description": "Клубника-киви" }
+                    ]
+                },
+                {
+                    "id": "annima-love",
+                    "name": "ANNIMA LOVE",
+                    "flavors": [
+                        { "id": 142, "name": "Морозный редбулл", "price": 640, "stock": 11, "description": "Морозный редбулл" },
+                        { "id": 143, "name": "Энергетик ягоды", "price": 640, "stock": 20, "description": "Энергетик ягоды" },
+                        { "id": 144, "name": "Вишневый сок", "price": 640, "stock": 1, "description": "Вишневый сок" },
+                        { "id": 145, "name": "Малиновый лимонад", "price": 640, "stock": 9, "description": "Малиновый лимонад" },
+                        { "id": 146, "name": "Кислая вишня", "price": 640, "stock": 3, "description": "Кислая вишня" },
+                        { "id": 147, "name": "Кислый скитлс", "price": 640, "stock": 5, "description": "Кислый скитлс" },
+                        { "id": 148, "name": "Клубника киви", "price": 640, "stock": 7, "description": "Клубника киви" },
+                        { "id": 149, "name": "Ледяной виноград", "price": 640, "stock": 8, "description": "Ледяной виноград" },
+                        { "id": 150, "name": "Черника гранат", "price": 640, "stock": 17, "description": "Черника гранат" },
+                        { "id": 151, "name": "Сочный персик", "price": 640, "stock": 16, "description": "Сочный персик" },
+                        { "id": 152, "name": "Смородина вишня черника", "price": 640, "stock": 14, "description": "Смородина вишня черника" },
+                        { "id": 153, "name": "Смородиновый лимонад", "price": 640, "stock": 15, "description": "Смородиновый лимонад" },
+                        { "id": 154, "name": "Черника ежевика", "price": 640, "stock": 18, "description": "Черника ежевика" },
+                        { "id": 155, "name": "Клубника банан", "price": 640, "stock": 6, "description": "Клубника банан" },
+                        { "id": 156, "name": "Морс из диких ягод", "price": 640, "stock": 12, "description": "Морс из диких ягод" },
+                        { "id": 157, "name": "Дыня черника", "price": 640, "stock": 2, "description": "Дыня черника" },
+                        { "id": 158, "name": "Морозные лесные ягоды", "price": 640, "stock": 10, "description": "Морозные лесные ягоды" },
+                        { "id": 159, "name": "Мохито с клубникой", "price": 640, "stock": 13, "description": "Мохито с клубникой" },
+                        { "id": 160, "name": "Энергетик малина", "price": 640, "stock": 19, "description": "Энергетик малина" },
+                        { "id": 161, "name": "Кислые ягодные червячки", "price": 640, "stock": 4, "description": "Кислые ягодные червячки" }
+                    ]
+                },
+                {
+                    "id": "annima-love-miside-70mg",
+                    "name": "ANNIMA LOVE MISIDE 70мг",
+                    "flavors": [
+                        { "id": 162, "name": "БЕЗУМНАЯ ВИШНЯ", "price": 500, "stock": 3, "description": "Безумная вишня" },
+                        { "id": 163, "name": "ВЕСЁЛАЯ МАЛИНА", "price": 500, "stock": 5, "description": "Весёлая малина" },
+                        { "id": 164, "name": "МИЛЫЙ КИВИ", "price": 500, "stock": 2, "description": "Милый киви" },
+                        { "id": 165, "name": "СОННАЯ ДЫНЯ", "price": 500, "stock": 4, "description": "Сонная дыня" },
+                        { "id": 166, "name": "ДВОЙНОЙ АРБУЗ", "price": 500, "stock": 1, "description": "Двойной арбуз" }
+                    ]
+                },
+                {
+                    "id": "annima-love-toyz-hard",
+                    "name": "ANNIMA LOVE & TOYZ (HARD)",
+                    "flavors": [
+                        { "id": 167, "name": "Виноградный микс", "price": 500, "stock": 4, "description": "Виноградный микс" },
+                        { "id": 168, "name": "Киви маракуйя лайм", "price": 500, "stock": 6, "description": "Киви маракуйя лайм" },
+                        { "id": 169, "name": "Фруктовый Red Bull", "price": 500, "stock": 14, "description": "Фруктовый ред булл" },
+                        { "id": 170, "name": "Клюква вишня", "price": 500, "stock": 8, "description": "Клюква вишня" },
+                        { "id": 171, "name": "Классическая Fanta", "price": 500, "stock": 7, "description": "Классическая фанта" },
+                        { "id": 172, "name": "Малина ежевика арбуз", "price": 500, "stock": 9, "description": "Малина ежевика арбуз" },
+                        { "id": 173, "name": "Ягодные мармеладные червячки", "price": 500, "stock": 15, "description": "Ягодные мармеладные червячки" },
+                        { "id": 174, "name": "Тропический коктейль", "price": 500, "stock": 13, "description": "Тропический коктейль" },
+                        { "id": 175, "name": "Спелое яблоко", "price": 500, "stock": 12, "description": "Спелое яблоко" },
+                        { "id": 176, "name": "Tutti Frutti", "price": 500, "stock": 2, "description": "Тутти фрутти" },
+                        { "id": 177, "name": "Вишневый Red Bull", "price": 500, "stock": 5, "description": "Вишневый ред булл" },
+                        { "id": 178, "name": "Skittles цитрусовый", "price": 500, "stock": 1, "description": "Скитлс цитрусовый" },
+                        { "id": 179, "name": "Виноградный Chupaa Chups", "price": 500, "stock": 3, "description": "Виноградный чупа-чупс" },
+                        { "id": 180, "name": "Малиновый мохито", "price": 500, "stock": 10, "description": "Малиновый мохито" },
+                        { "id": 181, "name": "Смородина гранат", "price": 500, "stock": 11, "description": "Смородина гранат" }
+                    ]
+                },
+                {
+                    "id": "annima-love-sour",
+                    "name": "ANNIMA LOVE SOUR",
+                    "flavors": [
+                        { "id": 182, "name": "Черника Малина", "price": 420, "stock": 21, "description": "Черника малина" },
+                        { "id": 183, "name": "Кислый Скитлс", "price": 420, "stock": 27, "description": "Кислый скитлс" },
+                        { "id": 184, "name": "Яблоко Киви", "price": 420, "stock": 22, "description": "Яблоко киви" },
+                        { "id": 185, "name": "Лайм Черешня", "price": 420, "stock": 16, "description": "Лайм черешня" },
+                        { "id": 186, "name": "Кислые арбуз Малина", "price": 420, "stock": 3, "description": "Кислые арбуз малина" },
+                        { "id": 187, "name": "Кислый Виноградный чупа-чупс", "price": 420, "stock": 7, "description": "Кислый виноградный чупа-чупс" },
+                        { "id": 188, "name": "Кислая Вишня Гранат", "price": 420, "stock": 1, "description": "Кислая вишня гранат" },
+                        { "id": 189, "name": "Кислый Гранатовый Коктейль", "price": 420, "stock": 8, "description": "Кислый гранатовый коктейль" },
+                        { "id": 190, "name": "Кислые Жевательные Конфетки", "price": 420, "stock": 4, "description": "Кислые жевательные конфетки" },
+                        { "id": 191, "name": "Кислое Зеленое Яблоко", "price": 420, "stock": 2, "description": "Кислое зеленое яблоко" },
+                        { "id": 192, "name": "Кислый Зеленый Виноград", "price": 420, "stock": 9, "description": "Кислый зеленый виноград" },
+                        { "id": 193, "name": "Энергетик Кислая Вишня", "price": 420, "stock": 15, "description": "Энергетик кислая вишня" },
+                        { "id": 194, "name": "Кислый Лайм Маракуйя", "price": 420, "stock": 10, "description": "Кислый лайм маракуйя" },
+                        { "id": 195, "name": "Кислые Малина Лайм", "price": 420, "stock": 5, "description": "Кислые малина лайм" },
+                        { "id": 196, "name": "Кислые Малиновые Червячки", "price": 420, "stock": 6, "description": "Кислые малиновые червячки" },
+                        { "id": 197, "name": "Кислый Тропический Микс", "price": 420, "stock": 11, "description": "Кислый тропический микс" },
+                        { "id": 198, "name": "Фанта Кислая Газировка", "price": 420, "stock": 14, "description": "Фанта кислая газировка" },
+                        { "id": 199, "name": "Кислый Фруктовый Энергетик", "price": 420, "stock": 12, "description": "Кислый фруктовый энергетик" },
+                        { "id": 200, "name": "Кислый цитрусовый сок", "price": 420, "stock": 13, "description": "Кислый цитрусовый сок" },
+                        { "id": 201, "name": "Лесные ягоды", "price": 420, "stock": 17, "description": "Лесные ягоды" },
+                        { "id": 202, "name": "Ананасовый Энергетик", "price": 420, "stock": 23, "description": "Ананасовый энергетик" },
+                        { "id": 203, "name": "Мандариновая фанта", "price": 420, "stock": 18, "description": "Мандариновая фанта" },
+                        { "id": 204, "name": "Персик Маракуйя", "price": 420, "stock": 19, "description": "Персик маракуйя" },
+                        { "id": 205, "name": "Вишня Лимон", "price": 420, "stock": 24, "description": "Вишня лимон" },
+                        { "id": 206, "name": "Черника Апельсин", "price": 420, "stock": 20, "description": "Черника апельсин" },
+                        { "id": 207, "name": "Ежевика Клубника", "price": 420, "stock": 25, "description": "Ежевика клубника" }
+                    ]
+                },
+                {
+                    "id": "annima-love-zombi",
+                    "name": "ANNIMA LOVE & ZOMBI (70mg)",
+                    "flavors": [
+                        { "id": 208, "name": "Алоэ виноград", "price": 630, "stock": 1, "description": "Алоэ виноград" },
+                        { "id": 209, "name": "Лесные ягоды", "price": 630, "stock": 12, "description": "Лесные ягоды" },
+                        { "id": 210, "name": "Мандариновая фанта", "price": 630, "stock": 14, "description": "Мандариновая фанта" },
+                        { "id": 211, "name": "Малина с кислинкой", "price": 630, "stock": 13, "description": "Малина с кислинкой" },
+                        { "id": 212, "name": "Яблоко персик", "price": 630, "stock": 20, "description": "Яблоко персик" },
+                        { "id": 213, "name": "Клубника банан", "price": 630, "stock": 8, "description": "Клубника банан" },
+                        { "id": 214, "name": "Ананас киви", "price": 630, "stock": 2, "description": "Ананас киви" },
+                        { "id": 215, "name": "Арбузный бабл гам", "price": 630, "stock": 3, "description": "Арбузный бабл гам" },
+                        { "id": 216, "name": "Вишня лед", "price": 630, "stock": 4, "description": "Вишня лед" },
+                        { "id": 217, "name": "Грейпфрут вишня", "price": 630, "stock": 5, "description": "Грейпфрут вишня" },
+                        { "id": 218, "name": "Ежевичный лимонад", "price": 630, "stock": 6, "description": "Ежевичный лимонад" },
+                        { "id": 219, "name": "Киви клубника", "price": 630, "stock": 7, "description": "Киви клубника" },
+                        { "id": 220, "name": "Клубнично-вишневый лимонад", "price": 630, "stock": 9, "description": "Клубнично-вишневый лимонад" },
+                        { "id": 221, "name": "Клубничный леденец", "price": 630, "stock": 10, "description": "Клубничный леденец" },
+                        { "id": 222, "name": "Лесной микс", "price": 630, "stock": 11, "description": "Лесной микс" },
+                        { "id": 223, "name": "Морозный ред Булл", "price": 630, "stock": 15, "description": "Морозный ред Булл" },
+                        { "id": 224, "name": "Персиковый шейк", "price": 630, "stock": 16, "description": "Персиковый шейк" },
+                        { "id": 225, "name": "Фанта маракуйя", "price": 630, "stock": 17, "description": "Фанта маракуйя" },
+                        { "id": 226, "name": "Энергетик виноград", "price": 630, "stock": 18, "description": "Энергетик виноград" },
+                        { "id": 227, "name": "Яблоко виноград", "price": 630, "stock": 19, "description": "Яблоко виноград" }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "blood",
+            "name": "BLOOD",
+            "icon": "🩸",
+            "series": [
+                {
+                    "id": "blood-50mg",
+                    "name": "BLOOD 50mg",
+                    "flavors": [
+                        { "id": 228, "name": "Вишня лайм", "price": 310, "stock": 5, "description": "Таркая вишня с лаймом" },
+                        { "id": 229, "name": "Банановый милкшейк", "price": 310, "stock": 2, "description": "Густой банановый милкшейк" },
+                        { "id": 230, "name": "Конфеты смородина мята", "price": 310, "stock": 9, "description": "Конфеты смородина мята" },
+                        { "id": 231, "name": "Малиновый лимонад", "price": 310, "stock": 12, "description": "Освежающий малиновый лимонад" },
+                        { "id": 232, "name": "Клюквенный лимонад", "price": 310, "stock": 8, "description": "Клюквенный лимонад" },
+                        { "id": 233, "name": "Банан клубника", "price": 310, "stock": 1, "description": "Банан с клубникой" },
+                        { "id": 234, "name": "Виноград черника", "price": 310, "stock": 4, "description": "Виноград с черникой" },
+                        { "id": 235, "name": "Дыня", "price": 310, "stock": 6, "description": "Сочная дыня" },
+                        { "id": 236, "name": "Брусничный морс", "price": 310, "stock": 3, "description": "Брусничный морс" },
+                        { "id": 237, "name": "Классический бабл гам", "price": 310, "stock": 7, "description": "Классический бабл гам" },
+                        { "id": 238, "name": "Малина гранат", "price": 310, "stock": 11, "description": "Малина с гранатом" },
+                        { "id": 239, "name": "Лесные ягоды", "price": 310, "stock": 10, "description": "Лесные ягоды" },
+                        { "id": 240, "name": "Сочный лимон", "price": 310, "stock": 16, "description": "Сочный лимон" },
+                        { "id": 241, "name": "Черная смородина", "price": 310, "stock": 18, "description": "Черная смородина" },
+                        { "id": 242, "name": "Черника малина", "price": 310, "stock": 19, "description": "Черника с малиной" },
+                        { "id": 243, "name": "Черный виноград", "price": 310, "stock": 20, "description": "Черный виноград" },
+                        { "id": 244, "name": "Персиковый лимонад", "price": 310, "stock": 13, "description": "Персиковый лимонад" },
+                        { "id": 245, "name": "Сладкий ананас", "price": 310, "stock": 14, "description": "Сладкий ананас" },
+                        { "id": 246, "name": "Сочная малина", "price": 310, "stock": 15, "description": "Сочная малина" },
+                        { "id": 247, "name": "Тропический микс", "price": 310, "stock": 17, "description": "Тропический микс" }
+                    ]
+                },
+                {
+                    "id": "blood-classic",
+                    "name": "BLOOD Classic",
+                    "flavors": [
+                        { "id": 248, "name": "Raspberry Pomegranate (Малина и гранат)", "price": 1030, "stock": 99, "description": "Малина и гранат" },
+                        { "id": 249, "name": "Lime lemon (Лимон лайм)", "price": 1030, "stock": 99, "description": "Лимон лайм" },
+                        { "id": 250, "name": "Needle rasberry (Игольчатая малина)", "price": 1030, "stock": 99, "description": "Игольчатая малина" },
+                        { "id": 251, "name": "Mors Cowberry (Брусничный морс)", "price": 1030, "stock": 99, "description": "Брусничный морс" },
+                        { "id": 252, "name": "Wild Strawberry Currant Mors (Морс из клубн. и смородины)", "price": 1030, "stock": 99, "description": "Морс из клубники и смородины" },
+                        { "id": 253, "name": "Green apple (Яблоко)", "price": 1030, "stock": 99, "description": "Яблоко" },
+                        { "id": 254, "name": "Juicy mango (Сочный манго)", "price": 1030, "stock": 99, "description": "Сочный манго" },
+                        { "id": 255, "name": "Sweet pineapple (Сладкий ананас)", "price": 1030, "stock": 99, "description": "Сладкий ананас" }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "catswill",
+            "name": "CATSWILL",
+            "icon": "🐱",
+            "series": [
+                {
+                    "id": "catswill-20mg",
+                    "name": "CATSWILL 20mg",
+                    "flavors": [
+                        { "id": 256, "name": "Клубника арбуз жвачка 20mg", "price": 500, "stock": 14, "description": "Клубника арбуз жвачка" },
+                        { "id": 257, "name": "Клубника виноград мята 20mg", "price": 500, "stock": 15, "description": "Клубника виноград мята" },
+                        { "id": 258, "name": "Клубнично вишневая конфета 20mg", "price": 500, "stock": 19, "description": "Клубнично вишневая конфета" },
+                        { "id": 259, "name": "Мамба кислое яблоко киви 20mg", "price": 500, "stock": 23, "description": "Мамба кислое яблоко киви" },
+                        { "id": 260, "name": "Морозные лесные ягоды 20mg", "price": 500, "stock": 25, "description": "Морозные лесные ягоды" },
+                        { "id": 261, "name": "Лимонад черника лайм 20mg", "price": 500, "stock": 21, "description": "Лимонад черника лайм" },
+                        { "id": 262, "name": "Клубника черника фрэш 20mg", "price": 500, "stock": 18, "description": "Клубника черника фрэш" },
+                        { "id": 263, "name": "Черника малина лимонад 20mg", "price": 500, "stock": 30, "description": "Черника малина лимонад" },
+                        { "id": 264, "name": "Клубника киви 20mg", "price": 500, "stock": 17, "description": "Клубника киви" },
+                        { "id": 265, "name": "Мамба манго апельсин 20mg", "price": 500, "stock": 24, "description": "Мамба манго апельсин" },
+                        { "id": 266, "name": "Имбирный лимонад с малиной 20mg", "price": 500, "stock": 5, "description": "Имбирный лимонад с малиной" },
+                        { "id": 267, "name": "Йогурт клубника маракуйя 20mg", "price": 500, "stock": 6, "description": "Йогурт клубника маракуйя" },
+                        { "id": 268, "name": "Вишня персик мята 20mg", "price": 500, "stock": 4, "description": "Вишня персик мята" },
+                        { "id": 269, "name": "Малина ежевика лед 20mg", "price": 500, "stock": 22, "description": "Малина ежевика лед" },
+                        { "id": 270, "name": "Алоэ виноград 20mg", "price": 500, "stock": 1, "description": "Алоэ виноград" },
+                        { "id": 271, "name": "Вишневые леденцы 20mg", "price": 500, "stock": 3, "description": "Вишневые леденцы" },
+                        { "id": 272, "name": "Кислые червячки с малиной и черешней 20mg", "price": 500, "stock": 9, "description": "Кислые червячки с малиной и черешней" },
+                        { "id": 273, "name": "Кислые яблочные червички 20mg", "price": 500, "stock": 10, "description": "Кислые яблочные червички" },
+                        { "id": 274, "name": "Кислый виноградный Чупа-чупс 20mg", "price": 500, "stock": 11, "description": "Кислый виноградный Чупа-чупс" },
+                        { "id": 275, "name": "Кислый малиновый скитлс 20mg", "price": 500, "stock": 12, "description": "Кислый малиновый скитлс" },
+                        { "id": 276, "name": "Мятная жвачка 20mg", "price": 500, "stock": 26, "description": "Мятная жвачка" },
+                        { "id": 277, "name": "Ананасовый сироп виноград 20mg", "price": 500, "stock": 2, "description": "Ананасовый сироп виноград" },
+                        { "id": 278, "name": "Кислый скитлс 20mg", "price": 500, "stock": 13, "description": "Кислый скитлс" },
+                        { "id": 279, "name": "Клубника жвачка банан 20mg", "price": 500, "stock": 16, "description": "Клубника жвачка банан" },
+                        { "id": 280, "name": "Лимонад ежевика сироп 20mg", "price": 500, "stock": 20, "description": "Лимонад ежевика сироп" },
+                        { "id": 281, "name": "Скитлс виноград 20mg", "price": 500, "stock": 27, "description": "Скитлс виноград" },
+                        { "id": 282, "name": "Хайповый энергетик с черникой 20mg", "price": 500, "stock": 28, "description": "Хайповый энергетик с черникой" },
+                        { "id": 283, "name": "Черника лед ежевика 20mg", "price": 500, "stock": 29, "description": "Черника лед ежевика" },
+                        { "id": 284, "name": "Чернично арбузная жвачка 20mg", "price": 500, "stock": 31, "description": "Чернично арбузная жвачка" },
+                        { "id": 285, "name": "Киви лед кислинка 20mg", "price": 500, "stock": 7, "description": "Киви лед кислинка" },
+                        { "id": 286, "name": "Кислая фруктовая жвачка 20mg", "price": 500, "stock": 8, "description": "Кислая фруктовая жвачка" }
+                    ]
+                },
                     {
                         id: 'catswill-50mg',
                         name: 'CATSWILL 50mg',
