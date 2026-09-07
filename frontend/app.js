@@ -13,116 +13,185 @@ const categories = [
         icon: '📂'
     },
     {
-        id: 'liquid',
-        name: 'Жидкости',
-        icon: '🍓',
-        brands: [
-            {
-                id: 'angry-vape',
-                name: 'Angry Vape',
-                icon: '🍓',
-                series: [
-                    {
-                        id: 'angry-vape-50mg',
-                        name: 'Angry Vape 50mg',
-                        flavors: [
-                            { id: 1, name: 'Варан Комод (клубничный джем)', price: 325, stock: 99, description: 'Клубничный джем с ментолом' },
-                            { id: 2, name: 'Бегемот Брутто (черный виноград)', price: 325, stock: 99, description: 'Черный виноград' },
-                            { id: 3, name: 'Ворон Лут (груша с ананасом)', price: 325, stock: 99, description: 'Груша с ананасом' },
-                            { id: 4, name: 'Жираф Шпиль (манго)', price: 325, stock: 99, description: 'Сочное манго' },
-                            { id: 5, name: 'Ёж Кутёж (синяя малина)', price: 325, stock: 99, description: 'Синяя малина' },
-                            { id: 6, name: 'Геккон Пупырка (кислые конфеты)', price: 325, stock: 99, description: 'Кислые конфеты' },
-                            { id: 7, name: 'Енот щипач (чизкейк с клубникой и бананом)', price: 325, stock: 99, description: 'Чизкейк с клубникой и бананом' },
-                            { id: 8, name: 'Волк АУФ (вишня с лимоном)', price: 325, stock: 99, description: 'Вишня с лимоном' },
-                            { id: 9, name: 'Акула гарпун (черника со сливками)', price: 325, stock: 99, description: 'Черника со сливками' },
-                            { id: 10, name: 'Вомбат Батяня (виноградная газировка)', price: 325, stock: 99, description: 'Виноградная газировка' },
-                            { id: 11, name: 'Гадюка мамба (персик с малиной)', price: 325, stock: 99, description: 'Персик с малиной' }
-                        ]
-                    },
-                    {
-                        id: 'angry-vape-20mg',
-                        name: 'Angry Vape 20mg',
-                        flavors: [
-                            { id: 12, name: 'Акула гарпун (черника со сливками)', price: 325, stock: 99, description: 'Черника со сливками' },
-                            { id: 13, name: 'Жираф Шпиль (манго)', price: 325, stock: 99, description: 'Сочное манго' },
-                            { id: 14, name: 'Ёж Кутёж (синяя малина)', price: 325, stock: 99, description: 'Синяя малина' },
-                            { id: 15, name: 'Варан Комод (клубничный джем)', price: 325, stock: 99, description: 'Клубничный джем с ментолом' }
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 'angry-ape',
-                name: 'ANGRY APE',
-                icon: '🍍',
-                series: [
-                    {
-                        id: 'angry-ape-ultra-60mg',
-                        name: 'ANGRY APE ULTRA 60mg',
-                        flavors: [
-                            { id: 16, name: 'Ананасовая конфета', price: 360, stock: 99, description: 'Сладкая ананасовая конфета' },
-                            { id: 17, name: 'Банан клубника', price: 360, stock: 99, description: 'Нежный банан с клубникой' },
-                            { id: 18, name: 'Ягодный микс', price: 360, stock: 99, description: 'Микс лесных ягод' }
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 'annima',
-                name: 'ANNIMA',
-                icon: '🍇',
-                series: [
-                    {
-                        id: 'annima-animma',
-                        name: 'ANIMMA',
-                        flavors: [
-                            { id: 1001, name: 'MADARA (бабл гам)', price: 440, stock: 99, description: 'Бабл гам' },
-                            { id: 1002, name: 'SASUKE (малина айс)', price: 440, stock: 99, description: 'Малина айс' },
-                            { id: 1003, name: 'ISSHIKI (мармеладные мишки)', price: 440, stock: 99, description: 'Мармеладные мишки' },
-                            { id: 1004, name: 'NARUTO (ананас)', price: 440, stock: 99, description: 'Ананас' },
-                            { id: 1005, name: 'JUBI (смородина и виноград)', price: 440, stock: 99, description: 'Смородина и виноград' },
-                            { id: 1006, name: 'KAGUYA (энергетик айс)', price: 440, stock: 99, description: 'Энергетик айс' },
-                            { id: 1007, name: 'JIRAIYA (манго-маракуйя)', price: 440, stock: 99, description: 'Манго-маракуйя' },
-                            { id: 1008, name: 'ITACHI (вишня айс)', price: 440, stock: 99, description: 'Вишня айс' },
-                            { id: 1009, name: 'INDRA (киви-клубника)', price: 440, stock: 99, description: 'Киви-клубника' },
-                            { id: 1010, name: 'JUGO (арбуз айс)', price: 440, stock: 99, description: 'Арбуз айс' }
-                        ]
-                    },
-                    {
-                        id: 'annima-love-killer-80mg',
-                        name: 'ANNIMA LOVE KILLER 80mg',
-                        flavors: [
-                            { id: 1011, name: 'Ежевичный Лимонад', price: 380, stock: 99, description: 'Ежевичный лимонад' },
-                            { id: 1012, name: 'Земляника Виноград', price: 380, stock: 99, description: 'Земляника виноград' },
-                            { id: 1013, name: 'Груша-Малина Газировка', price: 380, stock: 99, description: 'Груша-малина газировка' },
-                            { id: 1014, name: 'Клубничный Коктейль', price: 380, stock: 99, description: 'Клубничный коктейль' },
-                            { id: 1015, name: 'Виноградная Фанта', price: 380, stock: 99, description: 'Виноградная фанта' },
-                            { id: 1016, name: 'Виноград Алоэ', price: 380, stock: 99, description: 'Виноград алоэ' },
-                            { id: 1017, name: 'Вишнёвый Морс', price: 380, stock: 99, description: 'Вишнёвый морс' },
-                            { id: 1018, name: 'Вишня Скитлс Лимон', price: 380, stock: 99, description: 'Вишня скитлс лимон' },
-                            { id: 1019, name: 'Ананас Апельсин', price: 380, stock: 99, description: 'Ананас апельсин' },
-                            { id: 1020, name: 'Апельсин Вишня', price: 380, stock: 99, description: 'Апельсин вишня' },
-                            { id: 1021, name: 'Арбузный Смузи', price: 380, stock: 99, description: 'Арбузный смузи' },
-                            { id: 1022, name: 'Банан Клубника', price: 380, stock: 99, description: 'Банан клубника' },
-                            { id: 1023, name: 'Виноград Вишня', price: 380, stock: 99, description: 'Виноград вишня' },
-                            { id: 1024, name: 'Вишнёвая Газировка', price: 380, stock: 99, description: 'Вишнёвая газировка' },
-                            { id: 1025, name: 'Виноград Малина-Арбуз', price: 380, stock: 99, description: 'Виноград малина-арбуз' },
-                            { id: 1026, name: 'Виноградный Чупа-Чупс', price: 380, stock: 99, description: 'Виноградный чупа-чупс' },
-                            { id: 1027, name: 'Малина Черника', price: 380, stock: 99, description: 'Малина черника' },
-                            { id: 1028, name: 'Персиковый Лимонад', price: 380, stock: 99, description: 'Персиковый лимонад' },
-                            { id: 1029, name: 'Фруктовый Энергетик', price: 380, stock: 99, description: 'Фруктовый энергетик' },
-                            { id: 1030, name: 'Лесные Ягоды', price: 380, stock: 99, description: 'Лесные ягоды' },
-                            { id: 1031, name: 'Чернично-Малиновые Червячки', price: 380, stock: 99, description: 'Чернично-малиновые червячки' },
-                            { id: 1032, name: 'Яблочный Лимонад', price: 380, stock: 99, description: 'Яблочный лимонад' },
-                            { id: 1033, name: 'Фруктовый Тик-Так', price: 380, stock: 99, description: 'Фруктовый тик-так' },
-                            { id: 1034, name: 'Яблоко Киви', price: 380, stock: 99, description: 'Яблоко киви' },
-                            { id: 1035, name: 'Тропический Банан', price: 380, stock: 99, description: 'Тропический банан' },
-                            { id: 1036, name: 'Ягодная Жвачка', price: 380, stock: 99, description: 'Ягодная жвачка' },
-                            { id: 1037, name: 'Ред Булл с Ананасом', price: 380, stock: 99, description: 'Ред булл с ананасом' },
-                            { id: 1038, name: 'Розовый Лимонад', price: 380, stock: 99, description: 'Розовый лимонад' },
-                            { id: 1039, name: 'Персик Клубника', price: 380, stock: 99, description: 'Персик клубника' },
-                            { id: 1040, name: 'Малина Апельсин', price: 380, stock: 99, description: 'Малина апельсин' }
-                        ]
+        
+    "id": "liquid",
+    "name": "Жидкости",
+    "icon": "🍓",
+    "brands": [
+        {
+            "id": "angry-vape",
+            "name": "Angry Vape",
+            "icon": "🍓",
+            "series": [
+                {
+                    "id": "angry-vape-50mg",
+                    "name": "Angry Vape Salt 50mg",
+                    "flavors": [
+                        { "id": 1, "name": "Варан Комод (клубничный джем)", "price": 410, "stock": 4, "description": "Клубничный джем с ментолом" },
+                        { "id": 2, "name": "Бегемот Брутто (черный виноград)", "price": 410, "stock": 2, "description": "Черный виноград" },
+                        { "id": 3, "name": "Ворон Лут (груша с ананасом)", "price": 410, "stock": 7, "description": "Груша с ананасом" },
+                        { "id": 4, "name": "Жираф Шпиль (манго)", "price": 410, "stock": 14, "description": "Сочное манго" },
+                        { "id": 5, "name": "Ёж Кутёж (синяя малина)", "price": 410, "stock": 11, "description": "Синяя малина" },
+                        { "id": 6, "name": "Геккон Пупырка (кислые конфеты)", "price": 410, "stock": 9, "description": "Кислые конфеты" },
+                        { "id": 7, "name": "Енот щипач (чизкейк с клубникой и бананом)", "price": 410, "stock": 12, "description": "Чизкейк с клубникой и бананом" },
+                        { "id": 8, "name": "Волк АУФ (вишня с лимоном)", "price": 410, "stock": 5, "description": "Вишня с лимоном" },
+                        { "id": 9, "name": "Акула гарпун (черника со сливками)", "price": 410, "stock": 1, "description": "Черника со сливками" },
+                        { "id": 10, "name": "Вомбат Батяня (виноградная газировка)", "price": 410, "stock": 6, "description": "Виноградная газировка" },
+                        { "id": 11, "name": "Гадюка мамба (персик с малиной)", "price": 410, "stock": 8, "description": "Персик с малиной" },
+                        { "id": 12, "name": "Горилла верзила (яблоко с манго и ананасом)", "price": 410, "stock": 10, "description": "Яблоко с манго и ананасом" },
+                        { "id": 13, "name": "Жаба анжела (грейпфрут с малиной)", "price": 410, "stock": 13, "description": "Грейпфрут с малиной" },
+                        { "id": 14, "name": "Богомол Лизун (ягодные леденцы)", "price": 410, "stock": 3, "description": "Ягодные леденцы" },
+                        { "id": 15, "name": "Ленивец Таймлапс (апельсиновая газировка)", "price": 410, "stock": 20, "description": "Апельсиновая газировка" },
+                        { "id": 16, "name": "Лев шарм (йогурт манго маракуйя)", "price": 410, "stock": 19, "description": "Йогурт манго маракуйя" },
+                        { "id": 17, "name": "Муравей Термит (яблоко)", "price": 410, "stock": 22, "description": "Яблоко" },
+                        { "id": 18, "name": "Тигр матрац (банан)", "price": 410, "stock": 31, "description": "Банан" },
+                        { "id": 19, "name": "Слон Патефон (арбуз)", "price": 410, "stock": 29, "description": "Арбуз" },
+                        { "id": 20, "name": "Хамелион RGB (зеленое яблоко с вишней)", "price": 410, "stock": 33, "description": "Зеленое яблоко с вишней" },
+                        { "id": 21, "name": "Паук Меломан (малиновая газировка)", "price": 410, "stock": 26, "description": "Малиновая газировка" },
+                        { "id": 22, "name": "Касатка рогатка (мятная жвачка)", "price": 410, "stock": 16, "description": "Мятная жвачка" },
+                        { "id": 23, "name": "Осьминог Ван Гог (гранатовый сок)", "price": 410, "stock": 25, "description": "Гранатовый сок" },
+                        { "id": 24, "name": "Опоссум хвостун (арбузная жвачка)", "price": 410, "stock": 24, "description": "Арбузная жвачка" },
+                        { "id": 25, "name": "Сурикат Эдуард (йогурт с киви)", "price": 410, "stock": 30, "description": "Йогурт с киви" },
+                        { "id": 26, "name": "Леопард Пятно (ананасовая газировка)", "price": 410, "stock": 21, "description": "Ананасовая газировка" },
+                        { "id": 27, "name": "Капибара Чилл (яблоко с киви)", "price": 410, "stock": 15, "description": "Яблоко с киви" },
+                        { "id": 28, "name": "Коала сплюн (клубника)", "price": 410, "stock": 17, "description": "Клубника" },
+                        { "id": 29, "name": "Крокодил Бревно (киви)", "price": 410, "stock": 18, "description": "Киви" },
+                        { "id": 30, "name": "Носорог Лютый (ананас с яблоком)", "price": 410, "stock": 23, "description": "Ананас с яблоком" },
+                        { "id": 31, "name": "Попугай Повтор (лимонный мармелад)", "price": 410, "stock": 27, "description": "Лимонный мармелад" },
+                        { "id": 32, "name": "Улитка ЖКХ (жвачка с виноградом)", "price": 410, "stock": 32, "description": "Жвачка с виноградом" },
+                        { "id": 33, "name": "Рассомаха Маха (малиновый джем)", "price": 410, "stock": 28, "description": "Малиновый джем" }
+                    ]
+                },
+                {
+                    "id": "angry-vape-20mg",
+                    "name": "Angry Vape Salt 20mg",
+                    "flavors": [
+                        { "id": 34, "name": "Акула гарпун (черника со сливками)", "price": 410, "stock": 1, "description": "Черника со сливками" },
+                        { "id": 35, "name": "Жираф Шпиль (манго)", "price": 410, "stock": 14, "description": "Сочное манго" },
+                        { "id": 36, "name": "Ёж Кутёж (синяя малина)", "price": 410, "stock": 11, "description": "Синяя малина" },
+                        { "id": 37, "name": "Варан Комод (клубничный джем)", "price": 410, "stock": 4, "description": "Клубничный джем с ментолом" },
+                        { "id": 38, "name": "Опоссум хвостун (арбузная жвачка)", "price": 410, "stock": 24, "description": "Арбузная жвачка" },
+                        { "id": 39, "name": "Носорог Лютый (ананас с яблоком)", "price": 410, "stock": 23, "description": "Ананас с яблоком" },
+                        { "id": 40, "name": "Сурикат Эдуард (йогурт с киви)", "price": 410, "stock": 30, "description": "Йогурт с киви" },
+                        { "id": 41, "name": "Муравей Термит (яблоко)", "price": 410, "stock": 22, "description": "Яблоко" },
+                        { "id": 42, "name": "Гадюка мамба (персик с малиной)", "price": 410, "stock": 8, "description": "Персик с малиной" },
+                        { "id": 43, "name": "Богомол Лизун (ягодные леденцы)", "price": 410, "stock": 3, "description": "Ягодные леденцы" },
+                        { "id": 44, "name": "Ленивец Таймлапс (апельсиновая газировка)", "price": 410, "stock": 20, "description": "Апельсиновая газировка" },
+                        { "id": 45, "name": "Горилла верзила (яблоко с манго и ананасом)", "price": 410, "stock": 10, "description": "Яблоко с манго и ананасом" },
+                        { "id": 46, "name": "Жаба анжела (грейпфрут с малиной)", "price": 410, "stock": 13, "description": "Грейпфрут с малиной" },
+                        { "id": 47, "name": "Коала сплюн (клубника)", "price": 410, "stock": 17, "description": "Клубника" },
+                        { "id": 48, "name": "Хамелион RGB (зеленое яблоко с вишней)", "price": 410, "stock": 33, "description": "Зеленое яблоко с вишней" },
+                        { "id": 49, "name": "Капибара Чилл (яблоко с киви)", "price": 410, "stock": 15, "description": "Яблоко с киви" },
+                        { "id": 50, "name": "Тигр матрац (банан)", "price": 410, "stock": 31, "description": "Банан" },
+                        { "id": 51, "name": "Бегемот Брутто (черный виноград)", "price": 410, "stock": 2, "description": "Черный виноград" },
+                        { "id": 52, "name": "Крокодил Бревно (киви)", "price": 410, "stock": 18, "description": "Киви" },
+                        { "id": 53, "name": "Осьминог Ван Гог (гранатовый сок)", "price": 410, "stock": 25, "description": "Гранатовый сок" },
+                        { "id": 54, "name": "Лев шарм (йогурт манго маракуйя)", "price": 410, "stock": 19, "description": "Йогурт манго маракуйя" },
+                        { "id": 55, "name": "Волк АУФ (вишня с лимоном)", "price": 410, "stock": 5, "description": "Вишня с лимоном" },
+                        { "id": 56, "name": "Геккон Пупырка (кислые конфеты)", "price": 410, "stock": 9, "description": "Кислые конфеты" },
+                        { "id": 57, "name": "Леопард Пятно (ананасовая газировка)", "price": 410, "stock": 21, "description": "Ананасовая газировка" },
+                        { "id": 58, "name": "Паук Меломан (малиновая газировка)", "price": 410, "stock": 26, "description": "Малиновая газировка" },
+                        { "id": 59, "name": "Рассомаха Маха (малиновый джем)", "price": 410, "stock": 28, "description": "Малиновый джем" },
+                        { "id": 60, "name": "Слон Патефон (арбуз)", "price": 410, "stock": 29, "description": "Арбуз" },
+                        { "id": 61, "name": "Попугай Повтор (лимонный мармелад)", "price": 410, "stock": 27, "description": "Лимонный мармелад" },
+                        { "id": 62, "name": "Улитка ЖКХ (жвачка с виноградом)", "price": 410, "stock": 32, "description": "Жвачка с виноградом" },
+                        { "id": 63, "name": "Енот щипач (чизкейк с клубникой и бананом)", "price": 410, "stock": 12, "description": "Чизкейк с клубникой и бананом" },
+                        { "id": 64, "name": "Касатка рогатка (мятная жвачка)", "price": 410, "stock": 16, "description": "Мятная жвачка" },
+                        { "id": 65, "name": "Вомбат Батяня (виноградная газировка)", "price": 410, "stock": 6, "description": "Виноградная газировка" },
+                        { "id": 66, "name": "Ворон Лут (груша с ананасом)", "price": 410, "stock": 7, "description": "Груша с ананасом" }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "angry-ape",
+            "name": "ANGRY APE",
+            "icon": "🍍",
+            "series": [
+                {
+                    "id": "angry-ape-ultra-60mg",
+                    "name": "ANGRY APE ULTRA 60mg",
+                    "flavors": [
+                        { "id": 67, "name": "Ананасовая конфета", "price": 380, "stock": 1, "description": "Сладкая ананасовая конфета" },
+                        { "id": 68, "name": "Банан клубника", "price": 380, "stock": 4, "description": "Нежный банан с клубникой" },
+                        { "id": 69, "name": "Ягодный микс", "price": 380, "stock": 20, "description": "Микс лесных ягод" },
+                        { "id": 70, "name": "Апельсин с манго", "price": 380, "stock": 2, "description": "Апельсин с манго" },
+                        { "id": 71, "name": "Арбуз черника", "price": 380, "stock": 3, "description": "Арбуз черника" },
+                        { "id": 72, "name": "Вишневый доктор пеппер", "price": 380, "stock": 5, "description": "Вишневый доктор пеппер" },
+                        { "id": 73, "name": "Вишня винограда", "price": 380, "stock": 6, "description": "Вишня винограда" },
+                        { "id": 74, "name": "Двойная малина", "price": 380, "stock": 7, "description": "Двойная малина" },
+                        { "id": 75, "name": "Земляника винограда", "price": 380, "stock": 8, "description": "Земляника винограда" },
+                        { "id": 76, "name": "Йогурт с персиком", "price": 380, "stock": 9, "description": "Йогурт с персиком" },
+                        { "id": 77, "name": "Киви маракуйя гуаба", "price": 380, "stock": 10, "description": "Киви маракуйя гуаба" },
+                        { "id": 78, "name": "Кислая малина лед", "price": 380, "stock": 11, "description": "Кислая малина лед" },
+                        { "id": 79, "name": "Клубничный лимонад", "price": 380, "stock": 12, "description": "Клубничный лимонад" },
+                        { "id": 80, "name": "Манго маракуйя", "price": 380, "stock": 13, "description": "Манго маракуйя" },
+                        { "id": 81, "name": "Нектарин винограда", "price": 380, "stock": 14, "description": "Нектарин винограда" },
+                        { "id": 82, "name": "Черная смородина банан", "price": 380, "stock": 15, "description": "Черная смородина банан" },
+                        { "id": 83, "name": "Черника земляника лед", "price": 380, "stock": 16, "description": "Черника земляника лед" },
+                        { "id": 84, "name": "Энергетик винограда лед", "price": 380, "stock": 17, "description": "Энергетик винограда лед" },
+                        { "id": 85, "name": "Энергетик лесные ягоды", "price": 380, "stock": 18, "description": "Энергетик лесные ягоды" },
+                        { "id": 86, "name": "Яблоко персик", "price": 380, "stock": 19, "description": "Яблоко персик" }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "annima",
+            "name": "ANNIMA",
+            "icon": "🍇",
+            "series": [
+                {
+                    "id": "annima-animma",
+                    "name": "ANIMMA",
+                    "flavors": [
+                        { "id": 87, "name": "MADARA (бабл гам)", "price": 640, "stock": 8, "description": "Бабл гам" },
+                        { "id": 88, "name": "SASUKE (малина айс)", "price": 640, "stock": 10, "description": "Малина айс" },
+                        { "id": 89, "name": "ISSHIKI (мармеладные мишки)", "price": 640, "stock": 2, "description": "Мармеладные мишки" },
+                        { "id": 90, "name": "NARUTO (ананас)", "price": 640, "stock": 9, "description": "Ананас" },
+                        { "id": 91, "name": "JUBI (смородина и виноград)", "price": 640, "stock": 5, "description": "Смородина и виноград" },
+                        { "id": 92, "name": "KAGUYA (энергетик айс)", "price": 640, "stock": 7, "description": "Энергетик айс" },
+                        { "id": 93, "name": "JIRAIYA (манго-маракуйя)", "price": 640, "stock": 4, "description": "Манго-маракуйя" },
+                        { "id": 94, "name": "ITACHI (вишня айс)", "price": 640, "stock": 3, "description": "Вишня айс" },
+                        { "id": 95, "name": "INDRA (киви-клубника)", "price": 640, "stock": 1, "description": "Киви-клубника" },
+                        { "id": 96, "name": "JUGO (арбуз айс)", "price": 640, "stock": 6, "description": "Арбуз айс" }
+                    ]
+                },
+                {
+                    "id": "annima-love-killer-80mg",
+                    "name": "ANNIMA LOVE KILLER 80mg",
+                    "flavors": [
+                        { "id": 97, "name": "Ежевичный Лимонад", "price": 390, "stock": 14, "description": "Ежевичный лимонад" },
+                        { "id": 98, "name": "Земляника Виноград", "price": 390, "stock": 18, "description": "Земляника виноград" },
+                        { "id": 99, "name": "Груша-Малина Газировка", "price": 390, "stock": 13, "description": "Груша-малина газировка" },
+                        { "id": 100, "name": "Клубничный Коктейль", "price": 390, "stock": 19, "description": "Клубничный коктейль" },
+                        { "id": 101, "name": "Виноградная Фанта", "price": 390, "stock": 15, "description": "Виноградная фанта" },
+                        { "id": 102, "name": "Виноград Алоэ", "price": 390, "stock": 28, "description": "Виноград алоэ" },
+                        { "id": 103, "name": "Вишнёвый Морс", "price": 390, "stock": 8, "description": "Вишнёвый морс" },
+                        { "id": 104, "name": "Вишня Скитлс Лимон", "price": 390, "stock": 9, "description": "Вишня скитлс лимон" },
+                        { "id": 105, "name": "Ананас Апельсин", "price": 390, "stock": 1, "description": "Ананас апельсин" },
+                        { "id": 106, "name": "Апельсин Вишня", "price": 390, "stock": 2, "description": "Апельсин вишня" },
+                        { "id": 107, "name": "Арбузный Смузи", "price": 390, "stock": 3, "description": "Арбузный смузи" },
+                        { "id": 108, "name": "Банан Клубника", "price": 390, "stock": 4, "description": "Банан клубника" },
+                        { "id": 109, "name": "Виноград Вишня", "price": 390, "stock": 5, "description": "Виноград вишня" },
+                        { "id": 110, "name": "Вишнёвая Газировка", "price": 390, "stock": 7, "description": "Вишнёвая газировка" },
+                        { "id": 111, "name": "Виноград Малина-Арбуз", "price": 390, "stock": 10, "description": "Виноград малина-арбуз" },
+                        { "id": 112, "name": "Виноградный Чупа-Чупс", "price": 390, "stock": 6, "description": "Виноградный чупа-чупс" },
+                        { "id": 113, "name": "Малина Черника", "price": 390, "stock": 12, "description": "Малина черника" },
+                        { "id": 114, "name": "Персиковый Лимонад", "price": 390, "stock": 17, "description": "Персиковый лимонад" },
+                        { "id": 115, "name": "Фруктовый Энергетик", "price": 390, "stock": 21, "description": "Фруктовый энергетик" },
+                        { "id": 116, "name": "Лесные Ягоды", "price": 390, "stock": 20, "description": "Лесные ягоды" },
+                        { "id": 117, "name": "Чернично-Малиновые Червячки", "price": 390, "stock": 22, "description": "Чернично-малиновые червячки" },
+                        { "id": 118, "name": "Яблочный Лимонад", "price": 390, "stock": 24, "description": "Яблочный лимонад" },
+                        { "id": 119, "name": "Фруктовый Тик-Так", "price": 390, "stock": 26, "description": "Фруктовый тик-так" },
+                        { "id": 120, "name": "Яблоко Киви", "price": 390, "stock": 23, "description": "Яблоко киви" },
+                        { "id": 121, "name": "Тропический Банан", "price": 390, "stock": 27, "description": "Тропический банан" },
+                        { "id": 122, "name": "Ягодная Жвачка", "price": 390, "stock": 25, "description": "Ягодная жвачка" },
+                        { "id": 123, "name": "Ред Булл с Ананасом", "price": 390, "stock": 29, "description": "Ред булл с ананасом" },
+                        { "id": 124, "name": "Розовый Лимонад", "price": 390, "stock": 30, "description": "Розовый лимонад" },
+                        { "id": 125, "name": "Персик Клубника", "price": 390, "stock": 16, "description": "Персик клубника" },
+                        { "id": 126, "name": "Малина Апельсин", "price": 390, "stock": 11, "description": "Малина апельсин" }
+                       ]
                     },
                     {
                         id: 'annima-love-gold-edition-80mg',
