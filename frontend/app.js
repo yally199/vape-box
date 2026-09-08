@@ -657,7 +657,14 @@ const categories = [
                         { "id": 480, "name": "Кислая Малиновая Газировка", "price": 510, "stock": 12, "description": "Кислая Малиновая Газировка" },
                         { "id": 481, "name": "Кислая Морошка", "price": 510, "stock": 13, "description": "Кислая Морошка" }
                     ]
-                },
+                }
+            ]
+        },
+        {
+            "id": "podonki",
+            "name": "PODONKI",
+            "icon": "🎯",
+            "series": [
                 {
                     "id": "alfa-vape-podonki",
                     "name": "ALFA VAPE & PODONKI",
