@@ -994,7 +994,7 @@ const categories = [
             ]
         }
     ]
-}
+},
     {
         id: 'disposable',
         name: 'Одноразки',
