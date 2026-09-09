@@ -19,6 +19,15 @@ async function loadProductsFromBackend() {
         return [];
     }
 }
+// ===== РАСЧЁТ ЦЕНЫ С НАЦЕНКОЙ =====
+function calculatePrice(basePrice) {
+    if (basePrice === 0 || !basePrice) return 0;
+    if (basePrice < 1000) {
+        return Math.ceil(basePrice * 1.30 / 10) * 10; // +30%, округление до десятков вверх
+    } else {
+        return Math.ceil(basePrice * 1.25 / 10) * 10; // +25%, округление до десятков вверх
+    }
+}
 
 // Функция объединения: добавляет товары с бекенда в существующие категории
 function mergeProducts(backendProducts) {
@@ -32,20 +41,19 @@ function mergeProducts(backendProducts) {
             brand.series.forEach(series => {
                 // Ищем товары с бекенда, которые подходят под этот бренд и серию
                 const matched = backendProducts.filter(p => {
-                    // Простая эвристика: проверяем, содержит ли название товара название бренда
                     const nameLower = p.name.toLowerCase();
                     const brandLower = brand.name.toLowerCase();
                     return nameLower.includes(brandLower);
                 });
 
-                // Добавляем найденные товары в серию (если их там ещё нет)
+                // Добавляем найденные товары в серию
                 matched.forEach(p => {
                     const exists = series.flavors.some(f => f.name === p.name);
                     if (!exists) {
                         series.flavors.push({
                             id: p.id || Date.now() + Math.random(),
                             name: p.name,
-                            price: p.price || 0,
+                            price: calculatePrice(p.price) || 0, // ← здесь применяется наценка
                             stock: p.stock || 999,
                             description: p.description || p.category || '',
                         });
@@ -55,7 +63,6 @@ function mergeProducts(backendProducts) {
         });
     });
 }
-
 // ===== КАТЕГОРИИ С БРЕНДАМИ =====
 const categories = [
     {
@@ -1050,7 +1057,359 @@ const categories = [
                     ]
                 }
             ]
-        }
+        },
+        // ===== НОВЫЕ БРЕНДЫ ИЗ EXCEL =====
+{
+    "id": "angry-ape-ultra",
+    "name": "ANGRY APE ULTRA",
+    "icon": "🍍",
+    "series": [
+        { "id": "angry-ape-ultra-60mg", "name": "ANGRY APE ULTRA 60mg", "flavors": [] }
+    ]
+},
+{
+    "id": "blood",
+    "name": "BLOOD",
+    "icon": "🩸",
+    "series": [
+        { "id": "blood-50mg", "name": "BLOOD 50mg", "flavors": [] },
+        { "id": "blood-classic", "name": "BLOOD Classic", "flavors": [] }
+    ]
+},
+{
+    "id": "chappman",
+    "name": "CHAPPMAN",
+    "icon": "🧪",
+    "series": [
+        { "id": "chappman-20mg", "name": "CHAPPMAN 20mg", "flavors": [] },
+        { "id": "chappman-50mg", "name": "CHAPPMAN 50mg", "flavors": [] }
+    ]
+},
+{
+    "id": "chill-out",
+    "name": "CHILL OUT",
+    "icon": "❄️",
+    "series": [
+        { "id": "chill-out-20mg", "name": "CHILL OUT 20mg", "flavors": [] }
+    ]
+},
+{
+    "id": "dota",
+    "name": "DOTA",
+    "icon": "🎮",
+    "series": [
+        { "id": "dota-classic", "name": "DOTA Classic", "flavors": [] },
+        { "id": "dota-anaрхия", "name": "DOTA & АНАРХИЯ V2", "flavors": [] },
+        { "id": "dota-cats", "name": "Dota & Cats", "flavors": [] }
+    ]
+},
+{
+    "id": "duall",
+    "name": "DUALL",
+    "icon": "🔄",
+    "series": [
+        { "id": "duall-extra-hard", "name": "Duall EXTRA hard", "flavors": [] },
+        { "id": "duall-extra-light", "name": "Duall EXTRA light", "flavors": [] },
+        { "id": "duall-salt-hard", "name": "Duall salt hard", "flavors": [] },
+        { "id": "duall-salt-light", "name": "Duall salt light", "flavors": [] },
+        { "id": "duall-extreme-hard", "name": "Duall Extreme Extra Hard", "flavors": [] },
+        { "id": "duall-individual", "name": "ИНДИВИDUALL hard", "flavors": [] }
+    ]
+},
+{
+    "id": "faff",
+    "name": "FAFF",
+    "icon": "🍬",
+    "series": [
+        { "id": "faff-hard-50mg", "name": "FaFF Hard 50mg", "flavors": [] },
+        { "id": "faff-shooter-50mg", "name": "FaFF SHOOTER 50mg", "flavors": [] },
+        { "id": "faff-prime-hard-50mg", "name": "FaFF PRIME HARD 50мг", "flavors": [] }
+    ]
+},
+{
+    "id": "glitch",
+    "name": "GLITCH",
+    "icon": "💻",
+    "series": [
+        { "id": "glitch-genetic", "name": "Glitch Genetic Code EXTRA 20mg", "flavors": [] },
+        { "id": "glitch-rasin", "name": "Glitch Rasin EXTRA 20mg", "flavors": [] },
+        { "id": "glitch-sauce-20mg", "name": "Glitch Sauce 20mg ICED OUT", "flavors": [] },
+        { "id": "glitch-sauce-50mg", "name": "Glitch Sauce Classic (50mg)", "flavors": [] }
+    ]
+},
+{
+    "id": "hotspot",
+    "name": "HOTSPOT",
+    "icon": "🔥",
+    "series": [
+        { "id": "hotspot-fuel-up", "name": "HOTSPOT Fuel UP 50mg", "flavors": [] },
+        { "id": "hotspot-dont-chew", "name": "HOTSPOT DON'T Chew IT", "flavors": [] },
+        { "id": "hotspot-fuel-morph", "name": "HOTSPOT Fuel MORPH", "flavors": [] },
+        { "id": "hotspot-fuel", "name": "HOTSPOT Fuel", "flavors": [] },
+        { "id": "hotspot-dot", "name": "HOTSPOT DOT", "flavors": [] },
+        { "id": "hotspot-ice", "name": "HOTSPOT ICE", "flavors": [] },
+        { "id": "hotspot-podonki", "name": "HOTSPOT & PODONKI", "flavors": [] }
+    ]
+},
+{
+    "id": "husky",
+    "name": "HUSKY",
+    "icon": "🐕",
+    "series": [
+        { "id": "husky-mishki", "name": "HUSKY&МИШКИ", "flavors": [] },
+        { "id": "husky-double-ice", "name": "HUSKY Double Ice", "flavors": [] },
+        { "id": "husky-import", "name": "HUSKY IMPORT", "flavors": [] },
+        { "id": "husky-malaysian", "name": "HUSKY Malaysian", "flavors": [] },
+        { "id": "husky-mint", "name": "HUSKY Mint series", "flavors": [] },
+        { "id": "husky-premium", "name": "HUSKY Premium", "flavors": [] }
+    ]
+},
+{
+    "id": "isterika",
+    "name": "ISTERIKA",
+    "icon": "💢",
+    "series": [
+        { "id": "isterika-classic", "name": "ISTERIKA CLASSIC 20mg", "flavors": [] },
+        { "id": "isterika-mix", "name": "ISTERIKA MIX 20мг STRONG SALT", "flavors": [] },
+        { "id": "isterika-greh", "name": "ISTERIKA&ГРЕХ", "flavors": [] }
+    ]
+},
+{
+    "id": "koma",
+    "name": "KOMA",
+    "icon": "💀",
+    "series": [
+        { "id": "koma-fatality", "name": "KOMA fatality 81mg", "flavors": [] }
+    ]
+},
+{
+    "id": "lit-energy",
+    "name": "LIT ENERGY",
+    "icon": "⚡",
+    "series": [
+        { "id": "lit-energy-classic", "name": "LIT ENERGY", "flavors": [] }
+    ]
+},
+{
+    "id": "mad",
+    "name": "MAD",
+    "icon": "😈",
+    "series": [
+        { "id": "mad-50mg", "name": "MAD 50mg", "flavors": [] },
+        { "id": "mad-classic", "name": "MAD Classic", "flavors": [] },
+        { "id": "mad-samoubiitsa", "name": "MAD & САМОУБИЙЦА V2", "flavors": [] }
+    ]
+},
+{
+    "id": "monster",
+    "name": "MONSTER",
+    "icon": "👾",
+    "series": [
+        { "id": "monster-hardcore", "name": "MONSTER HARDCORE 60mg", "flavors": [] },
+        { "id": "monster-sour", "name": "MONSTER SOUR 60mg", "flavors": [] },
+        { "id": "monster-iceberg", "name": "MONSTER ICEBERG 60mg", "flavors": [] }
+    ]
+},
+{
+    "id": "monstervapor",
+    "name": "MONSTERVAPOR",
+    "icon": "🧟",
+    "series": [
+        { "id": "monstervapor-20mg", "name": "MONSTERVAPOR 20mg", "flavors": [] },
+        { "id": "monstervapor-50mg", "name": "MONSTERVAPOR 50mg", "flavors": [] },
+        { "id": "monstervapor-ice", "name": "MONSTERVAPOR ICE (70mg)", "flavors": [] },
+        { "id": "monstervapor-sour", "name": "MONSTERVAPOR SOUR (70mg)", "flavors": [] }
+    ]
+},
+{
+    "id": "narcoz",
+    "name": "NARCOZ",
+    "icon": "💊",
+    "series": [
+        { "id": "narcoz-20mg", "name": "NARCOZ 20mg (ОРИГИНАЛ)", "flavors": [] },
+        { "id": "narcoz-50mg", "name": "NARCOZ 50mg (ОРИГИНАЛ)", "flavors": [] }
+    ]
+},
+{
+    "id": "nice-shot",
+    "name": "NICE SHOT",
+    "icon": "🎯",
+    "series": [
+        { "id": "nice-shot-50mg", "name": "NICE SHOT 50mg", "flavors": [] }
+    ]
+},
+{
+    "id": "oggo",
+    "name": "OGGO",
+    "icon": "🐙",
+    "series": [
+        { "id": "oggo-reels", "name": "OGGO REELS", "flavors": [] },
+        { "id": "oggo-sour", "name": "OGGO SOUR", "flavors": [] },
+        { "id": "oggo-x-elfliq", "name": "OGGO X ELFLIQ Ice (40mg)", "flavors": [] }
+    ]
+},
+{
+    "id": "peredoz",
+    "name": "PEREDOZ",
+    "icon": "💉",
+    "series": [
+        { "id": "peredoz-classic", "name": "PEREDOZ Classic", "flavors": [] },
+        { "id": "peredoz-exclusive", "name": "PEREDOZ EXCLUSIVE", "flavors": [] },
+        { "id": "peredoz-v12", "name": "Peredoz V12", "flavors": [] }
+    ]
+},
+{
+    "id": "phantom",
+    "name": "PHANTOM",
+    "icon": "👻",
+    "series": [
+        { "id": "phantom-50mg", "name": "PHANTOM 50mg", "flavors": [] }
+    ]
+},
+{
+    "id": "pixel",
+    "name": "PIXEL",
+    "icon": "🖼️",
+    "series": [
+        { "id": "pixel-35mg", "name": "PIXEL 35mg", "flavors": [] },
+        { "id": "pixel-ice", "name": "PIXEL ICE (45mg)", "flavors": [] },
+        { "id": "pixel-sour", "name": "PIXEL SOUR (45mg)", "flavors": [] }
+    ]
+},
+{
+    "id": "protest",
+    "name": "PROTEST",
+    "icon": "✊",
+    "series": [
+        { "id": "protest-malasia", "name": "PROTEST & MALASIA", "flavors": [] },
+        { "id": "protest-classic", "name": "PROTEST Classic", "flavors": [] }
+    ]
+},
+{
+    "id": "rick-and-morty",
+    "name": "RICK AND MORTY",
+    "icon": "🧠",
+    "series": [
+        { "id": "rick-bad-acid", "name": "Rick and Morty Bad Acid (Дубль) 60mg", "flavors": [] },
+        { "id": "rick-bad-trip", "name": "Rick and morty&bad trip ice", "flavors": [] },
+        { "id": "rick-doomsday", "name": "Rick and Morty Doomsday (60mg)", "flavors": [] },
+        { "id": "rick-anime", "name": "RICK AND MORTY THE ANIME", "flavors": [] },
+        { "id": "rick-zamorzone", "name": "RICK and MORTY на замерзоне", "flavors": [] },
+        { "id": "rick-catswill", "name": "RICK AND MORTY & CATSWILL", "flavors": [] },
+        { "id": "rick-bad-trip-acid", "name": "RICK & MORTY Bad Trip Acid", "flavors": [] }
+    ]
+},
+{
+    "id": "skala",
+    "name": "SKALA",
+    "icon": "🏔️",
+    "series": [
+        { "id": "skala-20mg", "name": "SKALA 20mg", "flavors": [] },
+        { "id": "skala-50mg", "name": "SKALA 50mg", "flavors": [] },
+        { "id": "skala-kitai-20mg", "name": "SKALA 20mg (Китай)", "flavors": [] },
+        { "id": "skala-kitai-50mg", "name": "SKALA 50mg (Китай)", "flavors": [] }
+    ]
+},
+{
+    "id": "trava",
+    "name": "TRAVA",
+    "icon": "🌿",
+    "series": [
+        { "id": "trava-20mg", "name": "TRAVA 20mg (ОРИГИНАЛ)", "flavors": [] },
+        { "id": "trava-50mg", "name": "TRAVA 50mg (ОРИГИНАЛ)", "flavors": [] },
+        { "id": "trava-up", "name": "Trava Up 50mg (ОРИГИНАЛ)", "flavors": [] }
+    ]
+},
+{
+    "id": "yummy",
+    "name": "YUMMY",
+    "icon": "🍭",
+    "series": [
+        { "id": "yummy-medium", "name": "YUMMY medium", "flavors": [] },
+        { "id": "yummy-strong", "name": "YUMMY strong", "flavors": [] }
+    ]
+},
+{
+    "id": "zong-ultra",
+    "name": "ZONG ULTRA",
+    "icon": "⚡",
+    "series": [
+        { "id": "zong-ultra-medium", "name": "ZONG ULTRA (medium)", "flavors": [] }
+    ]
+},
+{
+    "id": "anarhiya-v2",
+    "name": "АНАРХИЯ V2",
+    "icon": "🏴",
+    "series": [
+        { "id": "anarhiya-v2", "name": "АНАРХИЯ V2", "flavors": [] }
+    ]
+},
+{
+    "id": "greh",
+    "name": "ГРЕХ",
+    "icon": "😈",
+    "series": [
+        { "id": "greh-remake", "name": "ГРЕХ Remake (60 mg)", "flavors": [] },
+        { "id": "greh-samoubiitsa-ice", "name": "ГРЕХ & САМОУБИЦА ICE", "flavors": [] },
+        { "id": "greh-samoubiitsa-sour", "name": "ГРЕХ & САМОУБИЦА SOUR", "flavors": [] },
+        { "id": "greh-samoubiitsa", "name": "ГРЕХ САМОУБИЙЦА", "flavors": [] }
+    ]
+},
+{
+    "id": "zlaya-labubu",
+    "name": "ЗЛАЯ ЛАБУБУ",
+    "icon": "🧙",
+    "series": [
+        { "id": "zlaya-labubu-50mg", "name": "ЗЛАЯ ЛАБУБУ 50мг hard", "flavors": [] },
+        { "id": "zlaya-labubu-sour", "name": "ЗЛАЯ ЛАБУБУ SOUR 50мг hard", "flavors": [] },
+        { "id": "zlaya-labubu-energy", "name": "Злая Лабубу ENERGY (Extra Hard)", "flavors": [] }
+    ]
+},
+{
+    "id": "zlaya-monashka",
+    "name": "ЗЛАЯ МОНАШКА",
+    "icon": "🧙‍♀️",
+    "series": [
+        { "id": "zlaya-monashka-80mg", "name": "ЗЛАЯ МОНАШКА 80mg SWEET", "flavors": [] },
+        { "id": "zlaya-monashka-hotspot", "name": "ЗЛАЯ МОНАШКА & HOTSPOT", "flavors": [] },
+        { "id": "zlaya-monashka-70mg", "name": "Злая монашка 70mg", "flavors": [] },
+        { "id": "zlaya-monashka-ice", "name": "ЗЛАЯ МОНАШКА ICE", "flavors": [] },
+        { "id": "zlaya-monashka-sour", "name": "Злая монашка SOUR 70mg", "flavors": [] }
+    ]
+},
+{
+    "id": "monarhiya",
+    "name": "МОНАРХИЯ",
+    "icon": "👑",
+    "series": [
+        { "id": "monarhiya-dikaya", "name": "МОНАРХИЯ Дикая", "flavors": [] },
+        { "id": "monarhiya-hard", "name": "МОНАРХИЯ HARD", "flavors": [] },
+        { "id": "monarhiya-sour", "name": "МОНАРХИЯ SOUR", "flavors": [] },
+        { "id": "monarhiya-limited", "name": "МОНАРХИЯ LIMITED", "flavors": [] }
+    ]
+},
+{
+    "id": "samoubiitsa",
+    "name": "САМОУБИЙЦА",
+    "icon": "💀",
+    "series": [
+        { "id": "samoubiitsa-v2-danger", "name": "САМОУБИЙЦА V2 DANGER 80mg", "flavors": [] },
+        { "id": "samoubiitsa-v2", "name": "САМОУБИЙЦА V2", "flavors": [] },
+        { "id": "samoubiitsa-v2-acid", "name": "САМОУБИЙЦА V2 ACID 70mg", "flavors": [] },
+        { "id": "samoubiitsa-v1", "name": "Самоубийца V1", "flavors": [] }
+    ]
+},
+{
+    "id": "zloy-monah",
+    "name": "Злой Монах 75mg",
+    "icon": "🧙",
+    "series": [
+        { "id": "zloy-monah-75mg", "name": "Злой Монах 75mg", "flavors": [] }
+           ]
+         }
+        ]      
+      }
     ]
 },
     {
@@ -2144,8 +2503,3 @@ function showToast(message, type = 'success') {
     updateCartUI();
     console.log('🛍️ VAPE BOX загружен! Товаров с бекенда:', backendProducts.length);
 })();
-
-// ===== ЗАПУСК =====
-renderCatalog();
-updateCartUI();
-console.log('🛍️ VAPE BOX с категориями и поиском загружен!');
