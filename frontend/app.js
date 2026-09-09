@@ -4,6 +4,57 @@ if (tg) {
     tg.ready();
     tg.expand();
 }
+// ===== ПОДКЛЮЧЕНИЕ К БЕКЕНДУ =====
+const API_URL = "https://vape-box.onrender.com"; // ← твоя ссылка
+
+// Функция загрузки товаров с бекенда
+async function loadProductsFromBackend() {
+    try {
+        const response = await fetch(`${API_URL}/api/products`);
+        if (!response.ok) throw new Error('Ошибка загрузки');
+        const data = await response.json();
+        return data.products || [];
+    } catch (error) {
+        console.warn('Бекенд недоступен, используем локальные товары:', error);
+        return [];
+    }
+}
+
+// Функция объединения: добавляет товары с бекенда в существующие категории
+function mergeProducts(backendProducts) {
+    if (!backendProducts || backendProducts.length === 0) return;
+
+    // Проходим по всем категориям
+    categories.forEach(cat => {
+        if (!cat.brands) return;
+        cat.brands.forEach(brand => {
+            if (!brand.series) return;
+            brand.series.forEach(series => {
+                // Ищем товары с бекенда, которые подходят под этот бренд и серию
+                const matched = backendProducts.filter(p => {
+                    // Простая эвристика: проверяем, содержит ли название товара название бренда
+                    const nameLower = p.name.toLowerCase();
+                    const brandLower = brand.name.toLowerCase();
+                    return nameLower.includes(brandLower);
+                });
+
+                // Добавляем найденные товары в серию (если их там ещё нет)
+                matched.forEach(p => {
+                    const exists = series.flavors.some(f => f.name === p.name);
+                    if (!exists) {
+                        series.flavors.push({
+                            id: p.id || Date.now() + Math.random(),
+                            name: p.name,
+                            price: p.price || 0,
+                            stock: p.stock || 999,
+                            description: p.description || p.category || '',
+                        });
+                    }
+                });
+            });
+        });
+    });
+}
 
 // ===== КАТЕГОРИИ С БРЕНДАМИ =====
 const categories = [
@@ -2085,6 +2136,14 @@ function showToast(message, type = 'success') {
         setTimeout(() => toast.remove(), 300);
     }, 2500);
 }
+// ===== ЗАПУСК С ЗАГРУЗКОЙ С БЕКЕНДА =====
+(async function init() {
+    const backendProducts = await loadProductsFromBackend();
+    mergeProducts(backendProducts);
+    renderCatalog();
+    updateCartUI();
+    console.log('🛍️ VAPE BOX загружен! Товаров с бекенда:', backendProducts.length);
+})();
 
 // ===== ЗАПУСК =====
 renderCatalog();
