@@ -248,8 +248,4 @@ def get_count():
     cursor.execute("SELECT COUNT(*) FROM products")
     count = cursor.fetchone()[0]
     conn.close()
-    return {"count": count}rsor()
-    cursor.execute("SELECT COUNT(*) FROM products")
-    count = cursor.fetchone()[0]
-    conn.close()
     return {"count": count}
