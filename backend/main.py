@@ -64,6 +64,35 @@ def calculate_price(base_price):
         return int((base_price * 1.25) / 10) * 10
 
 
+def parse_price(value):
+    """Превращает любое значение в число. '315,00' -> 315.0, '315.00 руб' -> 315.0"""
+    if value is None:
+        return 0
+    try:
+        if pd.isna(value):
+            return 0
+    except (TypeError, ValueError):
+        pass
+    if isinstance(value, (int, float)):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0
+    s = str(value).strip()
+    s = s.replace(' ', '').replace('₽', '').replace('руб.', '').replace('руб', '').replace('р.', '').replace('р', '')
+    s = s.replace(',', '.')
+    cleaned = ''
+    for ch in s:
+        if ch.isdigit() or ch == '.':
+            cleaned += ch
+    if not cleaned:
+        return 0
+    try:
+        return float(cleaned)
+    except ValueError:
+        return 0
+
+
 def import_from_excel():
     if not os.path.exists(EXCEL_FILE):
         print(f"[IMPORT] Файл {EXCEL_FILE} не найден!")
@@ -110,15 +139,10 @@ def import_from_excel():
             base_price = 0
             for col in price_cols:
                 if col in df.columns:
-                    val = row.get(col)
-                    if pd.notna(val):
-                        try:
-                            val = float(val)
-                            if val > 0:
-                                base_price = val
-                                break
-                        except (ValueError, TypeError):
-                            continue
+                    parsed = parse_price(row.get(col))
+                    if parsed > 0:
+                        base_price = parsed
+                        break
 
             if base_price == 0:
                 skipped_no_price += 1
@@ -148,8 +172,6 @@ def import_from_excel():
 
 
 IMPORTED_COUNT = import_from_excel()
-
-
 @app.get("/")
 def read_root():
     return {"message": "VAPE BOX API работает!", "imported": IMPORTED_COUNT}
