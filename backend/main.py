@@ -1,10 +1,13 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import List, Optional
 import pandas as pd
 import os
 import sqlite3
 import json
+from datetime import datetime
 
 app = FastAPI()
 
@@ -17,6 +20,9 @@ app.add_middleware(
 
 DB_PATH = "vape_shop.db"
 EXCEL_FILE = "prices.xlsx"
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_ADMIN_ID = os.getenv("TELEGRAM_ADMIN_ID", "")
 
 
 class UTF8JSONResponse(JSONResponse):
@@ -116,10 +122,6 @@ def import_from_excel():
         print(f"[IMPORT] Строк в файле: {len(df)}")
         print(f"[IMPORT] Колонки: {list(df.columns)}")
 
-        if len(df) > 0:
-            sample = df.iloc[0].to_dict()
-            print(f"[IMPORT] Пример строки: {sample}")
-
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM products")
@@ -149,7 +151,6 @@ def import_from_excel():
             else:
                 category, brand, series = 'Разное', 'Разное', ''
 
-            # Пропускаем товары без категории (Разное)
             if category == 'Разное':
                 skipped_raznoe += 1
                 continue
@@ -196,6 +197,58 @@ def import_from_excel():
 
 IMPORTED_COUNT = import_from_excel()
 
+
+# ===== ОТПРАВКА В TELEGRAM =====
+
+def send_telegram_message(text):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_ADMIN_ID:
+        print("[TG] Не настроены переменные окружения — уведомление не отправлено")
+        return False
+    try:
+        import urllib.request
+        import urllib.parse
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = urllib.parse.urlencode({
+            "chat_id": TELEGRAM_ADMIN_ID,
+            "text": text,
+            "parse_mode": "HTML"
+        }).encode("utf-8")
+        req = urllib.request.Request(url, data=payload)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            print(f"[TG] Уведомление отправлено, статус: {resp.status}")
+            return True
+    except Exception as e:
+        print(f"[TG] Ошибка отправки: {e}")
+        return False
+
+
+# ===== МОДЕЛИ ДЛЯ ЗАКАЗОВ =====
+
+class OrderItem(BaseModel):
+    name: str
+    brand: Optional[str] = ""
+    quantity: int
+    price: float
+    total: float
+
+
+class OrderCustomer(BaseModel):
+    name: str
+    telegram: Optional[str] = ""
+    phone: Optional[str] = ""
+    address: Optional[str] = ""
+    comment: Optional[str] = ""
+
+
+class OrderIn(BaseModel):
+    id: str
+    customer: OrderCustomer
+    items: List[OrderItem]
+    total: float
+    date: Optional[str] = ""
+
+
+# ===== ЭНДПОИНТЫ =====
 
 @app.get("/")
 def read_root():
@@ -249,3 +302,100 @@ def get_count():
     count = cursor.fetchone()[0]
     conn.close()
     return {"count": count}
+
+
+@app.post("/api/orders")
+def create_order(order: OrderIn):
+    conn = sqlite3.connect(DB_PATH)
+    conn.text_factory = str
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO orders (
+                order_number, customer_name, customer_telegram,
+                customer_phone, customer_address, comment,
+                items, total, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            order.id,
+            order.customer.name,
+            order.customer.telegram,
+            order.customer.phone,
+            order.customer.address,
+            order.customer.comment,
+            json.dumps([item.dict() for item in order.items], ensure_ascii=False),
+            order.total,
+            'Новый',
+            order.date or datetime.now().isoformat()
+        ))
+        conn.commit()
+
+        # Формируем сообщение для Telegram
+        items_text = "\n".join([
+            f"  • {item.name} × {item.quantity} = {item.total:.0f}₽"
+            for item in order.items
+        ])
+        text = (
+            f"🛍️ <b>НОВЫЙ ЗАКАЗ №{order.id}</b>\n\n"
+            f"<b>Клиент:</b> {order.customer.name}\n"
+        )
+        if order.customer.telegram:
+            text += f"<b>Telegram:</b> {order.customer.telegram}\n"
+        if order.customer.phone:
+            text += f"<b>Телефон:</b> {order.customer.phone}\n"
+        if order.customer.address:
+            text += f"<b>Адрес:</b> {order.customer.address}\n"
+        if order.customer.comment:
+            text += f"<b>Комментарий:</b> {order.customer.comment}\n"
+        text += f"\n<b>Товары:</b>\n{items_text}\n"
+        text += f"\n<b>Итого: {order.total:.0f}₽</b>"
+
+        send_telegram_message(text)
+
+        return {"success": True, "order_number": order.id}
+
+    except sqlite3.IntegrityError:
+        return {"success": False, "error": "Заказ с таким номером уже существует"}
+    except Exception as e:
+        print(f"[ORDER] Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+
+@app.get("/api/orders")
+def get_orders():
+    conn = sqlite3.connect(DB_PATH)
+    conn.text_factory = str
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT order_number, customer_name, customer_telegram,
+               customer_phone, customer_address, comment,
+               items, total, status, created_at
+        FROM orders
+        ORDER BY created_at DESC
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+
+    orders = []
+    for row in rows:
+        try:
+            items_parsed = json.loads(row[6]) if row[6] else []
+        except Exception:
+            items_parsed = []
+        orders.append({
+            "order_number": row[0],
+            "customer_name": row[1],
+            "customer_telegram": row[2],
+            "customer_phone": row[3],
+            "customer_address": row[4],
+            "comment": row[5],
+            "items": items_parsed,
+            "total": row[7],
+            "status": row[8],
+            "created_at": row[9],
+        })
+    return {"orders": orders}
