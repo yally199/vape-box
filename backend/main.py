@@ -68,9 +68,9 @@ def calculate_price(base_price):
     if base_price == 0 or not base_price:
         return 0
     if base_price < 1000:
-        return int((base_price * 1.30) / 10) * 10
-    else:
         return int((base_price * 1.25) / 10) * 10
+    else:
+        return int((base_price * 1.20) / 10) * 10
 
 
 def parse_price(value):
