@@ -801,7 +801,7 @@ function generateOrderNumber() {
     return `VB-${timestamp}${random}`;
 }
 
-function submitOrder(e) {
+async function submitOrder(e) {
     e.preventDefault();
     const name = document.getElementById('customerName').value.trim();
     const telegram = document.getElementById('customerTelegram').value.trim();
@@ -809,19 +809,48 @@ function submitOrder(e) {
     const address = document.getElementById('customerAddress').value.trim();
     const comment = document.getElementById('orderComment').value.trim();
 
-    if (!name || !telegram) { showToast('⚠️ Заполните имя и Telegram', 'error'); return; }
+    if (!name) {
+        showToast('⚠️ Введите имя', 'error');
+        return;
+    }
+    if (!telegram && !phone) {
+        showToast('⚠️ Укажите Telegram или телефон', 'error');
+        return;
+    }
 
     const orderNumber = generateOrderNumber();
     const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
     const order = {
         id: orderNumber,
         customer: { name, telegram, phone, address, comment },
-        items: cart.map(i => ({ name: i.name, brand: i.brandName || '', quantity: i.quantity, price: i.price, total: i.price * i.quantity })),
-        total, status: 'Новый', date: new Date().toISOString()
+        items: cart.map(i => ({
+            name: i.name,
+            brand: i.brandName || '',
+            quantity: i.quantity,
+            price: i.price,
+            total: i.price * i.quantity
+        })),
+        total: total,
+        date: new Date().toISOString()
     };
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-    orders.push(order);
-    localStorage.setItem('orders', JSON.stringify(orders));
+
+    try {
+        const response = await fetch(`${API_URL}/api/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(order)
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            showToast('❌ Ошибка: ' + (result.error || 'не удалось отправить'), 'error');
+            return;
+        }
+    } catch (err) {
+        console.warn('Не удалось отправить заказ на сервер:', err);
+        showToast('⚠️ Ошибка сети. Попробуйте ещё раз.', 'error');
+        return;
+    }
 
     if (orderModal) orderModal.classList.remove('active');
     if (orderNumberEl) orderNumberEl.textContent = `№ ${orderNumber}`;
@@ -831,11 +860,8 @@ function submitOrder(e) {
     updateCartUI();
     refreshCurrentView();
     if (orderForm) orderForm.reset();
-
-    if (tg) tg.sendData(JSON.stringify({ type: 'order', order }));
     showToast(`✅ Заказ №${orderNumber} оформлен!`, 'success');
 }
-
 // ===== УТОЧНЕНИЕ НАЛИЧИЯ =====
 function openCheckStock(productId) {
     const product = findProduct(productId);
