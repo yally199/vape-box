@@ -175,7 +175,7 @@ def import_from_excel():
             cursor.execute('''
                 INSERT INTO products (name, price, stock, category, description, brand, series)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (name, final_price, 99, category, 'Импортировано из Excel', brand, series))
+            ''', (name, final_price, 99, category, '', brand, series))
 
             count += 1
 
