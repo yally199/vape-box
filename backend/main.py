@@ -65,8 +65,15 @@ init_db()
 
 
 def calculate_price(base_price):
-    if base_price == 0 or not base_price:
-        return 0
+    if base_price == 0:
+                skipped_no_price += 1
+                continue
+
+            # Пропускаем товары без категории (Разное)
+            if category == 'Разное':
+                continue
+
+            final_price = calculate_price(base_price)
     if base_price < 1000:
         return int((base_price * 1.25) / 10) * 10
     elif base_price < 2000:
