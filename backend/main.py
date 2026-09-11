@@ -64,14 +64,9 @@ def init_db():
 init_db()
 
 
-if base_price == 0:
-                skipped_no_price += 1
-                continue
-
-            if category == 'Разное':
-                continue
-
-            final_price = calculate_price(base_price)            final_price = calculate_price(base_price)
+def calculate_price(base_price):
+    if base_price == 0 or not base_price:
+        return 0
     if base_price < 1000:
         return int((base_price * 1.25) / 10) * 10
     elif base_price < 2000:
@@ -80,7 +75,8 @@ if base_price == 0:
         return int((base_price * 1.15) / 10) * 10
     else:
         return int((base_price * 1.12) / 10) * 10
-        
+
+
 def parse_price(value):
     if value is None:
         return 0
@@ -120,7 +116,6 @@ def import_from_excel():
         print(f"[IMPORT] Строк в файле: {len(df)}")
         print(f"[IMPORT] Колонки: {list(df.columns)}")
 
-        # Проверка кодировки — выведем первую строку
         if len(df) > 0:
             sample = df.iloc[0].to_dict()
             print(f"[IMPORT] Пример строки: {sample}")
@@ -132,6 +127,7 @@ def import_from_excel():
         count = 0
         skipped_no_price = 0
         skipped_no_name = 0
+        skipped_raznoe = 0
 
         for _, row in df.iterrows():
             name = str(row.get('Наименование', '')).strip()
@@ -152,6 +148,11 @@ def import_from_excel():
                 category, brand, series = parts[0], 'Разное', ''
             else:
                 category, brand, series = 'Разное', 'Разное', ''
+
+            # Пропускаем товары без категории (Разное)
+            if category == 'Разное':
+                skipped_raznoe += 1
+                continue
 
             price_cols = [
                 'Цена: от 1000р', 'Цена: от 3 000р', 'Цена: от 10 000р',
@@ -183,6 +184,7 @@ def import_from_excel():
         print(f"[IMPORT] Добавлено: {count}")
         print(f"[IMPORT] Пропущено (нет цены): {skipped_no_price}")
         print(f"[IMPORT] Пропущено (нет названия): {skipped_no_name}")
+        print(f"[IMPORT] Пропущено (Разное): {skipped_raznoe}")
         return count
 
     except Exception as e:
@@ -243,6 +245,10 @@ async def upload_excel(file: UploadFile = File(...)):
 def get_count():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM products")
+    count = cursor.fetchone()[0]
+    conn.close()
+    return {"count": count}rsor()
     cursor.execute("SELECT COUNT(*) FROM products")
     count = cursor.fetchone()[0]
     conn.close()
