@@ -1,8 +1,10 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import pandas as pd
 import os
 import sqlite3
+import json
 
 app = FastAPI()
 
@@ -15,6 +17,13 @@ app.add_middleware(
 
 DB_PATH = "vape_shop.db"
 EXCEL_FILE = "prices.xlsx"
+
+
+class UTF8JSONResponse(JSONResponse):
+    media_type = "application/json; charset=utf-8"
+
+
+app.router.default_response_class = UTF8JSONResponse
 
 
 def init_db():
@@ -65,7 +74,6 @@ def calculate_price(base_price):
 
 
 def parse_price(value):
-    """Превращает любое значение в число. '315,00' -> 315.0, '315.00 руб' -> 315.0"""
     if value is None:
         return 0
     try:
@@ -99,10 +107,15 @@ def import_from_excel():
         return 0
 
     try:
-        df = pd.read_excel(EXCEL_FILE, header=0)
+        df = pd.read_excel(EXCEL_FILE, header=0, engine='openpyxl')
         df = df.dropna(how='all')
         print(f"[IMPORT] Строк в файле: {len(df)}")
         print(f"[IMPORT] Колонки: {list(df.columns)}")
+
+        # Проверка кодировки — выведем первую строку
+        if len(df) > 0:
+            sample = df.iloc[0].to_dict()
+            print(f"[IMPORT] Пример строки: {sample}")
 
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
@@ -172,6 +185,8 @@ def import_from_excel():
 
 
 IMPORTED_COUNT = import_from_excel()
+
+
 @app.get("/")
 def read_root():
     return {"message": "VAPE BOX API работает!", "imported": IMPORTED_COUNT}
@@ -180,6 +195,7 @@ def read_root():
 @app.get("/api/products")
 def get_products():
     conn = sqlite3.connect(DB_PATH)
+    conn.text_factory = str
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, price, stock, category, description, brand, series FROM products")
     rows = cursor.fetchall()
