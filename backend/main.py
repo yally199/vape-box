@@ -367,7 +367,20 @@ def create_order(order: OrderIn):
         text += f"\n<b>Товары:</b>\n{items_text}\n"
         text += f"\n<b>Итого: {order.total:.0f}₽</b>"
 
-        send_telegram_message(text)
+        # Кнопки управления заказом
+        keyboard = {
+            "inline_keyboard": [
+                [
+                    {"text": "✅ Принять", "callback_data": f"status:{order.id}:Принят"},
+                    {"text": "🚚 Отправил", "callback_data": f"status:{order.id}:Отправлен"}
+                ],
+                [
+                    {"text": "🏁 Завершён", "callback_data": f"status:{order.id}:Завершён"},
+                    {"text": "❌ Отменить", "callback_data": f"status:{order.id}:Отменён"}
+                ]
+            ]
+        }
+        send_telegram_message(text, reply_markup=keyboard)
 
         return {"success": True, "order_number": order.id}
 
