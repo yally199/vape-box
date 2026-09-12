@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAPE BOX — Админ-панель</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #0f0f14;
+        color: #e8e8ee;
+        padding: 16px;
+        min-height: 100vh;
+    }
+    h1 { font-size: 22px; margin-bottom: 16px; color: #8b5cf6; }
+    .login {
+        max-width: 400px;
+        margin: 80px auto;
+        padding: 24px;
+        background: #1a1a24;
+        border-radius: 16px;
+    }
+    .login h2 { font-size: 18px; margin-bottom: 16px; }
+    .login input {
+        width: 100%;
+        padding: 12px 14px;
+        background: #0f0f14;
+        border: 1px solid #2a2a38;
+        border-radius: 10px;
+        color: #e8e8ee;
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+    .login button {
+        width: 100%;
+        padding: 12px;
+        background: #8b5cf6;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .hidden { display: none !important; }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .filter-btn {
+        padding: 8px 14px;
+        background: #1a1a24;
+        border: 1px solid #2a2a38;
+        border-radius: 10px;
+        color: #b0b0c0;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .filter-btn.active { background: #8b5cf6; color: #fff; border-color: #8b5cf6; }
+    .search {
+        width: 100%;
+        padding: 10px 14px;
+        background: #1a1a24;
+        border: 1px solid #2a2a38;
+        border-radius: 10px;
+        color: #e8e8ee;
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+    .orders { display: flex; flex-direction: column; gap: 12px; }
+    .order {
+        background: #1a1a24;
+        border-radius: 14px;
+        padding: 16px;
+        border-left: 4px solid #8b5cf6;
+    }
+    .order.status-Новый { border-left-color: #f59e0b; }
+    .order.status-Принят { border-left-color: #3b82f6; }
+    .order.status-Отправлен { border-left-color: #8b5cf6; }
+    .order.status-Завершён { border-left-color: #10b981; }
+    .order.status-Отменён { border-left-color: #ef4444; opacity: 0.6; }
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .order-number { font-weight: 700; font-size: 16px; color: #8b5cf6; }
+    .order-date { font-size: 12px; color: #8080a0; }
+    .order-status {
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #2a2a38;
+    }
+    .order-info { font-size: 14px; line-height: 1.6; margin-bottom: 10px; }
+    .order-info b { color: #b0b0c0; font-weight: 500; }
+    .order-items {
+        background: #0f0f14;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 10px;
+        white-space: pre-wrap;
+    }
+    .order-total { font-size: 16px; font-weight: 700; color: #8b5cf6; margin-bottom: 12px; }
+    .order-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .order-actions button {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: none;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        color: #fff;
+    }
+    .btn-accept { background: #3b82f6; }
+    .btn-sent { background: #8b5cf6; }
+    .btn-done { background: #10b981; }
+    .btn-cancel { background: #ef4444; }
+    .btn-delete { background: #2a2a38; color: #8080a0 !important; }
+    .empty { text-align: center; padding: 60px 20px; color: #8080a0; }
+    .refresh-info { font-size: 12px; color: #8080a0; text-align: center; margin-top: 20px; }
+    .logout-btn {
+        padding: 8px 14px;
+        background: #2a2a38;
+        color: #b0b0c0;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login">
+    <h2>🔒 Админ-панель VAPE BOX</h2>
+    <input type="password" id="passwordInput" placeholder="Введите пароль" autocomplete="off">
+    <button onclick="tryLogin()">Войти</button>
+    <p id="loginError" style="color:#ef4444;font-size:13px;margin-top:10px;min-height:18px;"></p>
+</div>
+
+<div id="adminPanel" class="hidden">
+    <div class="header">
+        <h1>📦 Заказы VAPE BOX</h1>
+        <button class="logout-btn" onclick="logout()">Выйти</button>
+    </div>
+
+    <div class="filters">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Все</button>
+        <button class="filter-btn" data-filter="Новый" onclick="setFilter('Новый')">🟡 Новые</button>
+        <button class="filter-btn" data-filter="Принят" onclick="setFilter('Принят')">🔵 Принят</button>
+        <button class="filter-btn" data-filter="Отправлен" onclick="setFilter('Отправлен')">🟣 Отправлен</button>
+        <button class="filter-btn" data-filter="Завершён" onclick="setFilter('Завершён')">🟢 Завершён</button>
+        <button class="filter-btn" data-filter="Отменён" onclick="setFilter('Отменён')">🔴 Отменён</button>
+    </div>
+
+    <input type="text" class="search" id="searchInput" placeholder="Поиск по номеру, имени, телефону..." oninput="renderOrders()">
+
+    <div class="orders" id="ordersContainer"></div>
+
+    <div class="refresh-info">
+        Автообновление каждые 30 сек • <span id="lastUpdate"></span>
+    </div>
+</div>
+
+<script>
+const API_URL = "https://vape-box.onrender.com";
+const ADMIN_PASSWORD = "TV12131415"; // ← поменяй на свой пароль
+
+let allOrders = [];
+let currentFilter = 'all';
+let refreshInterval = null;
+
+function tryLogin() {
+    const input = document.getElementById('passwordInput').value;
+    if (input === ADMIN_PASSWORD) {
+        localStorage.setItem('vapebox_admin', '1');
+        showPanel();
+    } else {
+        document.getElementById('loginError').textContent = '❌ Неверный пароль';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('vapebox_admin');
+    if (refreshInterval) clearInterval(refreshInterval);
+    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('passwordInput').value = '';
+}
+
+function showPanel() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadOrders();
+    refreshInterval = setInterval(loadOrders, 30000);
+}
+
+async function loadOrders() {
+    try {
+        const resp = await fetch(`${API_URL}/api/orders`);
+        const data = await resp.json();
+        allOrders = data.orders || [];
+        renderOrders();
+        document.getElementById('lastUpdate').textContent = 'обновлено ' + new Date().toLocaleTimeString('ru-RU');
+    } catch (err) {
+        console.error('Ошибка загрузки:', err);
+    }
+}
+
+function setFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === filter);
+    });
+    renderOrders();
+}
+
+function renderOrders() {
+    const container = document.getElementById('ordersContainer');
+    const search = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    let filtered = allOrders;
+    if (currentFilter !== 'all') {
+        filtered = filtered.filter(o => o.status === currentFilter);
+    }
+    if (search) {
+        filtered = filtered.filter(o =>
+            (o.order_number || '').toLowerCase().includes(search) ||
+            (o.customer_name || '').toLowerCase().includes(search) ||
+            (o.customer_phone || '').toLowerCase().includes(search) ||
+            (o.customer_telegram || '').toLowerCase().includes(search)
+        );
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty">📭 Заказов нет</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+    filtered.forEach(order => {
+        const div = document.createElement('div');
+        div.className = 'order status-' + (order.status || 'Новый');
+
+        const itemsText = (order.items || []).map(i =>
+            `• ${i.name} × ${i.quantity} = ${i.total}₽`
+        ).join('\n');
+
+        const date = order.created_at ? new Date(order.created_at).toLocaleString('ru-RU') : '—';
+
+        div.innerHTML = `
+            <div class="order-header">
+                <span class="order-number">№ ${order.order_number}</span>
+                <span class="order-status">${order.status || 'Новый'}</span>
+            </div>
+            <div class="order-date">${date}</div>
+            <div class="order-info" style="margin-top:10px;">
+                <b>Клиент:</b> ${order.customer_name || '—'}<br>
+                ${order.customer_telegram ? `<b>TG:</b> ${order.customer_telegram}<br>` : ''}
+                ${order.customer_phone ? `<b>Тел:</b> ${order.customer_phone}<br>` : ''}
+                ${order.customer_address ? `<b>Адрес:</b> ${order.customer_address}<br>` : ''}
+                ${order.comment ? `<b>Коммент:</b> ${order.comment}` : ''}
+            </div>
+            <div class="order-items">${itemsText || 'Нет товаров'}</div>
+            <div class="order-total">💰 ${order.total}₽</div>
+            <div class="order-actions">
+                <button class="btn-accept" onclick="setStatus('${order.order_number}', 'Принят')">✅ Принять</button>
+                <button class="btn-sent" onclick="setStatus('${order.order_number}', 'Отправлен')">🚚 Отправлен</button>
+                <button class="btn-done" onclick="setStatus('${order.order_number}', 'Завершён')">🏁 Завершён</button>
+                <button class="btn-cancel" onclick="setStatus('${order.order_number}', 'Отменён')">❌ Отменить</button>
+                <button class="btn-delete" onclick="deleteOrder('${order.order_number}')">🗑️ Удалить</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+async function setStatus(orderNumber, status) {
+    try {
+        const resp = await fetch(`${API_URL}/api/orders/${orderNumber}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+        });
+        const data = await resp.json();
+        if (data.success) { loadOrders(); }
+        else { alert('Ошибка: ' + (data.error || 'не удалось')); }
+    } catch (err) { alert('Ошибка сети: ' + err.message); }
+}
+
+async function deleteOrder(orderNumber) {
+    if (!confirm('Удалить заказ ' + orderNumber + '?')) return;
+    try {
+        const resp = await fetch(`${API_URL}/api/orders/${orderNumber}`, { method: 'DELETE' });
+        const data = await resp.json();
+        if (data.success) { loadOrders(); }
+        else { alert('Ошибка: ' + (data.error || 'не удалось')); }
+    } catch (err) { alert('Ошибка сети: ' + err.message); }
+}
+
+if (localStorage.getItem('vapebox_admin') === '1') { showPanel(); }
+
+document.getElementById('passwordInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') tryLogin();
+});
+</script>
+
+</body>
+</html>
