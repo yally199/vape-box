@@ -500,3 +500,42 @@ def set_telegram_webhook():
     except Exception as e:
         print(f"[WEBHOOK] Ошибка установки: {e}")
         return {"success": False, "error": str(e)}
+        
+class OrderStatusUpdate(BaseModel):
+    status: str
+
+
+@app.post("/api/orders/{order_number}/status")
+def update_order_status(order_number: str, payload: OrderStatusUpdate):
+    conn = sqlite3.connect(DB_PATH)
+    conn.text_factory = str
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE orders SET status = ? WHERE order_number = ?",
+            (payload.status, order_number)
+        )
+        if cursor.rowcount == 0:
+            return {"success": False, "error": "Заказ не найден"}
+        conn.commit()
+        return {"success": True, "order_number": order_number, "status": payload.status}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+
+@app.delete("/api/orders/{order_number}")
+def delete_order(order_number: str):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM orders WHERE order_number = ?", (order_number,))
+        if cursor.rowcount == 0:
+            return {"success": False, "error": "Заказ не найден"}
+        conn.commit()
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
