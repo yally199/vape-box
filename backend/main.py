@@ -197,9 +197,7 @@ def import_from_excel():
 IMPORTED_COUNT = import_from_excel()
 
 
-# ===== ОТПРАВКА В TELEGRAM =====
-
-def send_telegram_message(text):
+def send_telegram_message(text, reply_markup=None):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_ADMIN_ID:
         print("[TG] Не настроены переменные окружения — уведомление не отправлено")
         return False
@@ -207,11 +205,14 @@ def send_telegram_message(text):
         import urllib.request
         import urllib.parse
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = urllib.parse.urlencode({
+        data = {
             "chat_id": TELEGRAM_ADMIN_ID,
             "text": text,
             "parse_mode": "HTML"
-        }).encode("utf-8")
+        }
+        if reply_markup:
+            data["reply_markup"] = json.dumps(reply_markup, ensure_ascii=False)
+        payload = urllib.parse.urlencode(data).encode("utf-8")
         req = urllib.request.Request(url, data=payload)
         with urllib.request.urlopen(req, timeout=10) as resp:
             print(f"[TG] Уведомление отправлено, статус: {resp.status}")
@@ -220,6 +221,23 @@ def send_telegram_message(text):
         print(f"[TG] Ошибка отправки: {e}")
         return False
 
+
+def answer_callback(callback_query_id, text=""):
+    """Отвечает на нажатие inline-кнопки (убирает часики на кнопке)."""
+    if not TELEGRAM_BOT_TOKEN:
+        return
+    try:
+        import urllib.request
+        import urllib.parse
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery"
+        payload = urllib.parse.urlencode({
+            "callback_query_id": callback_query_id,
+            "text": text
+        }).encode("utf-8")
+        req = urllib.request.Request(url, data=payload)
+        urllib.request.urlopen(req, timeout=10)
+    except Exception as e:
+        print(f"[TG] Ошибка callback: {e}")
 
 # ===== МОДЕЛИ ДЛЯ ЗАКАЗОВ =====
 
