@@ -429,3 +429,74 @@ def get_orders():
             "created_at": row[9],
         })
     return {"orders": orders}
+    # ===== TELEGRAM WEBHOOK =====
+
+@app.post("/api/telegram/webhook")
+async def telegram_webhook(update: dict):
+    """Принимает события от Telegram (нажатия кнопок)."""
+    try:
+        # Обработка нажатия inline-кнопки
+        if "callback_query" in update:
+            cq = update["callback_query"]
+            callback_id = cq.get("id")
+            data = cq.get("data", "")
+            message = cq.get("message", {})
+            message_id = message.get("message_id")
+            chat_id = message.get("chat", {}).get("id")
+
+            # Формат: status:VB-1234:Принят
+            if data.startswith("status:"):
+                parts = data.split(":", 2)
+                if len(parts) == 3:
+                    _, order_number, new_status = parts
+
+                    # Обновляем статус в базе
+                    conn = sqlite3.connect(DB_PATH)
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "UPDATE orders SET status = ? WHERE order_number = ?",
+                        (new_status, order_number)
+                    )
+                    updated = cursor.rowcount
+                    conn.commit()
+                    conn.close()
+
+                    if updated:
+                        answer_callback(callback_id, f"✅ {new_status}")
+
+                        # Редактируем сообщение — убираем старые кнопки, добавляем новые
+                        # Просто отвечаем текстом, что статус обновлён
+                        send_telegram_message(
+                            f"📝 Заказ <b>{order_number}</b> — статус изменён на <b>{new_status}</b>"
+                        )
+                    else:
+                        answer_callback(callback_id, "❌ Заказ не найден")
+
+        return {"ok": True}
+    except Exception as e:
+        print(f"[WEBHOOK] Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"ok": True}
+
+
+@app.get("/api/telegram/set-webhook")
+def set_telegram_webhook():
+    """Один раз вызывается, чтобы Telegram знал, куда присылать события."""
+    if not TELEGRAM_BOT_TOKEN:
+        return {"success": False, "error": "TELEGRAM_BOT_TOKEN не задан"}
+
+    webhook_url = "https://vape-box.onrender.com/api/telegram/webhook"
+    try:
+        import urllib.request
+        import urllib.parse
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook"
+        payload = urllib.parse.urlencode({"url": webhook_url}).encode("utf-8")
+        req = urllib.request.Request(url, data=payload)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = resp.read().decode("utf-8")
+            print(f"[WEBHOOK] Установка: {result}")
+            return {"success": True, "response": result}
+    except Exception as e:
+        print(f"[WEBHOOK] Ошибка установки: {e}")
+        return {"success": False, "error": str(e)}
