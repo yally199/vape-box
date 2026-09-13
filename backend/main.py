@@ -78,9 +78,9 @@ def calculate_price(base_price):
     elif base_price < 2000:
         return int((base_price * 1.20) / 10) * 10
     elif base_price < 3000:
-        return int((base_price * 1.17) / 10) * 10
+        return int((base_price * 1.18) / 10) * 10
     else:
-        return int((base_price * 1.15) / 10) * 10
+        return int((base_price * 1.16) / 10) * 10
 
 def parse_price(value):
     if value is None:
