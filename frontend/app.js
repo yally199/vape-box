@@ -477,7 +477,6 @@ async function showFlavors(categoryId, brandId, seriesId) {
     productsContainer.style.display = 'block';
     productsContainer.style.gridTemplateColumns = 'none';
 
-    // Запрашиваем товары конкретной серии с бекенда
     try {
         const cat = getCategory(categoryId);
         const brand = getBrand(categoryId, brandId);
@@ -488,24 +487,22 @@ async function showFlavors(categoryId, brandId, seriesId) {
         if (series && series.name) params.append('series', series.name);
         params.append('limit', '100');
 
-        const response = await fetch(`${API_URL}/api)/products/by-category?${params.toString()}`);
-        const data {
- = await response.json();
-        const products = data.           products || [];
+        const response = await fetch(`${API_URL}/api/products/by-category?${params.toString()}`);
+        const data = await response.json();
+        const products = data.products || [];
 
         productsContainer.innerHTML = '';
 
-        if products (products.length === 0Container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#8080a0;">Товаров нет</div>';
+        if (products.length === 0) {
+            productsContainer.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#8080a0;">Товаров нет</div>';
             return;
         }
 
-        // Информация сверху
         const info = document.createElement('div');
         info.style.cssText = 'padding:8px 4px 12px;font-size:13px;color:#8080a0;';
         info.textContent = `Показано ${products.length} из ${data.total}`;
         productsContainer.appendChild(info);
 
-        // Преобразуем в flavor-формат
         const flavors = products.map(p => ({
             id: p.id,
             name: p.name,
