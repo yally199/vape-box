@@ -36,7 +36,7 @@ const BRAND_ICONS = {
 };
 
 // ===== СОСТОЯНИЕ =====
-let categories = [];          // полное дерево с бекенда
+let categories = [];
 let cart = [];
 let currentView = 'catalog';
 let currentCategoryId = 'all';
@@ -45,7 +45,7 @@ let currentSeriesId = null;
 let currentSearch = '';
 let isSearchMode = false;
 
-// ===== DOM =====
+// ===== DOM ЭЛЕМЕНТЫ =====
 const productsContainer = document.getElementById('productsContainer');
 const emptyState = document.getElementById('emptyState');
 const categoriesContainer = document.getElementById('categoriesContainer');
@@ -91,72 +91,84 @@ function slugify(text) {
         .substring(0, 50);
 }
 
-// ===== ЗАГРУЗКА ДЕРЕВА КАТЕГОРИЙ =====
-async function loadCategoriesTree() {
-    try {
-        const response = await fetch(`${API_URL}/api/categories`);
-        const data = await response.json();
-        const tree = data.categories || [];
+// ===== ПОСТРОЕНИЕ ДЕРЕВА ИЗ ТОВАРОВ =====
+function buildCategoriesFromProducts(products) {
+    const categoryMap = {};
 
-        // Преобразуем в структуру, которую ждёт фронт
-        categories = tree.map(cat => ({
-            id: slugify(cat.name),
-            name: cat.name,
-            icon: CATEGORY_ICONS[cat.name] || '📁',
-            brands: (cat.brands || []).map(brand => ({
-                id: slugify(brand.name),
-                name: brand.name,
-                icon: BRAND_ICONS[brand.name] || '📦',
-                series: (brand.series || []).map(series => ({
-                    id: slugify(series.name),
-                    name: series.name,
-                    count: series.count || 0,
-                    flavors: []   // товары подгрузим при клике
-                }))
-            }))
-        }));
+    products.forEach(p => {
+        const catName = (p.category || 'Разное').trim() || 'Разное';
+        const brandName = (p.brand || 'Разное').trim() || 'Разное';
+        const seriesName = (p.series || '').trim() || 'Основное';
 
-        console.log('🌳 Дерево категорий загружено:', categories.length, 'категорий');
-    } catch (err) {
-        console.error('Ошибка загрузки дерева:', err);
-        categories = [];
-    }
+        if (!categoryMap[catName]) {
+            categoryMap[catName] = {
+                id: slugify(catName),
+                name: catName,
+                icon: CATEGORY_ICONS[catName] || '📁',
+                brands: {}
+            };
+        }
+        const category = categoryMap[catName];
+
+        if (!category.brands[brandName]) {
+            category.brands[brandName] = {
+                id: slugify(brandName),
+                name: brandName,
+                icon: BRAND_ICONS[brandName] || '📦',
+                series: {}
+            };
+        }
+        const brand = category.brands[brandName];
+
+        if (!brand.series[seriesName]) {
+            brand.series[seriesName] = {
+                id: slugify(seriesName),
+                name: seriesName,
+                flavors: []
+            };
+        }
+        const series = brand.series[seriesName];
+
+        series.flavors.push({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            stock: p.stock,
+            description: p.description || '',
+            brandName: brandName,
+            seriesName: seriesName
+        });
+    });
+
+    const result = [];
+    Object.values(categoryMap).forEach(cat => {
+        const brandsArr = [];
+        Object.values(cat.brands).forEach(brand => {
+            const seriesArr = [];
+            Object.values(brand.series).forEach(series => {
+                seriesArr.push(series);
+            });
+            brand.series = seriesArr;
+            brandsArr.push(brand);
+        });
+        cat.brands = brandsArr;
+        result.push(cat);
+    });
+
+    return result;
 }
 
-// ===== КАТАЛОГ (общая прокрутка) =====
-let allLoadedProducts = [];
-let currentOffset = 0;
-const PAGE_SIZE = 100;
-let hasMoreProducts = true;
-
-async function loadProductsPage(offset = 0, limit = PAGE_SIZE) {
+// ===== ЗАГРУЗКА ВСЕХ ТОВАРОВ =====
+async function loadAllProducts() {
     try {
-        const response = await fetch(`${API_URL}/api/products?limit=${limit}&offset=${offset}`);
+        const response = await fetch(`${API_URL}/api/products?limit=10000&offset=0`);
         if (!response.ok) throw new Error('Ошибка загрузки');
         const data = await response.json();
-        return {
-            products: data.products || [],
-            total: data.total || 0,
-            has_more: data.has_more || false
-        };
+        return data.products || [];
     } catch (error) {
         console.warn('Бекенд недоступен:', error);
-        return { products: [], total: 0, has_more: false };
+        return [];
     }
-}
-
-async function loadNextPage() {
-    if (!hasMoreProducts) return false;
-    const result = await loadProductsPage(currentOffset);
-    if (result.products.length === 0) {
-        hasMoreProducts = false;
-        return false;
-    }
-    allLoadedProducts = allLoadedProducts.concat(result.products);
-    currentOffset += result.products.length;
-    hasMoreProducts = result.has_more;
-    console.log(`📦 Каталог: ${allLoadedProducts.length} из ${result.total}`);
-    return true;
 }
 
 // ===== ВСПОМОГАТЕЛЬНЫЕ =====
@@ -180,7 +192,6 @@ function findProduct(productId) {
             for (const b of cat.brands) {
                 if (b.series) {
                     for (const s of b.series) {
-                        if (!s.flavors) continue;
                         const found = s.flavors.find(f => f.id === productId);
                         if (found) return found;
                     }
@@ -188,11 +199,34 @@ function findProduct(productId) {
             }
         }
     }
-    // Ищем среди загруженного каталога
-    for (const cat of categories) {
-        // Если товар из каталога — ищем в allLoadedProducts
-    }
-    return allLoadedProducts.find(p => p.id === productId) || null;
+    return null;
+}
+
+function getAllFlavors() {
+    const all = [];
+    categories.forEach(cat => {
+        if (cat.brands) {
+            cat.brands.forEach(brand => {
+                if (brand.series) {
+                    brand.series.forEach(series => {
+                        series.flavors.forEach(flavor => {
+                            all.push({
+                                ...flavor,
+                                categoryId: cat.id,
+                                categoryName: cat.name,
+                                brandId: brand.id,
+                                brandName: brand.name,
+                                brandIcon: brand.icon,
+                                seriesId: series.id,
+                                seriesName: series.name
+                            });
+                        });
+                    });
+                }
+            });
+        }
+    });
+    return all;
 }
 
 // ===== ОТРИСОВКА =====
@@ -223,7 +257,9 @@ function renderCatalog() {
         let count = 0;
         if (cat.brands) {
             cat.brands.forEach(b => {
-                if (b.series) b.series.forEach(s => { count += (s.count || 0); });
+                if (b.series) {
+                    b.series.forEach(s => { count += s.flavors.length; });
+                }
             });
         }
 
@@ -278,7 +314,9 @@ function showBrands(categoryId) {
         card.style.animationDelay = `${index * 0.05}s`;
 
         let count = 0;
-        if (brand.series) brand.series.forEach(s => { count += (s.count || 0); });
+        if (brand.series) {
+            brand.series.forEach(s => { count += s.flavors.length; });
+        }
 
         card.innerHTML = `
             <div class="product-image" style="font-size: 48px;">${brand.icon || '📦'}</div>
@@ -332,7 +370,7 @@ function showSeries(categoryId, brandId) {
             <div class="product-image" style="font-size: 36px;">📦</div>
             <div class="product-info">
                 <div class="product-name">${series.name}</div>
-                <div class="product-description">${series.count || 0} вкусов</div>
+                <div class="product-description">${series.flavors.length} вкусов</div>
                 <div class="product-bottom" style="justify-content: flex-end;">
                     <span style="color: var(--text-secondary); font-size: 14px;">→ Выбрать</span>
                 </div>
@@ -344,7 +382,7 @@ function showSeries(categoryId, brandId) {
     });
 }
 
-async function showFlavors(categoryId, brandId, seriesId) {
+function showFlavors(categoryId, brandId, seriesId) {
     currentView = 'flavors';
     currentCategoryId = categoryId;
     currentBrandId = brandId;
@@ -352,65 +390,17 @@ async function showFlavors(categoryId, brandId, seriesId) {
     if (backBtn) backBtn.style.display = 'flex';
 
     const series = getSeries(categoryId, brandId, seriesId);
-    const brand = getBrand(categoryId, brandId);
-    const cat = getCategory(categoryId);
-
-    if (pageTitle) pageTitle.textContent = series ? series.name : 'Товары';
+    if (!series) return;
+    if (pageTitle) pageTitle.textContent = series.name;
 
     if (!productsContainer) return;
-    productsContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#8080a0;">⏳ Загружаем товары...</div>';
+    productsContainer.innerHTML = '';
     productsContainer.style.display = 'block';
     productsContainer.style.gridTemplateColumns = 'none';
 
-    try {
-        const params = new URLSearchParams();
-        if (cat && cat.name) params.append('category', cat.name);
-        if (brand && brand.name) params.append('brand', brand.name);
-        if (series && series.name) params.append('series', series.name);
-        params.append('limit', '100');
-
-        const url = `${API_URL}/api/products/by-category?${params.toString()}`;
-        console.log('🔍 Запрос:', url);
-
-        const response = await fetch(url);
-        const data = await response.json();
-        const products = data.products || [];
-
-        console.log(`✅ Получено ${products.length} из ${data.total}`);
-
-        productsContainer.innerHTML = '';
-
-        if (products.length === 0) {
-            productsContainer.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#8080a0;">Товаров нет</div>';
-            return;
-        }
-
-        const info = document.createElement('div');
-        info.style.cssText = 'padding:8px 4px 12px;font-size:13px;color:#8080a0;';
-        info.textContent = `Показано ${products.length} из ${data.total}`;
-        productsContainer.appendChild(info);
-
-        const flavors = products.map(p => ({
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            stock: p.stock,
-            description: p.description || '',
-            brandName: p.brand || '',
-            seriesName: p.series || ''
-        }));
-
-        // Сохраняем в series.flavors, чтобы работал findProduct
-        if (series) series.flavors = flavors;
-
-        flavors.forEach((flavor, index) => {
-            productsContainer.appendChild(buildFlavorItem(flavor, index, categoryId, brandId));
-        });
-
-    } catch (err) {
-        console.error('❌ Ошибка загрузки:', err);
-        productsContainer.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#ef4444;">❌ Ошибка загрузки. Попробуйте ещё раз.</div>';
-    }
+    series.flavors.forEach((flavor, index) => {
+        productsContainer.appendChild(buildFlavorItem(flavor, index, categoryId, brandId));
+    });
 }
 
 function buildFlavorItem(flavor, index, categoryId, brandId) {
@@ -559,16 +549,11 @@ function escapeHtml(text) {
 
 // ===== КОРЗИНА =====
 function addToCart(productId, delta = 1) {
-    let product = findProduct(productId);
-    // Если не нашли в дереве — ищем в каталоге
-    if (!product) {
-        product = allLoadedProducts.find(p => p.id === productId);
-    }
+    const product = findProduct(productId);
     if (!product) return;
 
-    const stock = product.stock || 99;
-    if (delta > 0 && stock < delta) {
-        showToast(`❌ Осталось только ${stock} шт`, 'error');
+    if (delta > 0 && product.stock < delta) {
+        showToast(`❌ Осталось только ${product.stock} шт`, 'error');
         return;
     }
 
@@ -576,26 +561,26 @@ function addToCart(productId, delta = 1) {
 
     if (index === -1) {
         if (delta <= 0) return;
-        if (stock <= 0) {
+        if (product.stock <= 0) {
             showToast('❌ Товар закончился', 'error');
             return;
         }
         cart.push({ ...product, quantity: delta });
-        product.stock = stock - delta;
+        product.stock -= delta;
         showToast(`✅ Добавлено ${delta} шт`, 'success');
     } else {
         const newQty = cart[index].quantity + delta;
         if (newQty <= 0) {
-            product.stock = stock + cart[index].quantity;
+            product.stock += cart[index].quantity;
             cart.splice(index, 1);
             showToast('🗑️ Товар удалён', 'error');
         } else {
-            if (delta > 0 && stock < delta) {
-                showToast(`❌ Осталось только ${stock} шт`, 'error');
+            if (delta > 0 && product.stock < delta) {
+                showToast(`❌ Осталось только ${product.stock} шт`, 'error');
                 return;
             }
             cart[index].quantity = newQty;
-            product.stock = stock - delta;
+            product.stock -= delta;
             showToast(delta > 0 ? `✅ +${delta} шт` : `➖ ${Math.abs(delta)} шт`, delta > 0 ? 'success' : 'error');
         }
     }
@@ -607,6 +592,8 @@ function addToCart(productId, delta = 1) {
 function removeFromCart(productId) {
     const index = cart.findIndex(item => item.id === productId);
     if (index === -1) return;
+    const product = findProduct(productId);
+    if (product) product.stock += cart[index].quantity;
     cart.splice(index, 1);
     updateCartUI();
     refreshCurrentView();
@@ -615,8 +602,15 @@ function removeFromCart(productId) {
 
 function changeQuantity(productId, delta) {
     const item = cart.find(c => c.id === productId);
-    if (!item) return;
+    const product = findProduct(productId);
+    if (!item || !product) return;
+    if (delta > 0 && product.stock <= 0) {
+        showToast('❌ Недостаточно товара', 'error');
+        return;
+    }
     item.quantity += delta;
+    if (delta > 0) product.stock -= 1;
+    else product.stock += 1;
     if (item.quantity <= 0) {
         cart.splice(cart.findIndex(c => c.id === productId), 1);
     }
@@ -630,9 +624,9 @@ function updateCartUI() {
     if (cartCount) cartCount.textContent = totalItems;
 }
 
-async function refreshCurrentView() {
+function refreshCurrentView() {
     if (isSearchMode) {
-        await renderSearchResults();
+        renderSearchResults();
     } else if (currentView === 'catalog') {
         renderCatalog();
     } else if (currentView === 'brands') {
@@ -640,7 +634,7 @@ async function refreshCurrentView() {
     } else if (currentView === 'series' && currentBrandId) {
         showSeries(currentCategoryId, currentBrandId);
     } else if (currentView === 'flavors' && currentBrandId && currentSeriesId) {
-        await showFlavors(currentCategoryId, currentBrandId, currentSeriesId);
+        showFlavors(currentCategoryId, currentBrandId, currentSeriesId);
     }
 }
 
@@ -773,6 +767,8 @@ function renderCart() {
             e.stopPropagation();
             const idx = cart.findIndex(c => c.id === item.id);
             if (idx !== -1) {
+                const product = findProduct(item.id);
+                if (product) product.stock += item.quantity;
                 cart.splice(idx, 1);
                 updateCartUI();
                 renderCart();
@@ -869,7 +865,7 @@ async function submitOrder(e) {
 
 // ===== УТОЧНЕНИЕ НАЛИЧИЯ =====
 function openCheckStock(productId) {
-    let product = findProduct(productId) || allLoadedProducts.find(p => p.id === productId);
+    const product = findProduct(productId);
     if (!product) return;
     currentCheckStockProduct = { product };
     if (checkStockProductInfo) {
@@ -944,31 +940,12 @@ function showToast(message, type = 'success') {
 
 // ===== ЗАПУСК =====
 (async function init() {
-    // Загружаем дерево категорий (полное) + первую порцию каталога
-    await Promise.all([
-        loadCategoriesTree(),
-        loadNextPage()
-    ]);
-
+    console.log('🛍️ VAPE BOX: загружаем все товары...');
+    const products = await loadAllProducts();
+    console.log(`🛍️ Получено товаров: ${products.length}`);
+    categories = buildCategoriesFromProducts(products);
     renderCategoryTabs();
     renderCatalog();
     updateCartUI();
-
-    console.log('🛍️ VAPE BOX загружен! Категорий:', categories.length);
-
-    window.addEventListener('scroll', async () => {
-        if (!hasMoreProducts) return;
-        if (isSearchMode) return;
-        if (currentView !== 'catalog') return; // грузим каталог только на главной
-
-        const scrollPosition = window.innerHeight + window.scrollY;
-        const pageHeight = document.body.offsetHeight;
-
-        if (pageHeight - scrollPosition < 500) {
-            if (window.__loadingMore) return;
-            window.__loadingMore = true;
-            await loadNextPage();
-            window.__loadingMore = false;
-        }
-    });
+    console.log(`🛍️ VAPE BOX загружен! Категорий: ${categories.length}`);
 })();
