@@ -691,9 +691,9 @@ function updateCartUI() {
     if (cartCount) cartCount.textContent = totalItems;
 }
 
-function refreshCurrentView() {
+async function refreshCurrentView() {
     if (isSearchMode) {
-        renderSearchResults();
+        await renderSearchResults();
     } else if (currentView === 'catalog') {
         renderCatalog();
     } else if (currentView === 'brands') {
@@ -701,7 +701,7 @@ function refreshCurrentView() {
     } else if (currentView === 'series' && currentBrandId) {
         showSeries(currentCategoryId, currentBrandId);
     } else if (currentView === 'flavors' && currentBrandId && currentSeriesId) {
-        showFlavors(currentCategoryId, currentBrandId, currentSeriesId);
+        await showFlavors(currentCategoryId, currentBrandId, currentSeriesId);
     }
 }
 
