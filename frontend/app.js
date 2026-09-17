@@ -462,7 +462,7 @@ function showSeries(categoryId, brandId) {
     });
 }
 
-function showFlavors(categoryId, brandId, seriesId) {
+async function showFlavors(categoryId, brandId, seriesId) {
     currentView = 'flavors';
     currentCategoryId = categoryId;
     currentBrandId = brandId;
@@ -473,74 +473,57 @@ function showFlavors(categoryId, brandId, seriesId) {
     if (pageTitle) pageTitle.textContent = series.name;
 
     if (!productsContainer) return;
-    productsContainer.innerHTML = '';
+    productsContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#8080a0;">⏳ Загружаем товары...</div>';
     productsContainer.style.display = 'block';
     productsContainer.style.gridTemplateColumns = 'none';
 
-    series.flavors.forEach((flavor, index) => {
-        productsContainer.appendChild(buildFlavorItem(flavor, index, categoryId, brandId));
-    });
-}
+    // Запрашиваем товары конкретной серии с бекенда
+    try {
+        const cat = getCategory(categoryId);
+        const brand = getBrand(categoryId, brandId);
 
-function buildFlavorItem(flavor, index, categoryId, brandId) {
-    const item = document.createElement('div');
-    item.className = 'flavor-item';
-    item.style.animationDelay = `${index * 0.02}s`;
+        const params = new URLSearchParams();
+        if (cat && cat.name) params.append('category', cat.name);
+        if (brand && brand.name) params.append('brand', brand.name);
+        if (series && series.name) params.append('series', series.name);
+        params.append('limit', '100');
 
-    const isInCart = cart.some(c => c.id === flavor.id);
-    const hasStock = flavor.stock > 0;
-    const cartItem = cart.find(c => c.id === flavor.id);
-    const currentQty = cartItem ? cartItem.quantity : 0;
+        const response = await fetch(`${API_URL}/api)/products/by-category?${params.toString()}`);
+        const data {
+ = await response.json();
+        const products = data.           products || [];
 
-    const stockText = hasStock
-        ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
-        : `<span class="flavor-stock out-stock">🚫 Нет в наличии</span>`;
+        productsContainer.innerHTML = '';
 
-    let quantityControls = '';
-    if (hasStock && isInCart) {
-        quantityControls = `
-            <div class="qty-controls">
-                <button class="qty-btn qty-minus" data-id="${flavor.id}">−</button>
-                <span class="qty-number">${currentQty}</span>
-                <button class="qty-btn qty-plus" data-id="${flavor.id}">+</button>
-            </div>
-        `;
+        if products (products.length === 0Container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#8080a0;">Товаров нет</div>';
+            return;
+        }
+
+        // Информация сверху
+        const info = document.createElement('div');
+        info.style.cssText = 'padding:8px 4px 12px;font-size:13px;color:#8080a0;';
+        info.textContent = `Показано ${products.length} из ${data.total}`;
+        productsContainer.appendChild(info);
+
+        // Преобразуем в flavor-формат
+        const flavors = products.map(p => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            stock: p.stock,
+            description: p.description || '',
+            brandName: p.brand || '',
+            seriesName: p.series || ''
+        }));
+
+        flavors.forEach((flavor, index) => {
+            productsContainer.appendChild(buildFlavorItem(flavor, index, categoryId, brandId));
+        });
+
+    } catch (err) {
+        console.error('Ошибка загрузки товаров категории:', err);
+        productsContainer.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#ef4444;">❌ Ошибка загрузки. Попробуйте ещё раз.</div>';
     }
-
-    let addButton;
-    if (!hasStock) {
-        addButton = `<button class="add-btn disabled" disabled>Нет</button>`;
-    } else if (isInCart) {
-        addButton = `
-            <div class="btn-group">
-                ${quantityControls}
-                <button class="add-btn remove-from-cart" data-id="${flavor.id}" title="Удалить">✕</button>
-            </div>
-        `;
-    } else {
-        addButton = `<button class="add-btn add-to-cart" data-id="${flavor.id}">+ Добавить</button>`;
-    }
-
-    const brandIcon = brandId ? (getBrand(categoryId, brandId)?.icon || '📦') : '📦';
-
-    item.innerHTML = `
-        <div class="flavor-icon">${brandIcon}</div>
-        <div class="flavor-info">
-            <div class="flavor-name">${flavor.name}</div>
-            <div class="flavor-description">${flavor.description || ''}</div>
-            <div class="flavor-meta">
-                <span class="flavor-price">${flavor.price} ₽</span>
-                ${stockText}
-            </div>
-        </div>
-        <div class="flavor-actions">
-            ${addButton}
-            <button class="check-stock-btn" data-id="${flavor.id}">❓</button>
-        </div>
-    `;
-
-    bindFlavorEvents(item, flavor);
-    return item;
 }
 
 function bindFlavorEvents(item, flavor) {
