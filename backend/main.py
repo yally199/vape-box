@@ -82,6 +82,7 @@ def calculate_price(base_price):
     else:
         return int((base_price * 1.17) / 10) * 10
 
+
 def parse_price(value):
     if value is None:
         return 0
@@ -154,8 +155,9 @@ def import_from_excel():
                 skipped_raznoe += 1
                 continue
 
+            # Берём цену из столбца "от 3 000р" (и далее по возрастанию)
             price_cols = [
-                'Цена: от 1000р', 'Цена: от 3 000р', 'Цена: от 10 000р',
+                'Цена: от 3 000р', 'Цена: от 10 000р',
                 'Цена: от 30 000р', 'Цена: от 50 000р', 'Цена: от 100 000р',
             ]
             base_price = 0
@@ -223,7 +225,7 @@ def send_telegram_message(text, reply_markup=None):
 
 
 def answer_callback(callback_query_id, text=""):
-    """Отвечает на нажатие inline-кнопки (убирает часики на кнопке)."""
+    """Отвечает на нажатие inline-кнопки."""
     if not TELEGRAM_BOT_TOKEN:
         return
     try:
@@ -239,7 +241,8 @@ def answer_callback(callback_query_id, text=""):
     except Exception as e:
         print(f"[TG] Ошибка callback: {e}")
 
-# ===== МОДЕЛИ ДЛЯ ЗАКАЗОВ =====
+
+# ===== МОДЕЛИ =====
 
 class OrderItem(BaseModel):
     name: str
@@ -265,6 +268,10 @@ class OrderIn(BaseModel):
     date: Optional[str] = ""
 
 
+class OrderStatusUpdate(BaseModel):
+    status: str
+
+
 # ===== ЭНДПОИНТЫ =====
 
 @app.get("/")
@@ -273,11 +280,18 @@ def read_root():
 
 
 @app.get("/api/products")
-def get_products():
+def get_products(limit: int = 100, offset: int = 0):
     conn = sqlite3.connect(DB_PATH)
     conn.text_factory = str
     cursor = conn.cursor()
-    cursor.execute("SELECT id, name, price, stock, category, description, brand, series FROM products")
+
+    cursor.execute("SELECT COUNT(*) FROM products")
+    total = cursor.fetchone()[0]
+
+    cursor.execute(
+        "SELECT id, name, price, stock, category, description, brand, series FROM products LIMIT ? OFFSET ?",
+        (limit, offset)
+    )
     rows = cursor.fetchall()
     conn.close()
 
@@ -293,7 +307,63 @@ def get_products():
             "brand": row[6] or "",
             "series": row[7] or "",
         })
-    return {"products": products}
+
+    return {
+        "products": products,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "has_more": offset + len(products) < total
+    }
+
+
+@app.get("/api/search")
+def search_products(q: str = "", limit: int = 100):
+    if not q or len(q.strip()) < 2:
+        return {"products": [], "query": q, "total": 0}
+
+    query = q.strip().lower()
+    conn = sqlite3.connect(DB_PATH)
+    conn.text_factory = str
+    cursor = conn.cursor()
+
+    search_pattern = f"%{query}%"
+    cursor.execute('''
+        SELECT id, name, price, stock, category, description, brand, series
+        FROM products
+        WHERE LOWER(name) LIKE ?
+           OR LOWER(brand) LIKE ?
+           OR LOWER(series) LIKE ?
+           OR LOWER(category) LIKE ?
+        LIMIT ?
+    ''', (search_pattern, search_pattern, search_pattern, search_pattern, limit))
+    rows = cursor.fetchall()
+
+    cursor.execute('''
+        SELECT COUNT(*) FROM products
+        WHERE LOWER(name) LIKE ?
+           OR LOWER(brand) LIKE ?
+           OR LOWER(series) LIKE ?
+           OR LOWER(category) LIKE ?
+    ''', (search_pattern, search_pattern, search_pattern, search_pattern))
+    total = cursor.fetchone()[0]
+
+    conn.close()
+
+    products = []
+    for row in rows:
+        products.append({
+            "id": row[0],
+            "name": row[1],
+            "price": row[2],
+            "stock": row[3],
+            "category": row[4] or "",
+            "description": row[5] or "",
+            "brand": row[6] or "",
+            "series": row[7] or "",
+        })
+
+    return {"products": products, "query": q, "total": total}
 
 
 @app.post("/api/reload")
@@ -347,7 +417,6 @@ def create_order(order: OrderIn):
         ))
         conn.commit()
 
-        # Формируем сообщение для Telegram
         items_text = "\n".join([
             f"  • {item.name} × {item.quantity} = {item.total:.0f}₽"
             for item in order.items
@@ -367,7 +436,6 @@ def create_order(order: OrderIn):
         text += f"\n<b>Товары:</b>\n{items_text}\n"
         text += f"\n<b>Итого: {order.total:.0f}₽</b>"
 
-        # Кнопки управления заказом
         keyboard = {
             "inline_keyboard": [
                 [
@@ -429,80 +497,6 @@ def get_orders():
             "created_at": row[9],
         })
     return {"orders": orders}
-    # ===== TELEGRAM WEBHOOK =====
-
-@app.post("/api/telegram/webhook")
-async def telegram_webhook(update: dict):
-    """Принимает события от Telegram (нажатия кнопок)."""
-    try:
-        # Обработка нажатия inline-кнопки
-        if "callback_query" in update:
-            cq = update["callback_query"]
-            callback_id = cq.get("id")
-            data = cq.get("data", "")
-            message = cq.get("message", {})
-            message_id = message.get("message_id")
-            chat_id = message.get("chat", {}).get("id")
-
-            # Формат: status:VB-1234:Принят
-            if data.startswith("status:"):
-                parts = data.split(":", 2)
-                if len(parts) == 3:
-                    _, order_number, new_status = parts
-
-                    # Обновляем статус в базе
-                    conn = sqlite3.connect(DB_PATH)
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        "UPDATE orders SET status = ? WHERE order_number = ?",
-                        (new_status, order_number)
-                    )
-                    updated = cursor.rowcount
-                    conn.commit()
-                    conn.close()
-
-                    if updated:
-                        answer_callback(callback_id, f"✅ {new_status}")
-
-                        # Редактируем сообщение — убираем старые кнопки, добавляем новые
-                        # Просто отвечаем текстом, что статус обновлён
-                        send_telegram_message(
-                            f"📝 Заказ <b>{order_number}</b> — статус изменён на <b>{new_status}</b>"
-                        )
-                    else:
-                        answer_callback(callback_id, "❌ Заказ не найден")
-
-        return {"ok": True}
-    except Exception as e:
-        print(f"[WEBHOOK] Ошибка: {e}")
-        import traceback
-        traceback.print_exc()
-        return {"ok": True}
-
-
-@app.get("/api/telegram/set-webhook")
-def set_telegram_webhook():
-    """Один раз вызывается, чтобы Telegram знал, куда присылать события."""
-    if not TELEGRAM_BOT_TOKEN:
-        return {"success": False, "error": "TELEGRAM_BOT_TOKEN не задан"}
-
-    webhook_url = "https://vape-box.onrender.com/api/telegram/webhook"
-    try:
-        import urllib.request
-        import urllib.parse
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook"
-        payload = urllib.parse.urlencode({"url": webhook_url}).encode("utf-8")
-        req = urllib.request.Request(url, data=payload)
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            result = resp.read().decode("utf-8")
-            print(f"[WEBHOOK] Установка: {result}")
-            return {"success": True, "response": result}
-    except Exception as e:
-        print(f"[WEBHOOK] Ошибка установки: {e}")
-        return {"success": False, "error": str(e)}
-        
-class OrderStatusUpdate(BaseModel):
-    status: str
 
 
 @app.post("/api/orders/{order_number}/status")
@@ -539,3 +533,65 @@ def delete_order(order_number: str):
         return {"success": False, "error": str(e)}
     finally:
         conn.close()
+
+
+# ===== TELEGRAM WEBHOOK =====
+
+@app.post("/api/telegram/webhook")
+async def telegram_webhook(update: dict):
+    try:
+        if "callback_query" in update:
+            cq = update["callback_query"]
+            callback_id = cq.get("id")
+            data = cq.get("data", "")
+
+            if data.startswith("status:"):
+                parts = data.split(":", 2)
+                if len(parts) == 3:
+                    _, order_number, new_status = parts
+
+                    conn = sqlite3.connect(DB_PATH)
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "UPDATE orders SET status = ? WHERE order_number = ?",
+                        (new_status, order_number)
+                    )
+                    updated = cursor.rowcount
+                    conn.commit()
+                    conn.close()
+
+                    if updated:
+                        answer_callback(callback_id, f"✅ {new_status}")
+                        send_telegram_message(
+                            f"📝 Заказ <b>{order_number}</b> — статус изменён на <b>{new_status}</b>"
+                        )
+                    else:
+                        answer_callback(callback_id, "❌ Заказ не найден")
+
+        return {"ok": True}
+    except Exception as e:
+        print(f"[WEBHOOK] Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"ok": True}
+
+
+@app.get("/api/telegram/set-webhook")
+def set_telegram_webhook():
+    if not TELEGRAM_BOT_TOKEN:
+        return {"success": False, "error": "TELEGRAM_BOT_TOKEN не задан"}
+
+    webhook_url = "https://vape-box.onrender.com/api/telegram/webhook"
+    try:
+        import urllib.request
+        import urllib.parse
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook"
+        payload = urllib.parse.urlencode({"url": webhook_url}).encode("utf-8")
+        req = urllib.request.Request(url, data=payload)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = resp.read().decode("utf-8")
+            print(f"[WEBHOOK] Установка: {result}")
+            return {"success": True, "response": result}
+    except Exception as e:
+        print(f"[WEBHOOK] Ошибка установки: {e}")
+        return {"success": False, "error": str(e)}
