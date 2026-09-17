@@ -315,6 +315,65 @@ def get_products(limit: int = 100, offset: int = 0):
         "offset": offset,
         "has_more": offset + len(products) < total
     }
+@app.get("/api/products/by-category")
+def get_products_by_category(
+    category: str = "",
+    brand: str = "",
+    series: str = "",
+    limit: int = 100,
+    offset: int = 0
+):
+    conn = sqlite3.connect(DB_PATH)
+    conn.text_factory = str
+    cursor = conn.cursor()
+
+    # Строим фильтр
+    conditions = []
+    params = []
+    if category:
+        conditions.append("category = ?")
+        params.append(category)
+    if brand:
+        conditions.append("brand = ?")
+        params.append(brand)
+    if series:
+        conditions.append("series = ?")
+        params.append(series)
+
+    where_sql = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    # Общее количество
+    cursor.execute(f"SELECT COUNT(*) FROM products {where_sql}", params)
+    total = cursor.fetchone()[0]
+
+    # Порция
+    cursor.execute(
+        f"SELECT id, name, price, stock, category, description, brand, series FROM products {where_sql} LIMIT ? OFFSET ?",
+        params + [limit, offset]
+    )
+    rows = cursor.fetchall()
+    conn.close()
+
+    products = []
+    for row in rows:
+        products.append({
+            "id": row[0],
+            "name": row[1],
+            "price": row[2],
+            "stock": row[3],
+            "category": row[4] or "",
+            "description": row[5] or "",
+            "brand": row[6] or "",
+            "series": row[7] or "",
+        })
+
+    return {
+        "products": products,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "has_more": offset + len(products) < total
+    }
 
 
 @app.get("/api/search")
