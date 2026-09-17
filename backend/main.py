@@ -374,6 +374,48 @@ def get_products_by_category(
         "offset": offset,
         "has_more": offset + len(products) < total
     }
+    
+@app.get("/api/categories")
+def get_categories_tree():
+    conn = sqlite3.connect(DB_PATH)
+    conn.text_factory = str
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT category, brand, series, COUNT(*) as count
+        FROM products
+        WHERE category != '' AND category IS NOT NULL
+        GROUP BY category, brand, series
+        ORDER BY category, brand, series
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+
+    tree = {}  # category -> {brands: {brand -> {series: [{name, count}]}}}
+    for cat, brand, series, count in rows:
+        cat = cat or 'Разное'
+        brand = brand or 'Разное'
+        series = series or 'Основное'
+
+        if cat not in tree:
+            tree[cat] = {'name': cat, 'brands': {}}
+        if brand not in tree[cat]['brands']:
+            tree[cat]['brands'][brand] = {'name': brand, 'series': {}}
+        if series not in tree[cat]['brands'][brand]['series']:
+            tree[cat]['brands'][brand]['series'][series] = {'name': series, 'count': 0}
+        tree[cat]['brands'][brand]['series'][series]['count'] += count
+
+    # Преобразуем в массивы
+    result = []
+    for cat_name, cat_data in tree.items():
+        brands_arr = []
+        for brand_name, brand_data in cat_data['brands'].items():
+            series_arr = []
+            for series_name, series_data in brand_data['series'].items():
+                series_arr.append(series_data)
+            brands_arr.append({'name': brand_name, 'series': series_arr})
+        result.append({'name': cat_name, 'brands': brands_arr})
+
+    return {'categories': result}
 
 
 @app.get("/api/search")
