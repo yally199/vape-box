@@ -187,16 +187,57 @@ function slugify(text) {
 }
 
 // ===== ЗАГРУЗКА С БЕКЕНДА =====
-async function loadProductsFromBackend() {
+let allLoadedProducts = [];
+let currentOffset = 0;
+const PAGE_SIZE = 100;
+let hasMoreProducts = true;
+
+async function loadProductsPage(offset = 0, limit = PAGE_SIZE) {
     try {
-        const response = await fetch(`${API_URL}/api/products`);
+        const response = await fetch(`${API_URL}/api/products?limit=${limit}&offset=${offset}`);
         if (!response.ok) throw new Error('Ошибка загрузки');
         const data = await response.json();
-        return data.products || [];
+        return {
+            products: data.products || [],
+            total: data.total || 0,
+            has_more: data.has_more || false
+        };
     } catch (error) {
         console.warn('Бекенд недоступен:', error);
-        return [];
+        return { products: [], total: 0, has_more: false };
     }
+}
+
+async function loadNextPage() {
+    if (!hasMoreProducts) return false;
+
+    const result = await loadProductsPage(currentOffset);
+    if (result.products.length === 0) {
+        hasMoreProducts = false;
+        return false;
+    }
+
+    allLoadedProducts = allLoadedProducts.concat(result.products);
+    currentOffset += result.products.length;
+    hasMoreProducts = result.has_more;
+
+    categories = buildCategoriesFromProducts(allLoadedProducts);
+    renderCategoryTabs();
+
+    if (isSearchMode) {
+        // Во время поиска — не перерисовываем каталог
+    } else if (currentView === 'catalog') {
+        renderCatalog();
+    } else if (currentView === 'brands') {
+        showBrands(currentCategoryId);
+    } else if (currentView === 'series' && currentBrandId) {
+        showSeries(currentCategoryId, currentBrandId);
+    } else if (currentView === 'flavors' && currentBrandId && currentSeriesId) {
+        showFlavors(currentCategoryId, currentBrandId, currentSeriesId);
+    }
+
+    console.log(`📦 Загружено ${allLoadedProducts.length} из ${result.total}`);
+    return true;
 }
 
 // ===== ВСПОМОГАТЕЛЬНЫЕ =====
@@ -519,28 +560,75 @@ function bindFlavorEvents(item, flavor) {
     if (checkBtn) checkBtn.addEventListener('click', e => { e.stopPropagation(); openCheckStock(flavor.id); });
 }
 
-function renderSearchResults() {
+let searchTimeout = null;
+
+async function renderSearchResults() {
     currentView = 'search';
     isSearchMode = true;
     if (backBtn) backBtn.style.display = 'flex';
-    if (pageTitle) pageTitle.textContent = 'Результаты поиска';
+    if (pageTitle) pageTitle.textContent = 'Поиск: ' + currentSearch;
 
-    const results = getFilteredFlavors();
+    const query = currentSearch.trim();
+    if (query.length < 2) {
+        if (productsContainer) {
+            productsContainer.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#8080a0;">Введите минимум 2 символа</div>';
+        }
+        return;
+    }
+
     if (!productsContainer) return;
-    productsContainer.innerHTML = '';
+    productsContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#8080a0;">🔍 Ищем...</div>';
     productsContainer.style.display = 'block';
     productsContainer.style.gridTemplateColumns = 'none';
 
-    if (results.length === 0) {
-        if (emptyState) emptyState.style.display = 'block';
-        productsContainer.style.display = 'none';
-        return;
-    }
-    if (emptyState) emptyState.style.display = 'none';
+    try {
+        const response = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(query)}&limit=100`);
+        const data = await response.json();
+        const results = data.products || [];
+        const total = data.total || 0;
 
-    results.forEach((flavor, index) => {
-        productsContainer.appendChild(buildFlavorItem(flavor, index, flavor.categoryId, flavor.brandId));
-    });
+        if (currentSearch.trim() !== query) return;
+
+        productsContainer.innerHTML = '';
+
+        if (results.length === 0) {
+            productsContainer.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#8080a0;">😕 Ничего не найдено по запросу «' + escapeHtml(query) + '»</div>';
+            return;
+        }
+
+        const info = document.createElement('div');
+        info.style.cssText = 'padding:10px 4px 16px;font-size:14px;color:#8080a0;';
+        info.textContent = `Найдено: ${total}${total > 100 ? ' (показаны первые 100)' : ''}`;
+        productsContainer.appendChild(info);
+
+        const flavors = results.map(p => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            stock: p.stock,
+            description: p.description || '',
+            brandName: p.brand || '',
+            brandIcon: (typeof BRAND_ICONS !== 'undefined' && BRAND_ICONS[p.brand]) || '📦',
+            categoryId: slugify(p.category || 'Разное'),
+            brandId: slugify(p.brand || 'Разное'),
+            categoryName: p.category || '',
+            seriesName: p.series || ''
+        }));
+
+        flavors.forEach((flavor, index) => {
+            productsContainer.appendChild(buildFlavorItem(flavor, index, flavor.categoryId, flavor.brandId));
+        });
+
+    } catch (err) {
+        console.error('Ошибка поиска:', err);
+        productsContainer.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#ef4444;">❌ Ошибка поиска. Попробуйте ещё раз.</div>';
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ===== КОРЗИНА =====
@@ -695,14 +783,22 @@ if (backBtn) {
 if (searchInput) {
     searchInput.addEventListener('input', function() {
         currentSearch = this.value;
-        if (searchClear) searchClear.style.display = currentSearch ? 'block' : 'none';
-        if (currentSearch.trim()) {
-            renderSearchResults();
-        } else {
+        if (searchClear) {
+            searchClear.style.display = currentSearch ? 'block' : 'none';
+        }
+
+        if (searchTimeout) clearTimeout(searchTimeout);
+
+        if (!currentSearch.trim()) {
             isSearchMode = false;
             if (currentView === 'search') renderCatalog();
             else refreshCurrentView();
+            return;
         }
+
+        searchTimeout = setTimeout(() => {
+            renderSearchResults();
+        }, 400);
     });
 }
 
@@ -942,11 +1038,23 @@ function showToast(message, type = 'success') {
 
 // ===== ЗАПУСК =====
 (async function init() {
-    const backendProducts = await loadProductsFromBackend();
-    categories = buildCategoriesFromProducts(backendProducts);
-    renderCategoryTabs();
+    await loadNextPage();
     renderCatalog();
     updateCartUI();
-    console.log('🛍️ VAPE BOX загружен! Товаров с бекенда:', backendProducts.length);
-    console.log('📦 Категорий:', categories.length);
+    console.log('🛍️ VAPE BOX загружен! Первая порция:', allLoadedProducts.length);
+
+    window.addEventListener('scroll', async () => {
+        if (!hasMoreProducts) return;
+        if (isSearchMode) return; // во время поиска не догружаем
+
+        const scrollPosition = window.innerHeight + window.scrollY;
+        const pageHeight = document.body.offsetHeight;
+
+        if (pageHeight - scrollPosition < 500) {
+            if (window.__loadingMore) return;
+            window.__loadingMore = true;
+            await loadNextPage();
+            window.__loadingMore = false;
+        }
+    });
 })();
