@@ -804,9 +804,8 @@ function openOrderModal() {
 }
 
 function generateOrderNumber() {
-    const timestamp = Date.now().toString().slice(-4);
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `VB-${timestamp}${random}`;
+    // Простой номер: 4 цифры от 1000 до 9999
+    return String(Math.floor(1000 + Math.random() * 9000));
 }
 
 async function submitOrder(e) {
