@@ -40,6 +40,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             price REAL NOT NULL,
+            price_retail REAL DEFAULT 0,
             stock INTEGER DEFAULT 0,
             category TEXT,
             description TEXT,
@@ -81,6 +82,18 @@ def calculate_price(base_price):
         return int((base_price * 1.15) / 10) * 10
     else:
         return int((base_price * 1.13) / 10) * 10
+
+def calculate_price_retail(base_price):
+    if base_price == 0 or not base_price:
+        return 0
+    if base_price < 1000:
+        return int((base_price * 1.35) / 10) * 10
+    elif base_price < 2000:
+        return int((base_price * 1.31) / 10) * 10
+    elif base_price < 3000:
+        return int((base_price * 1.29) / 10) * 10
+    else:
+        return int((base_price * 1.27) / 10) * 10
 
 
 def parse_price(value):
@@ -173,12 +186,13 @@ def import_from_excel():
                 continue
 
             final_price = calculate_price(base_price)
+            final_price_retail = calculate_price_retail(base_price)
 
             cursor.execute('''
-                INSERT INTO products (name, price, stock, category, description, brand, series)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (name, final_price, 99, category, '', brand, series))
-
+                INSERT INTO products (name, price, price_retail, stock, category, description, brand, series)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (name, final_price, final_price_retail, 99, category, '', brand, series))
+            
             count += 1
 
         conn.commit()
@@ -289,7 +303,7 @@ def get_products(limit: int = 100, offset: int = 0):
     total = cursor.fetchone()[0]
 
     cursor.execute(
-        "SELECT id, name, price, stock, category, description, brand, series FROM products LIMIT ? OFFSET ?",
+        "SELECT id, name, price, price_retail, stock, category, description, brand, series FROM products LIMIT ? OFFSET ?",
         (limit, offset)
     )
     rows = cursor.fetchall()
@@ -301,11 +315,12 @@ def get_products(limit: int = 100, offset: int = 0):
             "id": row[0],
             "name": row[1],
             "price": row[2],
-            "stock": row[3],
-            "category": row[4] or "",
-            "description": row[5] or "",
-            "brand": row[6] or "",
-            "series": row[7] or "",
+            "price_retail": row[3] or 0,
+            "stock": row[4],
+            "category": row[5] or "",
+            "description": row[6] or "",
+            "brand": row[7] or "",
+            "series": row[8] or "",
         })
 
     return {
@@ -348,7 +363,7 @@ def get_products_by_category(
 
     # Порция
     cursor.execute(
-        f"SELECT id, name, price, stock, category, description, brand, series FROM products {where_sql} LIMIT ? OFFSET ?",
+        f"SELECT id, name, price, price_retail, stock, category, description, brand, series FROM products {where_sql} LIMIT ? OFFSET ?",
         params + [limit, offset]
     )
     rows = cursor.fetchall()
@@ -360,11 +375,12 @@ def get_products_by_category(
             "id": row[0],
             "name": row[1],
             "price": row[2],
-            "stock": row[3],
-            "category": row[4] or "",
-            "description": row[5] or "",
-            "brand": row[6] or "",
-            "series": row[7] or "",
+            "price_retail": row[3] or 0,
+            "stock": row[4],
+            "category": row[5] or "",
+            "description": row[6] or "",
+            "brand": row[7] or "",
+            "series": row[8] or "",
         })
 
     return {
@@ -430,7 +446,7 @@ def search_products(q: str = "", limit: int = 100):
 
     search_pattern = f"%{query}%"
     cursor.execute('''
-        SELECT id, name, price, stock, category, description, brand, series
+        SELECT id, name, price, price_retail, stock, category, description, brand, series
         FROM products
         WHERE LOWER(name) LIKE ?
            OR LOWER(brand) LIKE ?
@@ -457,11 +473,12 @@ def search_products(q: str = "", limit: int = 100):
             "id": row[0],
             "name": row[1],
             "price": row[2],
-            "stock": row[3],
-            "category": row[4] or "",
-            "description": row[5] or "",
-            "brand": row[6] or "",
-            "series": row[7] or "",
+            "price_retail": row[3] or 0,
+            "stock": row[4],
+            "category": row[5] or "",
+            "description": row[6] or "",
+            "brand": row[7] or "",
+            "series": row[8] or "",
         })
 
     return {"products": products, "query": q, "total": total}
