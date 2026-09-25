@@ -63,6 +63,16 @@
         font-size: 14px;
     }
     .filter-btn.active { background: #8b5cf6; color: #fff; border-color: #8b5cf6; }
+    .mode-filter-btn {
+        padding: 8px 14px;
+        background: #1a1a24;
+        border: 1px solid #2a2a38;
+        border-radius: 10px;
+        color: #b0b0c0;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .mode-filter-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
     .search {
         width: 100%;
         padding: 10px 14px;
@@ -101,6 +111,22 @@
         font-size: 12px;
         font-weight: 600;
         background: #2a2a38;
+    }
+    .order-mode-badge {
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+    .order-mode-badge.opt {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+    }
+    .order-mode-badge.retail {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
     }
     .order-info { font-size: 14px; line-height: 1.6; margin-bottom: 10px; }
     .order-info b { color: #b0b0c0; font-weight: 500; }
@@ -166,6 +192,12 @@
         <button class="filter-btn" data-filter="Отменён" onclick="setFilter('Отменён')">🔴 Отменён</button>
     </div>
 
+    <div class="filters" style="margin-top:-8px;">
+        <button class="mode-filter-btn active" data-mode="all" onclick="setModeFilter('all')">🌐 Все режимы</button>
+        <button class="mode-filter-btn" data-mode="opt" onclick="setModeFilter('opt')">📦 Опт</button>
+        <button class="mode-filter-btn" data-mode="retail" onclick="setModeFilter('retail')">🛒 Розница</button>
+    </div>
+
     <input type="text" class="search" id="searchInput" placeholder="Поиск по номеру, имени, телефону..." oninput="renderOrders()">
 
     <div class="orders" id="ordersContainer"></div>
@@ -181,6 +213,7 @@ const ADMIN_PASSWORD = "TV12131415"; // ← поменяй на свой пар�
 
 let allOrders = [];
 let currentFilter = 'all';
+let currentModeFilter = 'all';
 let refreshInterval = null;
 
 function tryLogin() {
@@ -228,6 +261,14 @@ function setFilter(filter) {
     renderOrders();
 }
 
+function setModeFilter(mode) {
+    currentModeFilter = mode;
+    document.querySelectorAll('.mode-filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    renderOrders();
+}
+
 function renderOrders() {
     const container = document.getElementById('ordersContainer');
     const search = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -235,6 +276,9 @@ function renderOrders() {
     let filtered = allOrders;
     if (currentFilter !== 'all') {
         filtered = filtered.filter(o => o.status === currentFilter);
+    }
+    if (currentModeFilter !== 'all') {
+        filtered = filtered.filter(o => (o.mode || 'opt') === currentModeFilter);
     }
     if (search) {
         filtered = filtered.filter(o =>
@@ -260,10 +304,16 @@ function renderOrders() {
         ).join('\n');
 
         const date = order.created_at ? new Date(order.created_at).toLocaleString('ru-RU') : '—';
+        const isRetail = order.mode === 'retail';
 
         div.innerHTML = `
             <div class="order-header">
-                <span class="order-number">№ ${order.order_number}</span>
+                <span class="order-number">
+                    № ${order.order_number}
+                    <span class="order-mode-badge ${isRetail ? 'retail' : 'opt'}">
+                        ${isRetail ? '🛒 РОЗНИЦА' : '📦 ОПТ'}
+                    </span>
+                </span>
                 <span class="order-status">${order.status || 'Новый'}</span>
             </div>
             <div class="order-date">${date}</div>
