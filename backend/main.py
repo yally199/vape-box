@@ -520,8 +520,8 @@ def create_order(order: OrderIn):
             INSERT INTO orders (
                 order_number, customer_name, customer_telegram,
                 customer_phone, customer_address, comment,
-                items, total, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                items, total, mode, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             order.id,
             order.customer.name,
@@ -531,6 +531,7 @@ def create_order(order: OrderIn):
             order.customer.comment,
             json.dumps([item.dict() for item in order.items], ensure_ascii=False),
             order.total,
+            order.mode or 'opt',
             'Новый',
             order.date or datetime.now().isoformat()
         ))
