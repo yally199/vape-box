@@ -8,14 +8,13 @@ if (tg) {
 // ===== ПОДКЛЮЧЕНИЕ К БЕКЕНДУ =====
 const API_URL = "https://vape-box.onrender.com";
 
+// ===== РЕЖИМ ЦЕН =====
+let priceMode = localStorage.getItem('priceMode') || null;
+
 // Эмодзи для категорий
 const CATEGORY_ICONS = {
-    'Жидкости': '🍓',
-    'Одноразки': '⚡',
-    'Под-системы': '📱',
-    'Расходники': '🧰',
-    'Шайбы': '🎮',
-    'Никотиновые ватки': '💊',
+    'Жидкости': '🍓', 'Одноразки': '⚡', 'Под-системы': '📱',
+    'Расходники': '🧰', 'Шайбы': '🎮', 'Никотиновые ватки': '💊',
     'БЛОЧНО': '📦'
 };
 
@@ -82,6 +81,14 @@ const checkStockForm = document.getElementById('checkStockForm');
 const checkStockProductInfo = document.getElementById('checkStockProductInfo');
 let currentCheckStockProduct = null;
 
+// ===== ПОЛУЧИТЬ ЦЕНУ ПО РЕЖИМУ =====
+function getPrice(item) {
+    if (priceMode === 'retail') {
+        return item.price_retail || item.price;
+    }
+    return item.price;
+}
+
 // ===== SLUGIFY =====
 function slugify(text) {
     return String(text).toLowerCase()
@@ -91,7 +98,7 @@ function slugify(text) {
         .substring(0, 50);
 }
 
-// ===== ПОСТРОЕНИЕ ДЕРЕВА ИЗ ТОВАРОВ =====
+// ===== ПОСТРОЕНИЕ ДЕРЕВА =====
 function buildCategoriesFromProducts(products) {
     const categoryMap = {};
 
@@ -133,6 +140,7 @@ function buildCategoriesFromProducts(products) {
             id: p.id,
             name: p.name,
             price: p.price,
+            price_retail: p.price_retail || 0,
             stock: p.stock,
             description: p.description || '',
             brandName: brandName,
@@ -202,31 +210,99 @@ function findProduct(productId) {
     return null;
 }
 
-function getAllFlavors() {
-    const all = [];
-    categories.forEach(cat => {
-        if (cat.brands) {
-            cat.brands.forEach(brand => {
-                if (brand.series) {
-                    brand.series.forEach(series => {
-                        series.flavors.forEach(flavor => {
-                            all.push({
-                                ...flavor,
-                                categoryId: cat.id,
-                                categoryName: cat.name,
-                                brandId: brand.id,
-                                brandName: brand.name,
-                                brandIcon: brand.icon,
-                                seriesId: series.id,
-                                seriesName: series.name
-                            });
-                        });
-                    });
-                }
-            });
-        }
+// ===== ЭКРАН ВЫБОРА РЕЖИМА =====
+function showModeSelection() {
+    const container = productsContainer;
+    if (!container) return;
+
+    if (categoriesContainer) categoriesContainer.style.display = 'none';
+    if (searchInput) searchInput.style.display = 'none';
+    if (pageTitle) pageTitle.style.display = 'none';
+    if (backBtn) backBtn.style.display = 'none';
+
+    container.style.display = 'block';
+    container.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;">
+            <div style="font-size:56px;margin-bottom:20px;">⚡</div>
+            <div style="font-size:26px;font-weight:700;margin-bottom:10px;">VAPE BOX</div>
+            <div style="font-size:15px;color:#8080a0;margin-bottom:36px;">Выберите режим покупки</div>
+
+            <button id="modeOpt" style="
+                display:block;width:100%;max-width:340px;margin:0 auto 14px;
+                padding:22px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);
+                color:#fff;border:none;border-radius:16px;
+                font-size:17px;font-weight:700;cursor:pointer;text-align:left;
+            ">
+                <div style="font-size:20px;margin-bottom:4px;">📦 Опт</div>
+                <div style="font-size:13px;opacity:0.85;font-weight:400;">Заказ от 2500₽</div>
+            </button>
+
+            <button id="modeRetail" style="
+                display:block;width:100%;max-width:340px;margin:0 auto;
+                padding:22px;background:linear-gradient(135deg,#f59e0b,#d97706);
+                color:#fff;border:none;border-radius:16px;
+                font-size:17px;font-weight:700;cursor:pointer;text-align:left;
+            ">
+                <div style="font-size:20px;margin-bottom:4px;">🛒 Розница</div>
+                <div style="font-size:13px;opacity:0.85;font-weight:400;">Заказ до 2500₽</div>
+            </button>
+
+            <div style="margin-top:24px;font-size:12px;color:#606080;">
+                Режим можно поменять в шапке
+            </div>
+        </div>
+    `;
+
+    document.getElementById('modeOpt').addEventListener('click', () => setMode('opt'));
+    document.getElementById('modeRetail').addEventListener('click', () => setMode('retail'));
+}
+
+function setMode(mode) {
+    priceMode = mode;
+    localStorage.setItem('priceMode', mode);
+
+    if (categoriesContainer) categoriesContainer.style.display = 'flex';
+    if (searchInput) searchInput.style.display = 'block';
+    if (pageTitle) pageTitle.style.display = 'block';
+
+    // Обновляем кнопку в шапке
+    updateModeButton();
+
+    renderCategoryTabs();
+    renderCatalog();
+    updateCartUI();
+    showToast(mode === 'opt' ? '📦 Режим: ОПТ' : '🛒 Режим: РОЗНИЦА', 'success');
+}
+
+function updateModeButton() {
+    const btn = document.getElementById('modeSwitchBtn');
+    if (btn) {
+        btn.textContent = priceMode === 'opt' ? '📦 ОПТ' : '🛒 РОЗНИЦА';
+        btn.style.background = priceMode === 'opt'
+            ? 'linear-gradient(135deg,#8b5cf6,#7c3aed)'
+            : 'linear-gradient(135deg,#f59e0b,#d97706)';
+    }
+}
+
+function createModeButton() {
+    // Проверяем, есть ли уже кнопка
+    if (document.getElementById('modeSwitchBtn')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'modeSwitchBtn';
+    btn.style.cssText = `
+        position:fixed;top:20px;right:70px;z-index:100;
+        padding:8px 12px;color:#fff;border:none;border-radius:10px;
+        font-size:12px;font-weight:700;cursor:pointer;
+        box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    `;
+    btn.textContent = '📦 ОПТ';
+    btn.addEventListener('click', () => {
+        const newMode = priceMode === 'opt' ? 'retail' : 'opt';
+        setMode(newMode);
     });
-    return all;
+    document.body.appendChild(btn);
+    updateModeButton();
 }
 
 // ===== ОТРИСОВКА =====
@@ -257,9 +333,7 @@ function renderCatalog() {
         let count = 0;
         if (cat.brands) {
             cat.brands.forEach(b => {
-                if (b.series) {
-                    b.series.forEach(s => { count += s.flavors.length; });
-                }
+                if (b.series) b.series.forEach(s => { count += s.flavors.length; });
             });
         }
 
@@ -314,9 +388,7 @@ function showBrands(categoryId) {
         card.style.animationDelay = `${index * 0.05}s`;
 
         let count = 0;
-        if (brand.series) {
-            brand.series.forEach(s => { count += s.flavors.length; });
-        }
+        if (brand.series) brand.series.forEach(s => { count += s.flavors.length; });
 
         card.innerHTML = `
             <div class="product-image" style="font-size: 48px;">${brand.icon || '📦'}</div>
@@ -412,6 +484,7 @@ function buildFlavorItem(flavor, index, categoryId, brandId) {
     const hasStock = flavor.stock > 0;
     const cartItem = cart.find(c => c.id === flavor.id);
     const currentQty = cartItem ? cartItem.quantity : 0;
+    const displayPrice = getPrice(flavor);
 
     const stockText = hasStock
         ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
@@ -449,7 +522,7 @@ function buildFlavorItem(flavor, index, categoryId, brandId) {
         <div class="flavor-info">
             <div class="flavor-name">${flavor.name}</div>
             <div class="flavor-meta">
-                <span class="flavor-price">${flavor.price} ₽</span>
+                <span class="flavor-price">${displayPrice} ₽</span>
                 ${stockText}
             </div>
         </div>
@@ -526,6 +599,7 @@ async function renderSearchResults() {
             id: p.id,
             name: p.name,
             price: p.price,
+            price_retail: p.price_retail || 0,
             stock: p.stock,
             description: p.description || '',
             brandName: p.brand || ''
@@ -558,6 +632,7 @@ function addToCart(productId, delta = 1) {
     }
 
     const index = cart.findIndex(item => item.id === productId);
+    const finalPrice = getPrice(product);
 
     if (index === -1) {
         if (delta <= 0) return;
@@ -565,7 +640,7 @@ function addToCart(productId, delta = 1) {
             showToast('❌ Товар закончился', 'error');
             return;
         }
-        cart.push({ ...product, quantity: delta });
+        cart.push({ ...product, price: finalPrice, quantity: delta });
         product.stock -= delta;
         showToast(`✅ Добавлено ${delta} шт`, 'success');
     } else {
@@ -580,6 +655,7 @@ function addToCart(productId, delta = 1) {
                 return;
             }
             cart[index].quantity = newQty;
+            cart[index].price = finalPrice; // обновляем цену на случай смены режима
             product.stock -= delta;
             showToast(delta > 0 ? `✅ +${delta} шт` : `➖ ${Math.abs(delta)} шт`, delta > 0 ? 'success' : 'error');
         }
@@ -804,7 +880,6 @@ function openOrderModal() {
 }
 
 function generateOrderNumber() {
-    // Простой номер: 4 цифры от 1000 до 9999
     return String(Math.floor(1000 + Math.random() * 9000));
 }
 
@@ -832,6 +907,7 @@ async function submitOrder(e) {
             total: i.price * i.quantity
         })),
         total: total,
+        mode: priceMode,
         date: new Date().toISOString()
     };
 
@@ -867,10 +943,11 @@ function openCheckStock(productId) {
     const product = findProduct(productId);
     if (!product) return;
     currentCheckStockProduct = { product };
+    const displayPrice = getPrice(product);
     if (checkStockProductInfo) {
         checkStockProductInfo.innerHTML = `
             <div class="product-name">${product.name}</div>
-            <div class="product-meta">${product.brandName || ''} • ${product.price} ₽</div>
+            <div class="product-meta">${product.brandName || ''} • ${displayPrice} ₽</div>
         `;
     }
     document.getElementById('checkStockName').value = '';
@@ -896,7 +973,7 @@ function submitCheckStock(e) {
     requests.push({
         id: `RQ-${Date.now().toString().slice(-6)}`,
         product: currentCheckStockProduct?.product?.name || '',
-        price: currentCheckStockProduct?.product?.price || 0,
+        price: getPrice(currentCheckStockProduct?.product || {}),
         customer: { name, contact, phone, comment },
         date: new Date().toISOString(),
         status: 'Новый'
@@ -939,12 +1016,19 @@ function showToast(message, type = 'success') {
 
 // ===== ЗАПУСК =====
 (async function init() {
-    console.log('🛍️ VAPE BOX: загружаем все товары...');
+    console.log('🛍️ VAPE BOX: загружаем товары...');
     const products = await loadAllProducts();
     console.log(`🛍️ Получено товаров: ${products.length}`);
     categories = buildCategoriesFromProducts(products);
+
+    if (!priceMode) {
+        showModeSelection();
+        return;
+    }
+
+    createModeButton();
     renderCategoryTabs();
     renderCatalog();
     updateCartUI();
-    console.log(`🛍️ VAPE BOX загружен! Категорий: ${categories.length}`);
+    console.log(`🛍️ VAPE BOX загружен! Режим: ${priceMode}`);
 })();
