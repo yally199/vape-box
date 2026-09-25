@@ -60,6 +60,7 @@ def init_db():
             comment TEXT,
             items TEXT,
             total REAL,
+            mode TEXT DEFAULT 'opt',
             status TEXT DEFAULT 'Новый',
             created_at TEXT
         )
@@ -87,13 +88,13 @@ def calculate_price_retail(base_price):
     if base_price == 0 or not base_price:
         return 0
     if base_price < 1000:
-        return int((base_price * 1.35) / 10) * 10
+        return int((base_price * 1.33) / 10) * 10
     elif base_price < 2000:
-        return int((base_price * 1.31) / 10) * 10
-    elif base_price < 3000:
         return int((base_price * 1.29) / 10) * 10
+    elif base_price < 3000:
+        return int((base_price * 1.25) / 10) * 10
     else:
-        return int((base_price * 1.27) / 10) * 10
+        return int((base_price * 1.23) / 10) * 10
 
 
 def parse_price(value):
