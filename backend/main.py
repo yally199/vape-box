@@ -280,6 +280,7 @@ class OrderIn(BaseModel):
     customer: OrderCustomer
     items: List[OrderItem]
     total: float
+    mode: Optional[str] = "opt"
     date: Optional[str] = ""
 
 
