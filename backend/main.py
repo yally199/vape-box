@@ -591,7 +591,7 @@ def get_orders():
     cursor.execute('''
         SELECT order_number, customer_name, customer_telegram,
                customer_phone, customer_address, comment,
-               items, total, status, created_at
+               items, total, mode, status, created_at
         FROM orders
         ORDER BY created_at DESC
     ''')
@@ -613,8 +613,9 @@ def get_orders():
             "comment": row[5],
             "items": items_parsed,
             "total": row[7],
-            "status": row[8],
-            "created_at": row[9],
+            "mode": row[8] or "opt",
+            "status": row[9],
+            "created_at": row[10],
         })
     return {"orders": orders}
 
