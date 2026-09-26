@@ -896,9 +896,12 @@ async function submitOrder(e) {
 
     const orderNumber = generateOrderNumber();
     const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    const telegramUserId = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user)
+        ? tg.initDataUnsafe.user.id : null;
+
     const order = {
         id: orderNumber,
-        customer: { name, telegram, phone, address, comment },
+        customer: { name, telegram, phone, address, comment, telegram_id: telegramUserId },
         items: cart.map(i => ({
             name: i.name,
             brand: i.brandName || '',
