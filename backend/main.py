@@ -594,8 +594,20 @@ def create_order(order: OrderIn):
         }
         send_telegram_message(text, reply_markup=keyboard)
 
-        return {"success": True, "order_number": order.id}
+        # Отправляем сообщение клиенту
+        if order.customer.telegram_id:
+            mode_label_client = "🛒 РОЗНИЦА" if order.mode == "retail" else "📦 ОПТ"
+            client_text = (
+                f"🛍️ <b>Спасибо, {order.customer.name}!</b>\n\n"
+                f"Ваш заказ <b>№{order.id}</b> принят ✅\n\n"
+                f"Режим: <b>{mode_label_client}</b>\n"
+                f"Сумма: <b>{order.total:.0f}₽</b>\n\n"
+                f"Мы свяжемся с вами в ближайшее время для подтверждения. 
+                Пожалуйста, напишите менеджеру."
+            )
+            send_telegram_to_customer(order.customer.telegram_id, client_text)
 
+        return {"success": True, "order_number": order.id}
     except sqlite3.IntegrityError:
         return {"success": False, "error": "Заказ с таким номером уже существует"}
     except Exception as e:
