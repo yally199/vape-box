@@ -273,6 +273,7 @@ class OrderCustomer(BaseModel):
     phone: Optional[str] = ""
     address: Optional[str] = ""
     comment: Optional[str] = ""
+    telegram_id: Optional[int] = None
 
 
 class OrderIn(BaseModel):
