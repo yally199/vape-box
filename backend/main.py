@@ -540,6 +540,15 @@ def create_order(order: OrderIn):
     conn.text_factory = str
     cursor = conn.cursor()
     try:
+        # Проверяем, нет ли уже такого заказа за последние 30 секунд
+        cursor.execute('''
+            SELECT order_number FROM orders
+            WHERE order_number = ?
+        ''', (order.id,))
+        existing = cursor.fetchone()
+        if existing:
+            return {"success": False, "error": "Такой заказ уже создан"}
+
         cursor.execute('''
             INSERT INTO orders (
                 order_number, customer_name, customer_telegram,
