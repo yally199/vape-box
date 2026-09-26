@@ -885,6 +885,13 @@ function generateOrderNumber() {
 
 async function submitOrder(e) {
     e.preventDefault();
+
+    // Защита от двойной отправки
+    if (window.__orderSubmitting) {
+        console.log('⏸️ Заказ уже отправляется');
+        return;
+    }
+    window.__orderSubmitting = true;
     const name = document.getElementById('customerName').value.trim();
     const telegram = document.getElementById('customerTelegram').value.trim();
     const phone = document.getElementById('customerPhone').value.trim();
@@ -939,6 +946,9 @@ async function submitOrder(e) {
     refreshCurrentView();
     if (orderForm) orderForm.reset();
     showToast(`✅ Заказ №${orderNumber} оформлен!`, 'success');
+
+    // Разрешаем следующий заказ только через 3 секунды
+    setTimeout(() => { window.__orderSubmitting = false; }, 3000);
 }
 
 // ===== УТОЧНЕНИЕ НАЛИЧИЯ =====
