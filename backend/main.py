@@ -49,12 +49,12 @@ def init_db():
             series TEXT
         )
     ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS orders (
+    CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             order_number TEXT NOT NULL UNIQUE,
             customer_name TEXT,
             customer_telegram TEXT,
+            customer_telegram_id INTEGER,
             customer_phone TEXT,
             customer_address TEXT,
             comment TEXT,
