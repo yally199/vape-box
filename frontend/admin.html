@@ -52,6 +52,28 @@
         gap: 8px;
         flex-wrap: wrap;
     }
+    .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .tab-btn {
+        padding: 10px 16px;
+        background: #1a1a24;
+        border: 1px solid #2a2a38;
+        border-radius: 10px;
+        color: #b0b0c0;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .tab-btn.active {
+        background: #8b5cf6;
+        color: #fff;
+        border-color: #8b5cf6;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
     .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
     .filter-btn {
         padding: 8px 14px;
@@ -120,14 +142,8 @@
         margin-left: 6px;
         vertical-align: middle;
     }
-    .order-mode-badge.opt {
-        background: rgba(139, 92, 246, 0.2);
-        color: #a78bfa;
-    }
-    .order-mode-badge.retail {
-        background: rgba(245, 158, 11, 0.2);
-        color: #fbbf24;
-    }
+    .order-mode-badge.opt { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+    .order-mode-badge.retail { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
     .order-info { font-size: 14px; line-height: 1.6; margin-bottom: 10px; }
     .order-info b { color: #b0b0c0; font-weight: 500; }
     .order-items {
@@ -166,6 +182,86 @@
         font-size: 13px;
         cursor: pointer;
     }
+    /* Картинки */
+    .img-upload-block {
+        background: #1a1a24;
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+    .img-upload-block h3 { font-size: 16px; margin-bottom: 12px; color: #8b5cf6; }
+    .img-upload-block label {
+        display: block;
+        font-size: 13px;
+        color: #b0b0c0;
+        margin-bottom: 6px;
+        margin-top: 12px;
+    }
+    .img-upload-block select, .img-upload-block input[type="text"] {
+        width: 100%;
+        padding: 10px 14px;
+        background: #0f0f14;
+        border: 1px solid #2a2a38;
+        border-radius: 10px;
+        color: #e8e8ee;
+        font-size: 14px;
+    }
+    .img-upload-block input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        background: #0f0f14;
+        border: 1px dashed #2a2a38;
+        border-radius: 10px;
+        color: #b0b0c0;
+        font-size: 13px;
+    }
+    .img-upload-btn {
+        width: 100%;
+        padding: 14px;
+        background: #8b5cf6;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 16px;
+    }
+    .img-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .img-card {
+        background: #1a1a24;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+    }
+    .img-card img {
+        width: 100%;
+        height: 120px;
+        object-fit: contain;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background: #0f0f14;
+    }
+    .img-card .img-cat {
+        font-size: 12px;
+        color: #b0b0c0;
+        margin-bottom: 6px;
+        word-break: break-all;
+    }
+    .img-card .img-del {
+        width: 100%;
+        padding: 6px;
+        background: #ef4444;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+    }
 </style>
 </head>
 <body>
@@ -179,43 +275,78 @@
 
 <div id="adminPanel" class="hidden">
     <div class="header">
-        <h1>📦 Заказы VAPE BOX</h1>
+        <h1>📦 VAPE BOX — Админ</h1>
         <button class="logout-btn" onclick="logout()">Выйти</button>
     </div>
 
-    <div class="filters">
-        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Все</button>
-        <button class="filter-btn" data-filter="Новый" onclick="setFilter('Новый')">🟡 Новые</button>
-        <button class="filter-btn" data-filter="Принят" onclick="setFilter('Принят')">🔵 Принят</button>
-        <button class="filter-btn" data-filter="Отправлен" onclick="setFilter('Отправлен')">🟣 Отправлен</button>
-        <button class="filter-btn" data-filter="Завершён" onclick="setFilter('Завершён')">🟢 Завершён</button>
-        <button class="filter-btn" data-filter="Отменён" onclick="setFilter('Отменён')">🔴 Отменён</button>
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="orders" onclick="setTab('orders')">📦 Заказы</button>
+        <button class="tab-btn" data-tab="images" onclick="setTab('images')">🖼️ Картинки</button>
     </div>
 
-    <div class="filters" style="margin-top:-8px;">
-        <button class="mode-filter-btn active" data-mode="all" onclick="setModeFilter('all')">🌐 Все режимы</button>
-        <button class="mode-filter-btn" data-mode="opt" onclick="setModeFilter('opt')">📦 Опт</button>
-        <button class="mode-filter-btn" data-mode="retail" onclick="setModeFilter('retail')">🛒 Розница</button>
+    <!-- Вкладка ЗАКАЗЫ -->
+    <div class="tab-content active" id="tab-orders">
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Все</button>
+            <button class="filter-btn" data-filter="Новый" onclick="setFilter('Новый')">🟡 Новые</button>
+            <button class="filter-btn" data-filter="Принят" onclick="setFilter('Принят')">🔵 Принят</button>
+            <button class="filter-btn" data-filter="Отправлен" onclick="setFilter('Отправлен')">🟣 Отправлен</button>
+            <button class="filter-btn" data-filter="Завершён" onclick="setFilter('Завершён')">🟢 Завершён</button>
+            <button class="filter-btn" data-filter="Отменён" onclick="setFilter('Отменён')">🔴 Отменён</button>
+        </div>
+
+        <div class="filters" style="margin-top:-8px;">
+            <button class="mode-filter-btn active" data-mode="all" onclick="setModeFilter('all')">🌐 Все режимы</button>
+            <button class="mode-filter-btn" data-mode="opt" onclick="setModeFilter('opt')">📦 Опт</button>
+            <button class="mode-filter-btn" data-mode="retail" onclick="setModeFilter('retail')">🛒 Розница</button>
+        </div>
+
+        <input type="text" class="search" id="searchInput" placeholder="Поиск по номеру, имени, телефону..." oninput="renderOrders()">
+
+        <div class="orders" id="ordersContainer"></div>
+
+        <div class="refresh-info">
+            Автообновление каждые 30 сек • <span id="lastUpdate"></span>
+        </div>
     </div>
 
-    <input type="text" class="search" id="searchInput" placeholder="Поиск по номеру, имени, телефону..." oninput="renderOrders()">
+    <!-- Вкладка КАРТИНКИ -->
+    <div class="tab-content" id="tab-images">
+        <div class="img-upload-block">
+            <h3>📤 Загрузить картинку</h3>
 
-    <div class="orders" id="ordersContainer"></div>
+            <label>Категория</label>
+            <select id="imgCategory">
+                <option value="Жидкости">🍓 Жидкости</option>
+                <option value="Одноразки">⚡ Одноразки</option>
+                <option value="Под-системы">📱 Под-системы</option>
+                <option value="Расходники">🧰 Расходники</option>
+                <option value="Шайбы">🎮 Шайбы</option>
+                <option value="Никотиновые ватки">💊 Никотиновые ватки</option>
+                <option value="БЛОЧНО">📦 БЛОЧНО</option>
+            </select>
 
-    <div class="refresh-info">
-        Автообновление каждые 30 сек • <span id="lastUpdate"></span>
+            <label>Картинка (PNG / JPG, до 500 КБ)</label>
+            <input type="file" id="imgFile" accept="image/*">
+
+            <button class="img-upload-btn" onclick="uploadImage()">📤 Загрузить на сервер</button>
+        </div>
+
+        <h3 style="font-size:16px;margin-bottom:12px;color:#8b5cf6;">🖼️ Загруженные картинки</h3>
+        <div class="img-list" id="imgList"></div>
     </div>
 </div>
 
 <script>
 const API_URL = "https://vape-box.onrender.com";
-const ADMIN_PASSWORD = "TV12131415"; // ← поменяй на свой пароль
+const ADMIN_PASSWORD = "TV12131415";
 
 let allOrders = [];
 let currentFilter = 'all';
 let currentModeFilter = 'all';
 let refreshInterval = null;
 
+// ===== ВХОД =====
 function tryLogin() {
     const input = document.getElementById('passwordInput').value;
     if (input === ADMIN_PASSWORD) {
@@ -238,9 +369,22 @@ function showPanel() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     loadOrders();
+    loadImages();
     refreshInterval = setInterval(loadOrders, 30000);
 }
 
+// ===== ВКЛАДКИ =====
+function setTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.toggle('active', c.id === 'tab-' + tab);
+    });
+    if (tab === 'images') loadImages();
+}
+
+// ===== ЗАКАЗЫ =====
 async function loadOrders() {
     try {
         const resp = await fetch(`${API_URL}/api/orders`);
@@ -361,6 +505,77 @@ async function deleteOrder(orderNumber) {
     } catch (err) { alert('Ошибка сети: ' + err.message); }
 }
 
+// ===== КАРТИНКИ =====
+async function uploadImage() {
+    const fileInput = document.getElementById('imgFile');
+    const category = document.getElementById('imgCategory').value;
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Выберите картинку');
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const resp = await fetch(`${API_URL}/api/upload-image?category=${encodeURIComponent(category)}`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await resp.json();
+        if (data.success) {
+            alert('✅ Картинка загружена!');
+            fileInput.value = '';
+            loadImages();
+        } else {
+            alert('❌ Ошибка: ' + (data.error || 'не удалось'));
+        }
+    } catch (err) {
+        alert('Ошибка сети: ' + err.message);
+    }
+}
+
+async function loadImages() {
+    try {
+        const resp = await fetch(`${API_URL}/api/images`);
+        const data = await resp.json();
+        const images = data.images || [];
+        const container = document.getElementById('imgList');
+
+        if (images.length === 0) {
+            container.innerHTML = '<div class="empty" style="grid-column:1/-1;">🖼️ Картинок пока нет</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        images.forEach(img => {
+            const card = document.createElement('div');
+            card.className = 'img-card';
+            card.innerHTML = `
+                <img src="${img.image_url}" alt="${img.category}">
+                <div class="img-cat">${img.category}</div>
+                <button class="img-del" onclick="deleteImage(${img.id})">🗑️ Удалить</button>
+            `;
+            container.appendChild(card);
+        });
+    } catch (err) {
+        console.error('Ошибка загрузки картинок:', err);
+    }
+}
+
+async function deleteImage(id) {
+    if (!confirm('Удалить картинку?')) return;
+    try {
+        const resp = await fetch(`${API_URL}/api/images/${id}`, { method: 'DELETE' });
+        const data = await resp.json();
+        if (data.success) { loadImages(); }
+        else { alert('Ошибка: ' + (data.error || 'не удалось')); }
+    } catch (err) { alert('Ошибка сети: ' + err.message); }
+}
+
+// ===== СТАРТ =====
 if (localStorage.getItem('vapebox_admin') === '1') { showPanel(); }
 
 document.getElementById('passwordInput').addEventListener('keydown', e => {
