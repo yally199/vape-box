@@ -35,6 +35,7 @@ app.router.default_response_class = UTF8JSONResponse
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,7 +50,9 @@ def init_db():
             series TEXT
         )
     ''')
-    CREATE TABLE IF NOT EXISTS orders (
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             order_number TEXT NOT NULL UNIQUE,
             customer_name TEXT,
@@ -65,6 +68,7 @@ def init_db():
             created_at TEXT
         )
     ''')
+
     conn.commit()
     conn.close()
 
@@ -83,6 +87,7 @@ def calculate_price(base_price):
         return int((base_price * 1.15) / 10) * 10
     else:
         return int((base_price * 1.13) / 10) * 10
+
 
 def calculate_price_retail(base_price):
     if base_price == 0 or not base_price:
@@ -169,7 +174,6 @@ def import_from_excel():
                 skipped_raznoe += 1
                 continue
 
-            # Берём цену из столбца "от 3 000р" (и далее по возрастанию)
             price_cols = [
                 'Цена: от 3 000р', 'Цена: от 10 000р',
                 'Цена: от 30 000р', 'Цена: от 50 000р', 'Цена: от 100 000р',
@@ -193,7 +197,7 @@ def import_from_excel():
                 INSERT INTO products (name, price, price_retail, stock, category, description, brand, series)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (name, final_price, final_price_retail, 99, category, '', brand, series))
-            
+
             count += 1
 
         conn.commit()
@@ -237,7 +241,8 @@ def send_telegram_message(text, reply_markup=None):
     except Exception as e:
         print(f"[TG] Ошибка отправки: {e}")
         return False
-        
+
+
 def send_telegram_to_customer(chat_id, text):
     """Отправляет сообщение конкретному пользователю по его chat_id."""
     if not TELEGRAM_BOT_TOKEN or not chat_id:
@@ -259,6 +264,56 @@ def send_telegram_to_customer(chat_id, text):
     except Exception as e:
         print(f"[TG-CLIENT] Ошибка: {e}")
         return False
+
+
+def notify_customer_status(order_number, new_status):
+    """Отправляет клиенту сообщение о смене статуса заказа."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.text_factory = str
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT customer_name, customer_telegram_id FROM orders WHERE order_number = ?",
+        (order_number,)
+    )
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        print(f"[STATUS] Заказ {order_number} не найден")
+        return
+
+    customer_name = row[0] or "Клиент"
+    customer_tg_id = row[1]
+
+    texts = {
+        "Принят": (
+            f"✅ <b>Заказ №{order_number} принят!</b>\n\n"
+            f"Мы начали обработку вашего заказа и свяжемся с вами для подтверждения."
+        ),
+        "Отправлен": (
+            f"🚚 <b>Заказ №{order_number} отправлен!</b>\n\n"
+            f"По вопросам доставки обращайтесь к менеджеру."
+        ),
+        "Завершён": (
+            f"🎉 <b>Заказ №{order_number} завершён!</b>\n\n"
+            f"Спасибо за покупку! Будем рады видеть вас снова."
+        ),
+        "Отменён": (
+            f"❌ <b>Заказ №{order_number} отменён.</b>\n\n"
+            f"Если это ошибка — свяжитесь с менеджером."
+        ),
+    }
+
+    text = texts.get(new_status)
+    if not text:
+        print(f"[STATUS] Нет текста для статуса {new_status}")
+        return
+
+    if not customer_tg_id:
+        print(f"[STATUS] У заказа {order_number} нет telegram_id — не отправлено")
+        return
+
+    send_telegram_to_customer(customer_tg_id, text)
 
 
 def answer_callback(callback_query_id, text=""):
@@ -355,6 +410,8 @@ def get_products(limit: int = 100, offset: int = 0):
         "offset": offset,
         "has_more": offset + len(products) < total
     }
+
+
 @app.get("/api/products/by-category")
 def get_products_by_category(
     category: str = "",
@@ -367,7 +424,6 @@ def get_products_by_category(
     conn.text_factory = str
     cursor = conn.cursor()
 
-    # Строим фильтр
     conditions = []
     params = []
     if category:
@@ -382,11 +438,9 @@ def get_products_by_category(
 
     where_sql = ("WHERE " + " AND ".join(conditions)) if conditions else ""
 
-    # Общее количество
     cursor.execute(f"SELECT COUNT(*) FROM products {where_sql}", params)
     total = cursor.fetchone()[0]
 
-    # Порция
     cursor.execute(
         f"SELECT id, name, price, price_retail, stock, category, description, brand, series FROM products {where_sql} LIMIT ? OFFSET ?",
         params + [limit, offset]
@@ -415,7 +469,8 @@ def get_products_by_category(
         "offset": offset,
         "has_more": offset + len(products) < total
     }
-    
+
+
 @app.get("/api/categories")
 def get_categories_tree():
     conn = sqlite3.connect(DB_PATH)
@@ -431,7 +486,7 @@ def get_categories_tree():
     rows = cursor.fetchall()
     conn.close()
 
-    tree = {}  # category -> {brands: {brand -> {series: [{name, count}]}}}
+    tree = {}
     for cat, brand, series, count in rows:
         cat = cat or 'Разное'
         brand = brand or 'Разное'
@@ -445,7 +500,6 @@ def get_categories_tree():
             tree[cat]['brands'][brand]['series'][series] = {'name': series, 'count': 0}
         tree[cat]['brands'][brand]['series'][series]['count'] += count
 
-    # Преобразуем в массивы
     result = []
     for cat_name, cat_data in tree.items():
         brands_arr = []
@@ -540,10 +594,8 @@ def create_order(order: OrderIn):
     conn.text_factory = str
     cursor = conn.cursor()
     try:
-        # Проверяем, нет ли уже такого заказа за последние 30 секунд
         cursor.execute('''
-            SELECT order_number FROM orders
-            WHERE order_number = ?
+            SELECT order_number FROM orders WHERE order_number = ?
         ''', (order.id,))
         existing = cursor.fetchone()
         if existing:
@@ -552,13 +604,14 @@ def create_order(order: OrderIn):
         cursor.execute('''
             INSERT INTO orders (
                 order_number, customer_name, customer_telegram,
-                customer_phone, customer_address, comment,
+                customer_telegram_id, customer_phone, customer_address, comment,
                 items, total, mode, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             order.id,
             order.customer.name,
             order.customer.telegram,
+            order.customer.telegram_id,
             order.customer.phone,
             order.customer.address,
             order.customer.comment,
@@ -574,8 +627,9 @@ def create_order(order: OrderIn):
             f"  • {item.name} × {item.quantity} = {item.total:.0f}₽"
             for item in order.items
         ])
+        mode_label = "🛒 РОЗНИЦА" if order.mode == "retail" else "📦 ОПТ"
         text = (
-            f"🛍️ <b>НОВЫЙ ЗАКАЗ №{order.id}</b>\n\n"
+            f"🛍️ <b>НОВЫЙ ЗАКАЗ №{order.id}</b> [{mode_label}]\n\n"
             f"<b>Клиент:</b> {order.customer.name}\n"
         )
         if order.customer.telegram:
@@ -603,7 +657,6 @@ def create_order(order: OrderIn):
         }
         send_telegram_message(text, reply_markup=keyboard)
 
-        # Отправляем сообщение клиенту
         if order.customer.telegram_id:
             mode_label_client = "🛒 РОЗНИЦА" if order.mode == "retail" else "📦 ОПТ"
             client_text = (
@@ -677,6 +730,9 @@ def update_order_status(order_number: str, payload: OrderStatusUpdate):
         if cursor.rowcount == 0:
             return {"success": False, "error": "Заказ не найден"}
         conn.commit()
+
+        notify_customer_status(order_number, payload.status)
+
         return {"success": True, "order_number": order_number, "status": payload.status}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -730,6 +786,7 @@ async def telegram_webhook(update: dict):
                         send_telegram_message(
                             f"📝 Заказ <b>{order_number}</b> — статус изменён на <b>{new_status}</b>"
                         )
+                        notify_customer_status(order_number, new_status)
                     else:
                         answer_callback(callback_id, "❌ Заказ не найден")
 
