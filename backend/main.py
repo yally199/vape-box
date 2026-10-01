@@ -23,6 +23,7 @@ EXCEL_FILE = "prices.xlsx"
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_ADMIN_ID = os.getenv("TELEGRAM_ADMIN_ID", "")
+IMGBB_API_KEY = os.getenv("IMGBB_API_KEY", "")
 
 
 class UTF8JSONResponse(JSONResponse):
@@ -65,6 +66,15 @@ def init_db():
             total REAL,
             mode TEXT DEFAULT 'opt',
             status TEXT DEFAULT 'Новый',
+            created_at TEXT
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category TEXT,
+            image_url TEXT,
             created_at TEXT
         )
     ''')
@@ -176,7 +186,6 @@ def import_from_excel():
 
             base_price = parse_price(row.get('Цена', 0))
             if base_price == 0:
-                
                 skipped_no_price += 1
                 continue
 
@@ -254,6 +263,32 @@ def send_telegram_to_customer(chat_id, text):
     except Exception as e:
         print(f"[TG-CLIENT] Ошибка: {e}")
         return False
+
+
+def upload_image_to_imgbb(image_bytes, filename="image.jpg"):
+    """Загружает картинку на ImgBB и возвращает URL."""
+    if not IMGBB_API_KEY:
+        print("[IMGBB] Нет API-ключа")
+        return None
+    try:
+        import requests
+        import base64
+        url = "https://api.imgbb.com/1/upload"
+        payload = {
+            "key": IMGBB_API_KEY,
+            "image": base64.b64encode(image_bytes),
+            "name": filename
+        }
+        response = requests.post(url, data=payload, timeout=30)
+        result = response.json()
+        if result.get("data") and result["data"].get("url"):
+            print(f"[IMGBB] Загружено: {result['data']['url']}")
+            return result["data"]["url"]
+        print(f"[IMGBB] Ошибка: {result}")
+        return None
+    except Exception as e:
+        print(f"[IMGBB] Ошибка: {e}")
+        return None
 
 
 def notify_customer_status(order_number, new_status):
@@ -807,3 +842,64 @@ def set_telegram_webhook():
     except Exception as e:
         print(f"[WEBHOOK] Ошибка установки: {e}")
         return {"success": False, "error": str(e)}
+
+
+# ===== IMGBB =====
+
+@app.post("/api/upload-image")
+async def upload_image(file: UploadFile = File(...), category: str = ""):
+    """Загружает картинку на ImgBB и возвращает URL."""
+    try:
+        contents = await file.read()
+        image_url = upload_image_to_imgbb(contents, file.filename)
+
+        if not image_url:
+            return {"success": False, "error": "Не удалось загрузить картинку"}
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO images (category, image_url, created_at) VALUES (?, ?, ?)",
+            (category, image_url, datetime.now().isoformat())
+        )
+        conn.commit()
+        conn.close()
+
+        return {"success": True, "image_url": image_url}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/images")
+def get_images():
+    conn = sqlite3.connect(DB_PATH)
+    conn.text_factory = str
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, category, image_url FROM images")
+    rows = cursor.fetchall()
+    conn.close()
+
+    images = []
+    for row in rows:
+        images.append({
+            "id": row[0],
+            "category": row[1] or "",
+            "image_url": row[2] or ""
+        })
+    return {"images": images}
+
+
+@app.delete("/api/images/{image_id}")
+def delete_image(image_id: int):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM images WHERE id = ?", (image_id,))
+        if cursor.rowcount == 0:
+            return {"success": False, "error": "Картинка не найдена"}
+        conn.commit()
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
