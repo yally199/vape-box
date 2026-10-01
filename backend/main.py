@@ -174,19 +174,9 @@ def import_from_excel():
                 skipped_raznoe += 1
                 continue
 
-            price_cols = [
-                'Цена: от 3 000р', 'Цена: от 10 000р',
-                'Цена: от 30 000р', 'Цена: от 50 000р', 'Цена: от 100 000р',
-            ]
-            base_price = 0
-            for col in price_cols:
-                if col in df.columns:
-                    parsed = parse_price(row.get(col))
-                    if parsed > 0:
-                        base_price = parsed
-                        break
-
+            base_price = parse_price(row.get('Цена', 0))
             if base_price == 0:
+                
                 skipped_no_price += 1
                 continue
 
