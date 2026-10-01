@@ -274,16 +274,22 @@ def upload_image_to_imgbb(image_bytes, filename="image.jpg"):
         import requests
         import base64
         url = "https://api.imgbb.com/1/upload"
+        
+        # Важно: decode('utf-8')!
+        b64_image = base64.b64encode(image_bytes).decode('utf-8')
+        
         payload = {
             "key": IMGBB_API_KEY,
-            "image": base64.b64encode(image_bytes),
+            "image": b64_image,
             "name": filename
         }
         response = requests.post(url, data=payload, timeout=30)
         result = response.json()
+        
         if result.get("data") and result["data"].get("url"):
             print(f"[IMGBB] Загружено: {result['data']['url']}")
             return result["data"]["url"]
+        
         print(f"[IMGBB] Ошибка: {result}")
         return None
     except Exception as e:
