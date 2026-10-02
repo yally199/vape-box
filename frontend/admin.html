@@ -56,6 +56,7 @@
         display: flex;
         gap: 8px;
         margin-bottom: 16px;
+        flex-wrap: wrap;
     }
     .tab-btn {
         padding: 10px 16px;
@@ -75,7 +76,7 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-    .filter-btn {
+    .filter-btn, .mode-filter-btn {
         padding: 8px 14px;
         background: #1a1a24;
         border: 1px solid #2a2a38;
@@ -85,15 +86,6 @@
         font-size: 14px;
     }
     .filter-btn.active { background: #8b5cf6; color: #fff; border-color: #8b5cf6; }
-    .mode-filter-btn {
-        padding: 8px 14px;
-        background: #1a1a24;
-        border: 1px solid #2a2a38;
-        border-radius: 10px;
-        color: #b0b0c0;
-        cursor: pointer;
-        font-size: 14px;
-    }
     .mode-filter-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
     .search {
         width: 100%;
@@ -140,7 +132,6 @@
         font-size: 11px;
         font-weight: 700;
         margin-left: 6px;
-        vertical-align: middle;
     }
     .order-mode-badge.opt { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
     .order-mode-badge.retail { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
@@ -182,6 +173,7 @@
         font-size: 13px;
         cursor: pointer;
     }
+
     /* Картинки */
     .img-upload-block {
         background: #1a1a24;
@@ -262,6 +254,85 @@
         font-size: 12px;
         cursor: pointer;
     }
+
+    /* Акции */
+    .promo-search-block {
+        background: #1a1a24;
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .promo-search-block h3 {
+        font-size: 16px;
+        margin-bottom: 12px;
+        color: #8b5cf6;
+    }
+    .promo-results {
+        margin-top: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .promo-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: #0f0f14;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        gap: 10px;
+    }
+    .promo-item-info {
+        flex: 1;
+        font-size: 14px;
+    }
+    .promo-item-name { font-weight: 600; margin-bottom: 4px; }
+    .promo-item-meta { font-size: 12px; color: #8080a0; }
+    .promo-add-btn {
+        padding: 8px 14px;
+        background: #10b981;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .promo-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .promo-card {
+        background: #1a1a24;
+        border-radius: 12px;
+        padding: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+    .promo-card-info { flex: 1; }
+    .promo-card-name { font-weight: 600; margin-bottom: 4px; }
+    .promo-card-meta { font-size: 13px; color: #8080a0; }
+    .promo-discount {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    .promo-del-btn {
+        padding: 8px 12px;
+        background: #ef4444;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+    }
 </style>
 </head>
 <body>
@@ -281,6 +352,7 @@
 
     <div class="tabs">
         <button class="tab-btn active" data-tab="orders" onclick="setTab('orders')">📦 Заказы</button>
+        <button class="tab-btn" data-tab="promos" onclick="setTab('promos')">🔥 Акции</button>
         <button class="tab-btn" data-tab="images" onclick="setTab('images')">🖼️ Картинки</button>
     </div>
 
@@ -310,6 +382,18 @@
         </div>
     </div>
 
+    <!-- Вкладка АКЦИИ -->
+    <div class="tab-content" id="tab-promos">
+        <div class="promo-search-block">
+            <h3>🔍 Найти товар и добавить в акции</h3>
+            <input type="text" class="search" id="promoSearchInput" placeholder="Начните вводить название товара..." oninput="searchProductsForPromo()">
+            <div class="promo-results" id="promoSearchResults"></div>
+        </div>
+
+        <h3 style="font-size:16px;margin-bottom:12px;color:#8b5cf6;">🔥 Товары в акциях (-10%)</h3>
+        <div class="promo-list" id="promoList"></div>
+    </div>
+
     <!-- Вкладка КАРТИНКИ -->
     <div class="tab-content" id="tab-images">
         <div class="img-upload-block">
@@ -326,7 +410,7 @@
                 <option value="БЛОЧНО">📦 БЛОЧНО</option>
             </select>
 
-            <label>Картинка (PNG / JPG, до 500 КБ)</label>
+            <label>Картинка (PNG / JPG)</label>
             <input type="file" id="imgFile" accept="image/*">
 
             <button class="img-upload-btn" onclick="uploadImage()">📤 Загрузить на сервер</button>
@@ -345,6 +429,7 @@ let allOrders = [];
 let currentFilter = 'all';
 let currentModeFilter = 'all';
 let refreshInterval = null;
+let promoSearchTimeout = null;
 
 // ===== ВХОД =====
 function tryLogin() {
@@ -369,6 +454,7 @@ function showPanel() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     loadOrders();
+    loadPromos();
     loadImages();
     refreshInterval = setInterval(loadOrders, 30000);
 }
@@ -382,6 +468,7 @@ function setTab(tab) {
         c.classList.toggle('active', c.id === 'tab-' + tab);
     });
     if (tab === 'images') loadImages();
+    if (tab === 'promos') loadPromos();
 }
 
 // ===== ЗАКАЗЫ =====
@@ -450,6 +537,16 @@ function renderOrders() {
         const date = order.created_at ? new Date(order.created_at).toLocaleString('ru-RU') : '—';
         const isRetail = order.mode === 'retail';
 
+        let deliveryInfo = '';
+        if (order.delivery_type === 'delivery') {
+            deliveryInfo = `<br><b>Доставка:</b> ${order.delivery_address || '—'}`;
+        } else if (order.delivery_type === 'pickup') {
+            deliveryInfo = `<br><b>Самовывоз:</b> ${order.pickup_point || '—'}`;
+            if (order.discount_percent > 0) {
+                deliveryInfo += ` <span style="color:#34d399">(-${order.discount_percent}%)</span>`;
+            }
+        }
+
         div.innerHTML = `
             <div class="order-header">
                 <span class="order-number">
@@ -467,6 +564,7 @@ function renderOrders() {
                 ${order.customer_phone ? `<b>Тел:</b> ${order.customer_phone}<br>` : ''}
                 ${order.customer_address ? `<b>Адрес:</b> ${order.customer_address}<br>` : ''}
                 ${order.comment ? `<b>Коммент:</b> ${order.comment}` : ''}
+                ${deliveryInfo}
             </div>
             <div class="order-items">${itemsText || 'Нет товаров'}</div>
             <div class="order-total">💰 ${order.total}₽</div>
@@ -490,9 +588,11 @@ async function setStatus(orderNumber, status) {
             body: JSON.stringify({ status })
         });
         const data = await resp.json();
-        if (data.success) { loadOrders(); }
-        else { alert('Ошибка: ' + (data.error || 'не удалось')); }
-    } catch (err) { alert('Ошибка сети: ' + err.message); }
+        if (data.success) loadOrders();
+        else alert('Ошибка: ' + (data.error || 'не удалось'));
+    } catch (err) {
+        alert('Ошибка сети: ' + err.message);
+    }
 }
 
 async function deleteOrder(orderNumber) {
@@ -500,9 +600,117 @@ async function deleteOrder(orderNumber) {
     try {
         const resp = await fetch(`${API_URL}/api/orders/${orderNumber}`, { method: 'DELETE' });
         const data = await resp.json();
-        if (data.success) { loadOrders(); }
-        else { alert('Ошибка: ' + (data.error || 'не удалось')); }
-    } catch (err) { alert('Ошибка сети: ' + err.message); }
+        if (data.success) loadOrders();
+        else alert('Ошибка: ' + (data.error || 'не удалось'));
+    } catch (err) {
+        alert('Ошибка сети: ' + err.message);
+    }
+}
+
+// ===== АКЦИИ =====
+async function loadPromos() {
+    try {
+        const resp = await fetch(`${API_URL}/api/promos`);
+        const data = await resp.json();
+        const promos = data.promos || [];
+        const container = document.getElementById('promoList');
+
+        if (promos.length === 0) {
+            container.innerHTML = '<div class="empty">🔥 Пока нет товаров в акциях</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        promos.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'promo-card';
+            card.innerHTML = `
+                <div class="promo-card-info">
+                    <div class="promo-card-name">${p.name}</div>
+                    <div class="promo-card-meta">${p.brand || ''} • ${p.price}₽</div>
+                </div>
+                <div class="promo-discount">-${p.discount_percent}%</div>
+                <button class="promo-del-btn" onclick="removePromo(${p.id})">Убрать</button>
+            `;
+            container.appendChild(card);
+        });
+    } catch (err) {
+        console.error('Ошибка загрузки акций:', err);
+    }
+}
+
+function searchProductsForPromo() {
+    const query = document.getElementById('promoSearchInput').value.trim();
+    const resultsContainer = document.getElementById('promoSearchResults');
+
+    if (promoSearchTimeout) clearTimeout(promoSearchTimeout);
+
+    if (query.length < 2) {
+        resultsContainer.innerHTML = '';
+        return;
+    }
+
+    promoSearchTimeout = setTimeout(async () => {
+        try {
+            const resp = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(query)}&limit=20`);
+            const data = await resp.json();
+            const products = data.products || [];
+
+            if (products.length === 0) {
+                resultsContainer.innerHTML = '<div style="padding:12px;color:#8080a0;font-size:14px;">Ничего не найдено</div>';
+                return;
+            }
+
+            resultsContainer.innerHTML = '';
+            products.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'promo-item';
+                item.innerHTML = `
+                    <div class="promo-item-info">
+                        <div class="promo-item-name">${p.name}</div>
+                        <div class="promo-item-meta">${p.brand || ''} • ${p.price}₽</div>
+                    </div>
+                    <button class="promo-add-btn" onclick="addPromo(${p.id})">+ В акции</button>
+                `;
+                resultsContainer.appendChild(item);
+            });
+        } catch (err) {
+            resultsContainer.innerHTML = '<div style="padding:12px;color:#ef4444;">Ошибка поиска</div>';
+        }
+    }, 350);
+}
+
+async function addPromo(productId) {
+    try {
+        const resp = await fetch(`${API_URL}/api/promos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: productId, discount_percent: 10 })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            document.getElementById('promoSearchInput').value = '';
+            document.getElementById('promoSearchResults').innerHTML = '';
+            loadPromos();
+            alert('✅ Товар добавлен в акции');
+        } else {
+            alert('Ошибка: ' + (data.error || 'не удалось'));
+        }
+    } catch (err) {
+        alert('Ошибка сети: ' + err.message);
+    }
+}
+
+async function removePromo(productId) {
+    if (!confirm('Убрать товар из акций?')) return;
+    try {
+        const resp = await fetch(`${API_URL}/api/promos/${productId}`, { method: 'DELETE' });
+        const data = await resp.json();
+        if (data.success) loadPromos();
+        else alert('Ошибка: ' + (data.error || 'не удалось'));
+    } catch (err) {
+        alert('Ошибка сети: ' + err.message);
+    }
 }
 
 // ===== КАРТИНКИ =====
@@ -570,13 +778,17 @@ async function deleteImage(id) {
     try {
         const resp = await fetch(`${API_URL}/api/images/${id}`, { method: 'DELETE' });
         const data = await resp.json();
-        if (data.success) { loadImages(); }
-        else { alert('Ошибка: ' + (data.error || 'не удалось')); }
-    } catch (err) { alert('Ошибка сети: ' + err.message); }
+        if (data.success) loadImages();
+        else alert('Ошибка: ' + (data.error || 'не удалось'));
+    } catch (err) {
+        alert('Ошибка сети: ' + err.message);
+    }
 }
 
 // ===== СТАРТ =====
-if (localStorage.getItem('vapebox_admin') === '1') { showPanel(); }
+if (localStorage.getItem('vapebox_admin') === '1') {
+    showPanel();
+}
 
 document.getElementById('passwordInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') tryLogin();
