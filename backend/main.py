@@ -75,7 +75,11 @@ def init_db():
             total REAL,
             mode TEXT DEFAULT 'opt',
             status TEXT DEFAULT 'Новый',
-            created_at TEXT
+            created_at TEXT,
+            delivery_type TEXT DEFAULT '',
+            pickup_point TEXT DEFAULT '',
+            delivery_address TEXT DEFAULT '',
+            discount_percent REAL DEFAULT 0
         )
     ''')
 
@@ -84,6 +88,16 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             category TEXT,
             image_url TEXT,
+            created_at TEXT
+        )
+    ''')
+
+    # ===== АКЦИИ =====
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS promos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER NOT NULL UNIQUE,
+            discount_percent REAL DEFAULT 10,
             created_at TEXT
         )
     ''')
@@ -252,7 +266,6 @@ def send_telegram_message(text, reply_markup=None):
 
 
 def send_telegram_to_customer(chat_id, text):
-    """Отправляет сообщение конкретному пользователю по его chat_id."""
     if not TELEGRAM_BOT_TOKEN or not chat_id:
         print(f"[TG-CLIENT] Нет токена или chat_id")
         return False
@@ -275,7 +288,6 @@ def send_telegram_to_customer(chat_id, text):
 
 
 def upload_image_to_cloudinary(image_bytes, filename="image.jpg"):
-    """Загружает картинку в Cloudinary и возвращает оптимизированный URL."""
     if not os.getenv("CLOUDINARY_CLOUD_NAME"):
         print("[CLOUDINARY] Нет настроек Cloudinary")
         return None
@@ -296,7 +308,6 @@ def upload_image_to_cloudinary(image_bytes, filename="image.jpg"):
 
 
 def notify_customer_status(order_number, new_status):
-    """Отправляет клиенту сообщение о смене статуса заказа."""
     conn = sqlite3.connect(DB_PATH)
     conn.text_factory = str
     cursor = conn.cursor()
@@ -346,7 +357,6 @@ def notify_customer_status(order_number, new_status):
 
 
 def answer_callback(callback_query_id, text=""):
-    """Отвечает на нажатие inline-кнопки."""
     if not TELEGRAM_BOT_TOKEN:
         return
     try:
@@ -389,10 +399,19 @@ class OrderIn(BaseModel):
     total: float
     mode: Optional[str] = "opt"
     date: Optional[str] = ""
+    delivery_type: Optional[str] = ""          # "delivery" или "pickup"
+    pickup_point: Optional[str] = ""           # название точки самовывоза
+    delivery_address: Optional[str] = ""       # метро / адрес при доставке
+    discount_percent: Optional[float] = 0      # 5 или 10
 
 
 class OrderStatusUpdate(BaseModel):
     status: str
+
+
+class PromoIn(BaseModel):
+    product_id: int
+    discount_percent: Optional[float] = 10
 
 
 # ===== ЭНДПОИНТЫ =====
@@ -617,25 +636,99 @@ def get_count():
     return {"count": count}
 
 
+# ===== АКЦИИ =====
+
+@app.get("/api/promos")
+def get_promos():
+    """Возвращает все товары, которые сейчас в акциях + их скидку."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.text_factory = str
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT p.id, p.name, p.price, p.price_retail, p.stock, p.category, p.brand, p.series, pr.discount_percent
+        FROM promos pr
+        JOIN products p ON p.id = pr.product_id
+        ORDER BY pr.id DESC
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+
+    promos = []
+    for row in rows:
+        promos.append({
+            "id": row[0],
+            "name": row[1],
+            "price": row[2],
+            "price_retail": row[3] or 0,
+            "stock": row[4],
+            "category": row[5] or "",
+            "brand": row[6] or "",
+            "series": row[7] or "",
+            "discount_percent": row[8] or 10
+        })
+    return {"promos": promos}
+
+
+@app.post("/api/promos")
+def add_promo(payload: PromoIn):
+    """Добавить товар в акции."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        # Проверяем, существует ли товар
+        cursor.execute("SELECT id FROM products WHERE id = ?", (payload.product_id,))
+        if not cursor.fetchone():
+            return {"success": False, "error": "Товар не найден"}
+
+        cursor.execute(
+            "INSERT OR REPLACE INTO promos (product_id, discount_percent, created_at) VALUES (?, ?, ?)",
+            (payload.product_id, payload.discount_percent or 10, datetime.now().isoformat())
+        )
+        conn.commit()
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+
+@app.delete("/api/promos/{product_id}")
+def delete_promo(product_id: int):
+    """Убрать товар из акций."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM promos WHERE product_id = ?", (product_id,))
+        if cursor.rowcount == 0:
+            return {"success": False, "error": "Товар не найден в акциях"}
+        conn.commit()
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+
+# ===== ЗАКАЗЫ =====
+
 @app.post("/api/orders")
 def create_order(order: OrderIn):
     conn = sqlite3.connect(DB_PATH)
     conn.text_factory = str
     cursor = conn.cursor()
     try:
-        cursor.execute('''
-            SELECT order_number FROM orders WHERE order_number = ?
-        ''', (order.id,))
-        existing = cursor.fetchone()
-        if existing:
+        cursor.execute('SELECT order_number FROM orders WHERE order_number = ?', (order.id,))
+        if cursor.fetchone():
             return {"success": False, "error": "Такой заказ уже создан"}
 
         cursor.execute('''
             INSERT INTO orders (
                 order_number, customer_name, customer_telegram,
                 customer_telegram_id, customer_phone, customer_address, comment,
-                items, total, mode, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                items, total, mode, status, created_at,
+                delivery_type, pickup_point, delivery_address, discount_percent
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             order.id,
             order.customer.name,
@@ -648,15 +741,29 @@ def create_order(order: OrderIn):
             order.total,
             order.mode or 'opt',
             'Новый',
-            order.date or datetime.now().isoformat()
+            order.date or datetime.now().isoformat(),
+            order.delivery_type or '',
+            order.pickup_point or '',
+            order.delivery_address or '',
+            order.discount_percent or 0
         ))
         conn.commit()
 
+        # Формируем текст для Telegram
         items_text = "\n".join([
             f"  • {item.name} × {item.quantity} = {item.total:.0f}₽"
             for item in order.items
         ])
         mode_label = "🛒 РОЗНИЦА" if order.mode == "retail" else "📦 ОПТ"
+
+        delivery_text = ""
+        if order.delivery_type == "delivery":
+            delivery_text = f"\n🚚 <b>Доставка</b>\nАдрес: {order.delivery_address or '—'}\n(стоимость уточнит менеджер)"
+        elif order.delivery_type == "pickup":
+            delivery_text = f"\n🏪 <b>Самовывоз</b>\nТочка: {order.pickup_point or '—'}"
+            if order.discount_percent and order.discount_percent > 0:
+                delivery_text += f"\n💥 Скидка за точку: -{order.discount_percent:.0f}%"
+
         text = (
             f"🛍️ <b>НОВЫЙ ЗАКАЗ №{order.id}</b> [{mode_label}]\n\n"
             f"<b>Клиент:</b> {order.customer.name}\n"
@@ -665,11 +772,11 @@ def create_order(order: OrderIn):
             text += f"<b>Telegram:</b> {order.customer.telegram}\n"
         if order.customer.phone:
             text += f"<b>Телефон:</b> {order.customer.phone}\n"
-        if order.customer.address:
-            text += f"<b>Адрес:</b> {order.customer.address}\n"
         if order.customer.comment:
             text += f"<b>Комментарий:</b> {order.customer.comment}\n"
-        text += f"\n<b>Товары:</b>\n{items_text}\n"
+
+        text += delivery_text
+        text += f"\n\n<b>Товары:</b>\n{items_text}\n"
         text += f"\n<b>Итого: {order.total:.0f}₽</b>"
 
         keyboard = {
@@ -693,8 +800,10 @@ def create_order(order: OrderIn):
                 f"Ваш заказ <b>№{order.id}</b> принят ✅\n\n"
                 f"Режим: <b>{mode_label_client}</b>\n"
                 f"Сумма: <b>{order.total:.0f}₽</b>\n\n"
-                f"Мы свяжемся с вами в ближайшее время для подтверждения или напишите менеджеру."
             )
+            if order.delivery_type == "delivery":
+                client_text += "Менеджер скоро напишет и уточнит стоимость доставки.\n\n"
+            client_text += "Мы свяжемся с вами в ближайшее время."
             send_telegram_to_customer(order.customer.telegram_id, client_text)
 
         return {"success": True, "order_number": order.id}
@@ -717,7 +826,8 @@ def get_orders():
     cursor.execute('''
         SELECT order_number, customer_name, customer_telegram,
                customer_phone, customer_address, comment,
-               items, total, mode, status, created_at
+               items, total, mode, status, created_at,
+               delivery_type, pickup_point, delivery_address, discount_percent
         FROM orders
         ORDER BY created_at DESC
     ''')
@@ -742,6 +852,10 @@ def get_orders():
             "mode": row[8] or "opt",
             "status": row[9],
             "created_at": row[10],
+            "delivery_type": row[11] or "",
+            "pickup_point": row[12] or "",
+            "delivery_address": row[13] or "",
+            "discount_percent": row[14] or 0,
         })
     return {"orders": orders}
 
@@ -759,9 +873,7 @@ def update_order_status(order_number: str, payload: OrderStatusUpdate):
         if cursor.rowcount == 0:
             return {"success": False, "error": "Заказ не найден"}
         conn.commit()
-
         notify_customer_status(order_number, payload.status)
-
         return {"success": True, "order_number": order_number, "status": payload.status}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -852,7 +964,6 @@ def set_telegram_webhook():
 
 @app.post("/api/upload-image")
 async def upload_image(file: UploadFile = File(...), category: str = ""):
-    """Загружает картинку в Cloudinary и сохраняет URL в базу."""
     try:
         contents = await file.read()
         image_url = upload_image_to_cloudinary(contents, file.filename)
