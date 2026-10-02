@@ -34,9 +34,20 @@ const BRAND_ICONS = {
     'САМОУБИЙЦА': '💀', 'Злой Монах 75mg': '🧙'
 };
 
+// Точки самовывоза
+const PICKUP_POINTS = [
+    { id: 'preobrazhenskaya', name: 'М. Преображенская площадь', discount: 0 },
+    { id: 'pervomayskaya', name: 'М. Первомайская', discount: 0 },
+    { id: 'schelkovskaya', name: 'М. Щелковская', discount: 0 },
+    { id: 'solovetskih', name: 'Остановка Площадь Соловецких Юнг', discount: 5 },
+    { id: 'habarovskaya', name: 'Остановка Хабаровская улица', discount: 5 }
+];
+
 // ===== СОСТОЯНИЕ =====
 let categories = [];
-let categoryImages = {}; // { "Жидкости": "https://res.cloudinary.com/...", ... }
+let categoryImages = {};
+let promoProducts = [];          // товары из акций
+let promoMap = {};               // id -> discount_percent
 let cart = [];
 let currentView = 'catalog';
 let currentCategoryId = 'all';
@@ -44,6 +55,9 @@ let currentBrandId = null;
 let currentSeriesId = null;
 let currentSearch = '';
 let isSearchMode = false;
+let hasReferralDiscount = false; // есть ли неиспользованная реферальная скидка
+let deliveryType = 'pickup';     // 'pickup' | 'delivery'
+let selectedPickupPoint = null;
 
 // ===== DOM ЭЛЕМЕНТЫ =====
 const productsContainer = document.getElementById('productsContainer');
@@ -82,12 +96,20 @@ const checkStockForm = document.getElementById('checkStockForm');
 const checkStockProductInfo = document.getElementById('checkStockProductInfo');
 let currentCheckStockProduct = null;
 
-// ===== ПОЛУЧИТЬ ЦЕНУ ПО РЕЖИМУ =====
+// ===== ПОЛУЧИТЬ ЦЕНУ ПО РЕЖИМУ + АКЦИЯ =====
 function getPrice(item) {
-    if (priceMode === 'retail') {
-        return item.price_retail || item.price;
+    let base = priceMode === 'retail' ? (item.price_retail || item.price) : item.price;
+    
+    // Если товар в акции — применяем скидку
+    if (promoMap[item.id]) {
+        const discount = promoMap[item.id];
+        base = Math.round(base * (1 - discount / 100));
     }
-    return item.price;
+    return base;
+}
+
+function getOriginalPrice(item) {
+    return priceMode === 'retail' ? (item.price_retail || item.price) : item.price;
 }
 
 // ===== SLUGIFY =====
@@ -167,7 +189,7 @@ function buildCategoriesFromProducts(products) {
     return result;
 }
 
-// ===== ЗАГРУЗКА ВСЕХ ТОВАРОВ =====
+// ===== ЗАГРУЗКА =====
 async function loadAllProducts() {
     try {
         const response = await fetch(`${API_URL}/api/products?limit=10000&offset=0`);
@@ -180,24 +202,51 @@ async function loadAllProducts() {
     }
 }
 
-// ===== ЗАГРУЗКА КАРТИНОК КАТЕГОРИЙ =====
 async function loadCategoryImages() {
     try {
         const response = await fetch(`${API_URL}/api/images`);
         if (!response.ok) return;
         const data = await response.json();
         const images = data.images || [];
-
-        // Берём последнюю загруженную картинку для каждой категории
         categoryImages = {};
         images.forEach(img => {
             if (img.category && img.image_url) {
                 categoryImages[img.category] = img.image_url;
             }
         });
-        console.log('🖼️ Загружено картинок категорий:', Object.keys(categoryImages).length);
     } catch (error) {
         console.warn('Не удалось загрузить картинки:', error);
+    }
+}
+
+async function loadPromos() {
+    try {
+        const response = await fetch(`${API_URL}/api/promos`);
+        if (!response.ok) return;
+        const data = await response.json();
+        promoProducts = data.promos || [];
+        promoMap = {};
+        promoProducts.forEach(p => {
+            promoMap[p.id] = p.discount_percent || 10;
+        });
+        console.log('🔥 Акций загружено:', promoProducts.length);
+    } catch (error) {
+        console.warn('Не удалось загрузить акции:', error);
+    }
+}
+
+async function checkReferralDiscount() {
+    const userId = tg?.initDataUnsafe?.user?.id;
+    if (!userId) return;
+    try {
+        const response = await fetch(`${API_URL}/api/referral/${userId}`);
+        const data = await response.json();
+        hasReferralDiscount = data.has_discount === true;
+        if (hasReferralDiscount) {
+            console.log('🎁 Есть реферальная скидка -5%');
+        }
+    } catch (e) {
+        console.warn('Ошибка проверки реферала:', e);
     }
 }
 
@@ -217,6 +266,20 @@ function getSeries(categoryId, brandId, seriesId) {
 }
 
 function findProduct(productId) {
+    // Сначала ищем в акциях
+    const promo = promoProducts.find(p => p.id === productId);
+    if (promo) {
+        return {
+            id: promo.id,
+            name: promo.name,
+            price: promo.price,
+            price_retail: promo.price_retail || 0,
+            stock: promo.stock,
+            brandName: promo.brand || '',
+            seriesName: promo.series || ''
+        };
+    }
+
     for (const cat of categories) {
         if (cat.brands) {
             for (const b of cat.brands) {
@@ -268,10 +331,6 @@ function showModeSelection() {
                 <div style="font-size:20px;margin-bottom:4px;">🛒 Розница</div>
                 <div style="font-size:13px;opacity:0.85;font-weight:400;">Заказ до 2500₽</div>
             </button>
-
-            <div style="margin-top:24px;font-size:12px;color:#606080;">
-                Режим можно поменять в шапке
-            </div>
         </div>
     `;
 
@@ -288,9 +347,8 @@ function setMode(mode) {
     if (pageTitle) pageTitle.style.display = 'block';
 
     updateModeButton();
-
     renderCategoryTabs();
-    renderCatalog();
+    showPromos(); // сначала показываем акции
     updateCartUI();
     showToast(mode === 'opt' ? '📦 Режим: ОПТ' : '🛒 Режим: РОЗНИЦА', 'success');
 }
@@ -325,7 +383,63 @@ function createModeButton() {
     updateModeButton();
 }
 
-// ===== ОТРИСОВКА =====
+// ===== АКЦИИ =====
+function showPromos() {
+    currentView = 'promos';
+    currentCategoryId = 'promos';
+    currentBrandId = null;
+    currentSeriesId = null;
+    isSearchMode = false;
+    if (backBtn) backBtn.style.display = 'none';
+    if (pageTitle) pageTitle.textContent = '🔥 Акции';
+
+    document.querySelectorAll('.category').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.category === 'promos');
+    });
+
+    if (!productsContainer) return;
+    productsContainer.innerHTML = '';
+    productsContainer.style.display = 'block';
+    productsContainer.style.gridTemplateColumns = 'none';
+
+    if (promoProducts.length === 0) {
+        productsContainer.innerHTML = `
+            <div style="text-align:center;padding:40px 20px;color:#8080a0;">
+                <div style="font-size:48px;margin-bottom:12px;">🔥</div>
+                <div>Сейчас нет активных акций</div>
+                <button onclick="renderCatalog()" style="margin-top:20px;padding:12px 24px;background:#8b5cf6;color:#fff;border:none;border-radius:12px;font-weight:600;cursor:pointer;">
+                    Перейти в каталог
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    // Красивый заголовок
+    const header = document.createElement('div');
+    header.style.cssText = 'padding:16px 4px 20px;text-align:center;';
+    header.innerHTML = `
+        <div style="font-size:28px;margin-bottom:6px;">🔥</div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px;">Товары по акции</div>
+        <div style="font-size:14px;color:#8080a0;">Скидка 10% на выбранные позиции</div>
+    `;
+    productsContainer.appendChild(header);
+
+    promoProducts.forEach((p, index) => {
+        const flavor = {
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            price_retail: p.price_retail || 0,
+            stock: p.stock,
+            brandName: p.brand || '',
+            seriesName: p.series || ''
+        };
+        productsContainer.appendChild(buildFlavorItem(flavor, index, null, null, true));
+    });
+}
+
+// ===== ОТРИСОВКА КАТАЛОГА =====
 function renderCatalog() {
     currentView = 'catalog';
     currentCategoryId = 'all';
@@ -357,7 +471,6 @@ function renderCatalog() {
             });
         }
 
-        // Берём картинку, если есть
         const imageUrl = categoryImages[cat.name];
         const imageHtml = imageUrl
             ? `<img src="${imageUrl}" alt="${cat.name}" style="width:100%;height:100%;object-fit:contain;border-radius:12px;">`
@@ -503,16 +616,23 @@ function showFlavors(categoryId, brandId, seriesId) {
     });
 }
 
-function buildFlavorItem(flavor, index, categoryId, brandId) {
+function buildFlavorItem(flavor, index, categoryId, brandId, isPromo = false) {
     const item = document.createElement('div');
     item.className = 'flavor-item';
     item.style.animationDelay = `${index * 0.02}s`;
+
+    if (isPromo || promoMap[flavor.id]) {
+        item.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+        item.style.background = 'rgba(16, 185, 129, 0.05)';
+    }
 
     const isInCart = cart.some(c => c.id === flavor.id);
     const hasStock = flavor.stock > 0;
     const cartItem = cart.find(c => c.id === flavor.id);
     const currentQty = cartItem ? cartItem.quantity : 0;
     const displayPrice = getPrice(flavor);
+    const originalPrice = getOriginalPrice(flavor);
+    const hasDiscount = promoMap[flavor.id];
 
     const stockText = hasStock
         ? `<span class="flavor-stock in-stock">✅ В наличии</span>`
@@ -545,12 +665,18 @@ function buildFlavorItem(flavor, index, categoryId, brandId) {
 
     const brandIcon = brandId ? (getBrand(categoryId, brandId)?.icon || '📦') : '📦';
 
+    const priceHtml = hasDiscount
+        ? `<span class="flavor-price" style="color:#34d399;">${displayPrice} ₽</span>
+           <span style="text-decoration:line-through;color:#8080a0;font-size:13px;margin-left:6px;">${originalPrice} ₽</span>
+           <span style="background:rgba(16,185,129,0.2);color:#34d399;font-size:11px;padding:2px 6px;border-radius:4px;margin-left:6px;">-10%</span>`
+        : `<span class="flavor-price">${displayPrice} ₽</span>`;
+
     item.innerHTML = `
         <div class="flavor-icon">${brandIcon}</div>
         <div class="flavor-info">
             <div class="flavor-name">${flavor.name}</div>
             <div class="flavor-meta">
-                <span class="flavor-price">${displayPrice} ₽</span>
+                ${priceHtml}
                 ${stockText}
             </div>
         </div>
@@ -581,17 +707,23 @@ function bindFlavorEvents(item, flavor) {
     if (checkBtn) checkBtn.addEventListener('click', e => { e.stopPropagation(); openCheckStock(flavor.id); });
 }
 
-// ===== ПОИСК =====
+// ===== ПОИСК + ФИЛЬТРЫ =====
 let searchTimeout = null;
 
-async function renderSearchResults() {
+async function renderSearchResults(filterType = null) {
     currentView = 'search';
     isSearchMode = true;
     if (backBtn) backBtn.style.display = 'flex';
-    if (pageTitle) pageTitle.textContent = 'Поиск: ' + currentSearch;
 
-    const query = currentSearch.trim();
-    if (query.length < 2) {
+    let query = currentSearch.trim();
+    if (filterType === 'first') query = 'под';
+    if (filterType === 'power') query = 'мощн';
+
+    if (pageTitle) pageTitle.textContent = filterType === 'first' ? 'Первое устройство' :
+                                          filterType === 'power' ? 'Мощные устройства' :
+                                          'Поиск: ' + currentSearch;
+
+    if (!filterType && query.length < 2) {
         if (productsContainer) {
             productsContainer.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#8080a0;">Введите минимум 2 символа</div>';
         }
@@ -606,34 +738,41 @@ async function renderSearchResults() {
     try {
         const response = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(query)}&limit=100`);
         const data = await response.json();
-        const results = data.products || [];
-        const total = data.total || 0;
+        let results = data.products || [];
 
-        if (currentSearch.trim() !== query) return;
+        // Дополнительная фильтрация для рекомендаций
+        if (filterType === 'first') {
+            results = results.filter(p => 
+                /под|pod|aio|starter|набор|комплект/i.test(p.name + ' ' + (p.brand || ''))
+            );
+        }
+        if (filterType === 'power') {
+            results = results.filter(p => 
+                /мощн|watts|w\b|box|mod|батаре/i.test(p.name + ' ' + (p.brand || ''))
+            );
+        }
 
         productsContainer.innerHTML = '';
 
         if (results.length === 0) {
-            productsContainer.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#8080a0;">😕 Ничего не найдено по запросу «' + escapeHtml(query) + '»</div>';
+            productsContainer.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#8080a0;">😕 Ничего не найдено</div>';
             return;
         }
 
         const info = document.createElement('div');
         info.style.cssText = 'padding:10px 4px 16px;font-size:14px;color:#8080a0;';
-        info.textContent = `Найдено: ${total}${total > 100 ? ' (показаны первые 100)' : ''}`;
+        info.textContent = `Найдено: ${results.length}`;
         productsContainer.appendChild(info);
 
-        const flavors = results.map(p => ({
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            price_retail: p.price_retail || 0,
-            stock: p.stock,
-            description: p.description || '',
-            brandName: p.brand || ''
-        }));
-
-        flavors.forEach((flavor, index) => {
+        results.forEach((p, index) => {
+            const flavor = {
+                id: p.id,
+                name: p.name,
+                price: p.price,
+                price_retail: p.price_retail || 0,
+                stock: p.stock,
+                brandName: p.brand || ''
+            };
             productsContainer.appendChild(buildFlavorItem(flavor, index, null, null));
         });
 
@@ -731,6 +870,8 @@ function updateCartUI() {
 function refreshCurrentView() {
     if (isSearchMode) {
         renderSearchResults();
+    } else if (currentView === 'promos') {
+        showPromos();
     } else if (currentView === 'catalog') {
         renderCatalog();
     } else if (currentView === 'brands') {
@@ -745,7 +886,10 @@ function refreshCurrentView() {
 // ===== КАТЕГОРИИ-ТАБЫ =====
 function renderCategoryTabs() {
     if (!categoriesContainer) return;
-    categoriesContainer.innerHTML = '<button class="category active" data-category="all">📂 Все товары</button>';
+    categoriesContainer.innerHTML = `
+        <button class="category" data-category="promos">🔥 Акции</button>
+        <button class="category active" data-category="all">📂 Все товары</button>
+    `;
     categories.forEach(cat => {
         const btn = document.createElement('button');
         btn.className = 'category';
@@ -763,7 +907,9 @@ if (categoriesContainer) {
         document.querySelectorAll('.category').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        if (categoryId === 'all') {
+        if (categoryId === 'promos') {
+            showPromos();
+        } else if (categoryId === 'all') {
             if (searchInput) {
                 searchInput.value = '';
                 currentSearch = '';
@@ -892,6 +1038,8 @@ function closeSuccessModal() { if (successModal) successModal.classList.remove('
 
 function openOrderModal() {
     if (cart.length === 0) { showToast('⚠️ Корзина пуста', 'error'); return; }
+    
+    // Рендерим список товаров
     if (orderItemsList) orderItemsList.innerHTML = '';
     let total = 0;
     cart.forEach(item => {
@@ -902,9 +1050,118 @@ function openOrderModal() {
         div.textContent = `${item.name} × ${item.quantity} = ${itemTotal} ₽`;
         if (orderItemsList) orderItemsList.appendChild(div);
     });
-    if (orderTotalPrice) orderTotalPrice.textContent = total + ' ₽';
+
+    // Добавляем блок доставки, если его ещё нет
+    ensureDeliveryFields();
+
+    updateOrderTotal();
+
     if (cartModal) cartModal.classList.remove('active');
     if (orderModal) orderModal.classList.add('active');
+}
+
+function ensureDeliveryFields() {
+    // Проверяем, есть ли уже блок доставки
+    if (document.getElementById('deliveryBlock')) return;
+
+    const form = orderForm;
+    if (!form) return;
+
+    const block = document.createElement('div');
+    block.id = 'deliveryBlock';
+    block.style.cssText = 'margin:16px 0;padding:16px;background:rgba(139,92,246,0.08);border-radius:12px;';
+
+    block.innerHTML = `
+        <div style="font-weight:600;margin-bottom:12px;">Способ получения</div>
+        
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;">
+            <input type="radio" name="deliveryType" value="pickup" checked onchange="onDeliveryTypeChange()">
+            <span>🏪 Самовывоз</span>
+        </label>
+        
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer;">
+            <input type="radio" name="deliveryType" value="delivery" onchange="onDeliveryTypeChange()">
+            <span>🚚 Доставка</span>
+        </label>
+
+        <div id="pickupPointsBlock">
+            <div style="font-size:13px;color:#8080a0;margin-bottom:8px;">Выберите точку:</div>
+            ${PICKUP_POINTS.map(p => `
+                <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;font-size:14px;">
+                    <input type="radio" name="pickupPoint" value="${p.id}" onchange="onPickupPointChange()">
+                    <span>${p.name}${p.discount > 0 ? ` <span style="color:#34d399;font-weight:600;">(-${p.discount}%)</span>` : ''}</span>
+                </label>
+            `).join('')}
+        </div>
+
+        <div id="deliveryAddressBlock" style="display:none;">
+            <label style="display:block;font-size:13px;color:#8080a0;margin-bottom:6px;">Метро / Адрес</label>
+            <input type="text" id="deliveryAddressInput" placeholder="Например: м. Сокольники" 
+                   style="width:100%;padding:12px;background:#0f0f14;border:1px solid #2a2a38;border-radius:10px;color:#e8e8ee;font-size:15px;">
+            <div style="font-size:12px;color:#8080a0;margin-top:8px;">
+                Стоимость доставки уточнит менеджер после подтверждения заказа
+            </div>
+        </div>
+
+        <div id="discountInfo" style="margin-top:12px;font-size:13px;color:#34d399;display:none;"></div>
+    `;
+
+    // Вставляем перед кнопкой отправки
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        form.insertBefore(block, submitBtn);
+    } else {
+        form.appendChild(block);
+    }
+}
+
+function onDeliveryTypeChange() {
+    const type = document.querySelector('input[name="deliveryType"]:checked')?.value || 'pickup';
+    deliveryType = type;
+    
+    document.getElementById('pickupPointsBlock').style.display = type === 'pickup' ? 'block' : 'none';
+    document.getElementById('deliveryAddressBlock').style.display = type === 'delivery' ? 'block' : 'none';
+    
+    updateOrderTotal();
+}
+
+function onPickupPointChange() {
+    const pointId = document.querySelector('input[name="pickupPoint"]:checked')?.value;
+    selectedPickupPoint = PICKUP_POINTS.find(p => p.id === pointId) || null;
+    updateOrderTotal();
+}
+
+function updateOrderTotal() {
+    let total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    let discountPercent = 0;
+
+    // Скидка за точку самовывоза
+    if (deliveryType === 'pickup' && selectedPickupPoint && selectedPickupPoint.discount > 0) {
+        discountPercent = selectedPickupPoint.discount;
+    }
+
+    // Реферальная скидка (если нет скидки за точку)
+    if (hasReferralDiscount && discountPercent === 0) {
+        discountPercent = 5;
+    }
+
+    if (discountPercent > 0) {
+        total = Math.round(total * (1 - discountPercent / 100));
+    }
+
+    if (orderTotalPrice) {
+        orderTotalPrice.textContent = total + ' ₽';
+    }
+
+    const info = document.getElementById('discountInfo');
+    if (info) {
+        if (discountPercent > 0) {
+            info.style.display = 'block';
+            info.textContent = `💥 Применена скидка -${discountPercent}%`;
+        } else {
+            info.style.display = 'none';
+        }
+    }
 }
 
 function generateOrderNumber() {
@@ -914,28 +1171,62 @@ function generateOrderNumber() {
 async function submitOrder(e) {
     e.preventDefault();
 
-    if (window.__orderSubmitting) {
-        console.log('⏸️ Заказ уже отправляется');
-        return;
-    }
+    if (window.__orderSubmitting) return;
     window.__orderSubmitting = true;
-    const name = document.getElementById('customerName').value.trim();
-    const telegram = document.getElementById('customerTelegram').value.trim();
-    const phone = document.getElementById('customerPhone').value.trim();
-    const address = document.getElementById('customerAddress').value.trim();
-    const comment = document.getElementById('orderComment').value.trim();
 
-    if (!name) { showToast('⚠️ Введите имя', 'error'); return; }
-    if (!telegram && !phone) { showToast('⚠️ Укажите Telegram или телефон', 'error'); return; }
+    const name = document.getElementById('customerName')?.value.trim();
+    const telegram = document.getElementById('customerTelegram')?.value.trim();
+    const phone = document.getElementById('customerPhone')?.value.trim();
+    const comment = document.getElementById('orderComment')?.value.trim() || '';
+
+    if (!name) { showToast('⚠️ Введите имя', 'error'); window.__orderSubmitting = false; return; }
+    if (!telegram && !phone) { showToast('⚠️ Укажите Telegram или телефон', 'error'); window.__orderSubmitting = false; return; }
+
+    // Проверка доставки
+    let pickupPointName = '';
+    let deliveryAddress = '';
+    let discountPercent = 0;
+
+    if (deliveryType === 'pickup') {
+        if (!selectedPickupPoint) {
+            showToast('⚠️ Выберите точку самовывоза', 'error');
+            window.__orderSubmitting = false;
+            return;
+        }
+        pickupPointName = selectedPickupPoint.name;
+        discountPercent = selectedPickupPoint.discount || 0;
+    } else {
+        deliveryAddress = document.getElementById('deliveryAddressInput')?.value.trim() || '';
+        if (!deliveryAddress) {
+            showToast('⚠️ Укажите метро / адрес доставки', 'error');
+            window.__orderSubmitting = false;
+            return;
+        }
+    }
+
+    // Реферальная скидка
+    if (hasReferralDiscount && discountPercent === 0) {
+        discountPercent = 5;
+    }
+
+    let total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    if (discountPercent > 0) {
+        total = Math.round(total * (1 - discountPercent / 100));
+    }
 
     const orderNumber = generateOrderNumber();
-    const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
-    const telegramUserId = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user)
-        ? tg.initDataUnsafe.user.id : null;
+    const telegramUserId = tg?.initDataUnsafe?.user?.id || null;
 
     const order = {
         id: orderNumber,
-        customer: { name, telegram, phone, address, comment, telegram_id: telegramUserId },
+        customer: { 
+            name, 
+            telegram, 
+            phone, 
+            address: deliveryAddress || pickupPointName, 
+            comment, 
+            telegram_id: telegramUserId 
+        },
         items: cart.map(i => ({
             name: i.name,
             brand: i.brandName || '',
@@ -945,7 +1236,11 @@ async function submitOrder(e) {
         })),
         total: total,
         mode: priceMode,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        delivery_type: deliveryType,
+        pickup_point: pickupPointName,
+        delivery_address: deliveryAddress,
+        discount_percent: discountPercent
     };
 
     try {
@@ -957,10 +1252,12 @@ async function submitOrder(e) {
         const result = await response.json();
         if (!result.success) {
             showToast('❌ Ошибка: ' + (result.error || 'не удалось'), 'error');
+            window.__orderSubmitting = false;
             return;
         }
     } catch (err) {
         showToast('⚠️ Ошибка сети', 'error');
+        window.__orderSubmitting = false;
         return;
     }
 
@@ -1055,12 +1352,13 @@ function showToast(message, type = 'success') {
 
 // ===== ЗАПУСК =====
 (async function init() {
-    console.log('🛍️ VAPE BOX: загружаем товары...');
+    console.log('🛍️ VAPE BOX: загружаем...');
     
-    // Загружаем товары и картинки параллельно
     const [products] = await Promise.all([
         loadAllProducts(),
-        loadCategoryImages()
+        loadCategoryImages(),
+        loadPromos(),
+        checkReferralDiscount()
     ]);
 
     console.log(`🛍️ Получено товаров: ${products.length}`);
@@ -1073,7 +1371,7 @@ function showToast(message, type = 'success') {
 
     createModeButton();
     renderCategoryTabs();
-    renderCatalog();
+    showPromos(); // при входе сразу показываем акции
     updateCartUI();
     console.log(`🛍️ VAPE BOX загружен! Режим: ${priceMode}`);
 })();
