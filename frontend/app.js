@@ -36,6 +36,7 @@ const BRAND_ICONS = {
 
 // ===== СОСТОЯНИЕ =====
 let categories = [];
+let categoryImages = {}; // { "Жидкости": "https://res.cloudinary.com/...", ... }
 let cart = [];
 let currentView = 'catalog';
 let currentCategoryId = 'all';
@@ -179,6 +180,27 @@ async function loadAllProducts() {
     }
 }
 
+// ===== ЗАГРУЗКА КАРТИНОК КАТЕГОРИЙ =====
+async function loadCategoryImages() {
+    try {
+        const response = await fetch(`${API_URL}/api/images`);
+        if (!response.ok) return;
+        const data = await response.json();
+        const images = data.images || [];
+
+        // Берём последнюю загруженную картинку для каждой категории
+        categoryImages = {};
+        images.forEach(img => {
+            if (img.category && img.image_url) {
+                categoryImages[img.category] = img.image_url;
+            }
+        });
+        console.log('🖼️ Загружено картинок категорий:', Object.keys(categoryImages).length);
+    } catch (error) {
+        console.warn('Не удалось загрузить картинки:', error);
+    }
+}
+
 // ===== ВСПОМОГАТЕЛЬНЫЕ =====
 function getCategory(id) { return categories.find(c => c.id === id); }
 
@@ -265,7 +287,6 @@ function setMode(mode) {
     if (searchInput) searchInput.style.display = 'block';
     if (pageTitle) pageTitle.style.display = 'block';
 
-    // Обновляем кнопку в шапке
     updateModeButton();
 
     renderCategoryTabs();
@@ -285,7 +306,6 @@ function updateModeButton() {
 }
 
 function createModeButton() {
-    // Проверяем, есть ли уже кнопка
     if (document.getElementById('modeSwitchBtn')) return;
 
     const btn = document.createElement('button');
@@ -337,8 +357,16 @@ function renderCatalog() {
             });
         }
 
+        // Берём картинку, если есть
+        const imageUrl = categoryImages[cat.name];
+        const imageHtml = imageUrl
+            ? `<img src="${imageUrl}" alt="${cat.name}" style="width:100%;height:100%;object-fit:contain;border-radius:12px;">`
+            : `<div style="font-size:48px;">${cat.icon || '📁'}</div>`;
+
         card.innerHTML = `
-            <div class="product-image" style="font-size: 48px;">${cat.icon || '📁'}</div>
+            <div class="product-image" style="display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                ${imageHtml}
+            </div>
             <div class="product-info">
                 <div class="product-name">${cat.name}</div>
                 <div class="product-description">${count} товаров</div>
@@ -655,7 +683,7 @@ function addToCart(productId, delta = 1) {
                 return;
             }
             cart[index].quantity = newQty;
-            cart[index].price = finalPrice; // обновляем цену на случай смены режима
+            cart[index].price = finalPrice;
             product.stock -= delta;
             showToast(delta > 0 ? `✅ +${delta} шт` : `➖ ${Math.abs(delta)} шт`, delta > 0 ? 'success' : 'error');
         }
@@ -886,7 +914,6 @@ function generateOrderNumber() {
 async function submitOrder(e) {
     e.preventDefault();
 
-    // Защита от двойной отправки
     if (window.__orderSubmitting) {
         console.log('⏸️ Заказ уже отправляется');
         return;
@@ -947,7 +974,6 @@ async function submitOrder(e) {
     if (orderForm) orderForm.reset();
     showToast(`✅ Заказ №${orderNumber} оформлен!`, 'success');
 
-    // Разрешаем следующий заказ только через 3 секунды
     setTimeout(() => { window.__orderSubmitting = false; }, 3000);
 }
 
@@ -1030,7 +1056,13 @@ function showToast(message, type = 'success') {
 // ===== ЗАПУСК =====
 (async function init() {
     console.log('🛍️ VAPE BOX: загружаем товары...');
-    const products = await loadAllProducts();
+    
+    // Загружаем товары и картинки параллельно
+    const [products] = await Promise.all([
+        loadAllProducts(),
+        loadCategoryImages()
+    ]);
+
     console.log(`🛍️ Получено товаров: ${products.length}`);
     categories = buildCategoriesFromProducts(products);
 
