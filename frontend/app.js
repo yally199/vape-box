@@ -1132,21 +1132,40 @@ function onPickupPointChange() {
 }
 
 function updateOrderTotal() {
-    let total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    // Считаем отдельно товары из акций и обычные
+    let promoTotal = 0;
+    let regularTotal = 0;
+
+    cart.forEach(item => {
+        const itemSum = item.price * item.quantity;
+        if (promoMap[item.id]) {
+            promoTotal += itemSum;
+        } else {
+            regularTotal += itemSum;
+        }
+    });
+
     let discountPercent = 0;
 
-    // Скидка за точку самовывоза
+    // Скидка за точку самовывоза (на весь заказ)
     if (deliveryType === 'pickup' && selectedPickupPoint && selectedPickupPoint.discount > 0) {
         discountPercent = selectedPickupPoint.discount;
     }
 
-    // Реферальная скидка (если нет скидки за точку)
-    if (hasReferralDiscount && discountPercent === 0) {
-        discountPercent = 5;
+    // Реферальная скидка — только на обычные товары (не из акций)
+    let referralDiscountAmount = 0;
+    if (hasReferralDiscount && discountPercent === 0 && regularTotal > 0) {
+        referralDiscountAmount = Math.round(regularTotal * 0.05);
     }
 
+    let total = promoTotal + regularTotal;
+
+    // Применяем скидку за точку (на весь заказ)
     if (discountPercent > 0) {
         total = Math.round(total * (1 - discountPercent / 100));
+    } else {
+        // Или вычитаем реферальную скидку только с обычных товаров
+        total = total - referralDiscountAmount;
     }
 
     if (orderTotalPrice) {
@@ -1157,7 +1176,10 @@ function updateOrderTotal() {
     if (info) {
         if (discountPercent > 0) {
             info.style.display = 'block';
-            info.textContent = `💥 Применена скидка -${discountPercent}%`;
+            info.textContent = `💥 Применена скидка -${discountPercent}% (за точку самовывоза)`;
+        } else if (referralDiscountAmount > 0) {
+            info.style.display = 'block';
+            info.textContent = `🎁 Скидка -5% за первый заказ (не действует на товары из акций)`;
         } else {
             info.style.display = 'none';
         }
@@ -1182,7 +1204,6 @@ async function submitOrder(e) {
     if (!name) { showToast('⚠️ Введите имя', 'error'); window.__orderSubmitting = false; return; }
     if (!telegram && !phone) { showToast('⚠️ Укажите Telegram или телефон', 'error'); window.__orderSubmitting = false; return; }
 
-    // Проверка доставки
     let pickupPointName = '';
     let deliveryAddress = '';
     let discountPercent = 0;
@@ -1204,14 +1225,31 @@ async function submitOrder(e) {
         }
     }
 
-    // Реферальная скидка
-    if (hasReferralDiscount && discountPercent === 0) {
-        discountPercent = 5;
-    }
+    // Считаем итог
+    let promoTotal = 0;
+    let regularTotal = 0;
 
-    let total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    cart.forEach(item => {
+        const itemSum = item.price * item.quantity;
+        if (promoMap[item.id]) {
+            promoTotal += itemSum;
+        } else {
+            regularTotal += itemSum;
+        }
+    });
+
+    let total = promoTotal + regularTotal;
+    let finalDiscountPercent = discountPercent;
+
+    // Скидка за точку — на весь заказ
     if (discountPercent > 0) {
         total = Math.round(total * (1 - discountPercent / 100));
+    } 
+    // Реферальная скидка — только на обычные товары
+    else if (hasReferralDiscount && regularTotal > 0) {
+        const referralDiscount = Math.round(regularTotal * 0.05);
+        total = total - referralDiscount;
+        finalDiscountPercent = 5;
     }
 
     const orderNumber = generateOrderNumber();
@@ -1240,7 +1278,7 @@ async function submitOrder(e) {
         delivery_type: deliveryType,
         pickup_point: pickupPointName,
         delivery_address: deliveryAddress,
-        discount_percent: discountPercent
+        discount_percent: finalDiscountPercent
     };
 
     try {
