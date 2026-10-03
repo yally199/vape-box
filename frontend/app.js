@@ -8,8 +8,31 @@ if (tg) {
 // ===== ПОДКЛЮЧЕНИЕ К БЕКЕНДУ =====
 const API_URL = "https://vape-box.onrender.com";
 
+// ===== РЕЖИМЫ (4) =====
+// retail    → main    (розница, без минималки)
+// opt       → main    (опт, от 2500)
+// opt5000   → catalog2 (опт от 5000, от 4500, быстрее)
+// preorder  → catalog2 (предзаказ, без минималки, 4–5 дней)
+const MODES = {
+    retail:   { label: '🛒 Розница',      short: '🛒 РОЗНИЦА',  source: 'main',     min: 0,    color: 'linear-gradient(135deg,#f59e0b,#d97706)', desc: 'Заказ до 2500₽',   eta: '' },
+    opt:      { label: '📦 Опт',          short: '📦 ОПТ',      source: 'main',     min: 2500, color: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', desc: 'Заказ от 2500₽',   eta: '' },
+    opt5000:  { label: '📦 Опт от 5000',  short: '📦 ОПТ 5000', source: 'catalog2', min: 4500, color: 'linear-gradient(135deg,#0ea5e9,#0284c7)', desc: 'От 4500₽ • быстрее', eta: '⚡ Быстрая отправка' },
+    preorder: { label: '⏳ Предзаказ',     short: '⏳ ПРЕДЗАКАЗ',source: 'catalog2', min: 0,    color: 'linear-gradient(135deg,#10b981,#059669)', desc: '4–5 дней • без минималки', eta: '⏳ Срок ожидания 4–5 дней' }
+};
+
 // ===== РЕЖИМ ЦЕН =====
-let priceMode = localStorage.getItem('priceMode') || null;
+let priceMode = localStorage.getItem('priceMode');
+if (priceMode && !MODES[priceMode]) priceMode = null; // на случай старых значений
+
+function getModeInfo() {
+    return MODES[priceMode] || MODES.opt;
+}
+function getModeSource() {
+    return getModeInfo().source;
+}
+function getModeMin() {
+    return getModeInfo().min;
+}
 
 // Эмодзи для категорий
 const CATEGORY_ICONS = {
@@ -46,8 +69,8 @@ const PICKUP_POINTS = [
 // ===== СОСТОЯНИЕ =====
 let categories = [];
 let categoryImages = {};
-let promoProducts = [];          // товары из акций
-let promoMap = {};               // id -> discount_percent
+let promoProducts = [];
+let promoMap = {};
 let cart = [];
 let currentView = 'catalog';
 let currentCategoryId = 'all';
@@ -55,8 +78,8 @@ let currentBrandId = null;
 let currentSeriesId = null;
 let currentSearch = '';
 let isSearchMode = false;
-let hasReferralDiscount = false; // есть ли неиспользованная реферальная скидка
-let deliveryType = 'pickup';     // 'pickup' | 'delivery'
+let hasReferralDiscount = false;
+let deliveryType = 'pickup';
 let selectedPickupPoint = null;
 
 // ===== DOM ЭЛЕМЕНТЫ =====
@@ -99,8 +122,6 @@ let currentCheckStockProduct = null;
 // ===== ПОЛУЧИТЬ ЦЕНУ ПО РЕЖИМУ + АКЦИЯ =====
 function getPrice(item) {
     let base = priceMode === 'retail' ? (item.price_retail || item.price) : item.price;
-    
-    // Если товар в акции — применяем скидку
     if (promoMap[item.id]) {
         const discount = promoMap[item.id];
         base = Math.round(base * (1 - discount / 100));
@@ -166,8 +187,10 @@ function buildCategoriesFromProducts(products) {
             price_retail: p.price_retail || 0,
             stock: p.stock,
             description: p.description || '',
+            article: p.article || '',
             brandName: brandName,
-            seriesName: seriesName
+            seriesName: seriesName,
+            source: p.source || 'main'
         });
     });
 
@@ -189,10 +212,12 @@ function buildCategoriesFromProducts(products) {
     return result;
 }
 
-// ===== ЗАГРУЗКА =====
+// ===== ЗАГРУЗКА (с учётом source режима) =====
 async function loadAllProducts() {
     try {
-        const response = await fetch(`${API_URL}/api/products?limit=10000&offset=0`);
+        // Грузим товары ТЕКУЩЕГО источника (main / catalog2)
+        const source = getModeSource();
+        const response = await fetch(`${API_URL}/api/products?limit=10000&offset=0&source=${source}`);
         if (!response.ok) throw new Error('Ошибка загрузки');
         const data = await response.json();
         return data.products || [];
@@ -266,7 +291,6 @@ function getSeries(categoryId, brandId, seriesId) {
 }
 
 function findProduct(productId) {
-    // Сначала ищем в акциях
     const promo = promoProducts.find(p => p.id === productId);
     if (promo) {
         return {
@@ -276,7 +300,9 @@ function findProduct(productId) {
             price_retail: promo.price_retail || 0,
             stock: promo.stock,
             brandName: promo.brand || '',
-            seriesName: promo.series || ''
+            seriesName: promo.series || '',
+            article: promo.article || '',
+            source: promo.source || 'main'
         };
     }
 
@@ -295,7 +321,7 @@ function findProduct(productId) {
     return null;
 }
 
-// ===== ЭКРАН ВЫБОРА РЕЖИМА =====
+// ===== ЭКРАН ВЫБОРА РЕЖИМА (4 кнопки) =====
 function showModeSelection() {
     const container = productsContainer;
     if (!container) return;
@@ -305,81 +331,101 @@ function showModeSelection() {
     if (pageTitle) pageTitle.style.display = 'none';
     if (backBtn) backBtn.style.display = 'none';
 
+    const btnStyle = (mode) => `
+        display:block;width:100%;max-width:340px;margin:0 auto 12px;
+        padding:20px;background:${MODES[mode].color};
+        color:#fff;border:none;border-radius:16px;
+        font-size:17px;font-weight:700;cursor:pointer;text-align:left;
+        box-shadow:0 6px 20px rgba(0,0,0,0.25);
+    `;
+
     container.style.display = 'block';
     container.innerHTML = `
-        <div style="text-align:center;padding:40px 20px;">
-            <div style="font-size:56px;margin-bottom:20px;">⚡</div>
-            <div style="font-size:26px;font-weight:700;margin-bottom:10px;">VAPE BOX</div>
-            <div style="font-size:15px;color:#8080a0;margin-bottom:36px;">Выберите режим покупки</div>
+        <div style="text-align:center;padding:30px 20px;">
+            <div style="font-size:56px;margin-bottom:16px;">⚡</div>
+            <div style="font-size:26px;font-weight:700;margin-bottom:8px;">VAPE BOX</div>
+            <div style="font-size:15px;color:#8080a0;margin-bottom:30px;">Выберите режим покупки</div>
 
-            <button id="modeOpt" style="
-                display:block;width:100%;max-width:340px;margin:0 auto 14px;
-                padding:22px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);
-                color:#fff;border:none;border-radius:16px;
-                font-size:17px;font-weight:700;cursor:pointer;text-align:left;
-            ">
-                <div style="font-size:20px;margin-bottom:4px;">📦 Опт</div>
-                <div style="font-size:13px;opacity:0.85;font-weight:400;">Заказ от 2500₽</div>
+            <button id="modeRetail" style="${btnStyle('retail')}">
+                <div style="font-size:19px;margin-bottom:4px;">${MODES.retail.label}</div>
+                <div style="font-size:13px;opacity:0.85;font-weight:400;">${MODES.retail.desc}</div>
             </button>
 
-            <button id="modeRetail" style="
-                display:block;width:100%;max-width:340px;margin:0 auto;
-                padding:22px;background:linear-gradient(135deg,#f59e0b,#d97706);
-                color:#fff;border:none;border-radius:16px;
-                font-size:17px;font-weight:700;cursor:pointer;text-align:left;
-            ">
-                <div style="font-size:20px;margin-bottom:4px;">🛒 Розница</div>
-                <div style="font-size:13px;opacity:0.85;font-weight:400;">Заказ до 2500₽</div>
+            <button id="modeOpt" style="${btnStyle('opt')}">
+                <div style="font-size:19px;margin-bottom:4px;">${MODES.opt.label}</div>
+                <div style="font-size:13px;opacity:0.85;font-weight:400;">${MODES.opt.desc}</div>
+            </button>
+
+            <button id="modeOpt5000" style="${btnStyle('opt5000')}">
+                <div style="font-size:19px;margin-bottom:4px;">${MODES.opt5000.label}</div>
+                <div style="font-size:13px;opacity:0.85;font-weight:400;">${MODES.opt5000.desc}</div>
+            </button>
+
+            <button id="modePreorder" style="${btnStyle('preorder')}">
+                <div style="font-size:19px;margin-bottom:4px;">${MODES.preorder.label}</div>
+                <div style="font-size:13px;opacity:0.85;font-weight:400;">${MODES.preorder.desc}</div>
             </button>
         </div>
     `;
 
-    document.getElementById('modeOpt').addEventListener('click', () => setMode('opt'));
     document.getElementById('modeRetail').addEventListener('click', () => setMode('retail'));
+    document.getElementById('modeOpt').addEventListener('click', () => setMode('opt'));
+    document.getElementById('modeOpt5000').addEventListener('click', () => setMode('opt5000'));
+    document.getElementById('modePreorder').addEventListener('click', () => setMode('preorder'));
 }
 
-function setMode(mode) {
+async function setMode(mode) {
+    const oldSource = priceMode ? getModeSource() : null;
     priceMode = mode;
     localStorage.setItem('priceMode', mode);
+
+    const newSource = getModeSource();
+
+    // Если источник товаров изменился — перезагружаем каталог
+    if (oldSource !== newSource) {
+        cart = []; // корзина привязана к каталогу — очищаем
+        updateCartUI();
+        const products = await loadAllProducts();
+        categories = buildCategoriesFromProducts(products);
+    }
 
     if (categoriesContainer) categoriesContainer.style.display = 'flex';
     if (searchInput) searchInput.style.display = 'block';
     if (pageTitle) pageTitle.style.display = 'block';
 
+    createModeButton();
     updateModeButton();
     renderCategoryTabs();
-    showPromos(); // сначала показываем акции
+    showPromos();
     updateCartUI();
-    showToast(mode === 'opt' ? '📦 Режим: ОПТ' : '🛒 Режим: РОЗНИЦА', 'success');
+    showToast(`${getModeInfo().label} — выбран`, 'success');
 }
 
 function updateModeButton() {
     const btn = document.getElementById('modeSwitchBtn');
     if (btn) {
-        btn.textContent = priceMode === 'opt' ? '📦 ОПТ' : '🛒 РОЗНИЦА';
-        btn.style.background = priceMode === 'opt'
-            ? 'linear-gradient(135deg,#8b5cf6,#7c3aed)'
-            : 'linear-gradient(135deg,#f59e0b,#d97706)';
+        btn.textContent = getModeInfo().short;
+        btn.style.background = getModeInfo().color;
     }
 }
 
 function createModeButton() {
-    if (document.getElementById('modeSwitchBtn')) return;
-
-    const btn = document.createElement('button');
-    btn.id = 'modeSwitchBtn';
-    btn.style.cssText = `
-        position:fixed;top:20px;right:70px;z-index:100;
-        padding:8px 12px;color:#fff;border:none;border-radius:10px;
-        font-size:12px;font-weight:700;cursor:pointer;
-        box-shadow:0 4px 12px rgba(0,0,0,0.3);
-    `;
-    btn.textContent = '📦 ОПТ';
-    btn.addEventListener('click', () => {
-        const newMode = priceMode === 'opt' ? 'retail' : 'opt';
-        setMode(newMode);
-    });
-    document.body.appendChild(btn);
+    let btn = document.getElementById('modeSwitchBtn');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'modeSwitchBtn';
+        btn.style.cssText = `
+            position:fixed;top:20px;right:70px;z-index:100;
+            padding:8px 12px;color:#fff;border:none;border-radius:10px;
+            font-size:12px;font-weight:700;cursor:pointer;
+            box-shadow:0 4px 12px rgba(0,0,0,0.3);
+        `;
+        btn.addEventListener('click', () => {
+            // Возврат к экрану выбора режима
+            showModeSelection();
+        });
+        document.body.appendChild(btn);
+    }
     updateModeButton();
 }
 
@@ -402,7 +448,11 @@ function showPromos() {
     productsContainer.style.display = 'block';
     productsContainer.style.gridTemplateColumns = 'none';
 
-    if (promoProducts.length === 0) {
+    // Акции фильтруем по текущему источнику
+    const source = getModeSource();
+    const visiblePromos = promoProducts.filter(p => (p.source || 'main') === source);
+
+    if (visiblePromos.length === 0) {
         productsContainer.innerHTML = `
             <div style="text-align:center;padding:40px 20px;color:#8080a0;">
                 <div style="font-size:48px;margin-bottom:12px;">🔥</div>
@@ -415,7 +465,6 @@ function showPromos() {
         return;
     }
 
-    // Красивый заголовок
     const header = document.createElement('div');
     header.style.cssText = 'padding:16px 4px 20px;text-align:center;';
     header.innerHTML = `
@@ -425,7 +474,7 @@ function showPromos() {
     `;
     productsContainer.appendChild(header);
 
-    promoProducts.forEach((p, index) => {
+    visiblePromos.forEach((p, index) => {
         const flavor = {
             id: p.id,
             name: p.name,
@@ -433,7 +482,8 @@ function showPromos() {
             price_retail: p.price_retail || 0,
             stock: p.stock,
             brandName: p.brand || '',
-            seriesName: p.series || ''
+            seriesName: p.series || '',
+            article: p.article || ''
         };
         productsContainer.appendChild(buildFlavorItem(flavor, index, null, null, true));
     });
@@ -671,10 +721,15 @@ function buildFlavorItem(flavor, index, categoryId, brandId, isPromo = false) {
            <span style="background:rgba(16,185,129,0.2);color:#34d399;font-size:11px;padding:2px 6px;border-radius:4px;margin-left:6px;">-10%</span>`
         : `<span class="flavor-price">${displayPrice} ₽</span>`;
 
+    // Артикул (если есть) — мелким шрифтом
+    const articleHtml = flavor.article
+        ? `<span style="color:#6b7280;font-size:11px;margin-left:6px;">#${flavor.article}</span>`
+        : '';
+
     item.innerHTML = `
         <div class="flavor-icon">${brandIcon}</div>
         <div class="flavor-info">
-            <div class="flavor-name">${flavor.name}</div>
+            <div class="flavor-name">${flavor.name}${articleHtml}</div>
             <div class="flavor-meta">
                 ${priceHtml}
                 ${stockText}
@@ -736,18 +791,18 @@ async function renderSearchResults(filterType = null) {
     productsContainer.style.gridTemplateColumns = 'none';
 
     try {
-        const response = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(query)}&limit=100`);
+        // Передаём mode в поиск, чтобы искать только в текущем каталоге
+        const response = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(query)}&limit=100&mode=${priceMode || ''}`);
         const data = await response.json();
         let results = data.products || [];
 
-        // Дополнительная фильтрация для рекомендаций
         if (filterType === 'first') {
-            results = results.filter(p => 
+            results = results.filter(p =>
                 /под|pod|aio|starter|набор|комплект/i.test(p.name + ' ' + (p.brand || ''))
             );
         }
         if (filterType === 'power') {
-            results = results.filter(p => 
+            results = results.filter(p =>
                 /мощн|watts|w\b|box|mod|батаре/i.test(p.name + ' ' + (p.brand || ''))
             );
         }
@@ -771,7 +826,8 @@ async function renderSearchResults(filterType = null) {
                 price: p.price,
                 price_retail: p.price_retail || 0,
                 stock: p.stock,
-                brandName: p.brand || ''
+                brandName: p.brand || '',
+                article: p.article || ''
             };
             productsContainer.appendChild(buildFlavorItem(flavor, index, null, null));
         });
@@ -885,9 +941,10 @@ function refreshCurrentView() {
 
 // ===== КАТЕГОРИИ-ТАБЫ =====
 function renderCategoryTabs() {
-    if (!categoriesContainer) return;
-    categoriesContainer.innerHTML = `
-        <button class="category" data-category="promos">🔥 Акции</button>
+ =    if (!categoriesContainer) return;
+    categoriesContainer '';
+.innerHTML = `
+        <button            class="category" data-category="prom thisos">🔥 Акции.style</button>
         <button class="category active" data-category="all">📂 Все товары</button>
     `;
     categories.forEach(cat => {
@@ -968,8 +1025,7 @@ if (searchClear) {
     searchClear.addEventListener('click', function() {
         if (searchInput) {
             searchInput.value = '';
-            currentSearch = '';
-            this.style.display = 'none';
+            currentSearch.display = 'none';
             isSearchMode = false;
             renderCatalog();
         }
@@ -1038,8 +1094,17 @@ function closeSuccessModal() { if (successModal) successModal.classList.remove('
 
 function openOrderModal() {
     if (cart.length === 0) { showToast('⚠️ Корзина пуста', 'error'); return; }
-    
-    // Рендерим список товаров
+
+    // Проверка минималки для текущего режима
+    const minSum = getModeMin();
+    if (minSum > 0) {
+        const currentTotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+        if (currentTotal < minSum) {
+            showToast(`⚠️ Минимум для «${getModeInfo().label}»: ${minSum}₽. Сейчас: ${currentTotal}₽`, 'error');
+            return;
+        }
+    }
+
     if (orderItemsList) orderItemsList.innerHTML = '';
     let total = 0;
     cart.forEach(item => {
@@ -1051,9 +1116,7 @@ function openOrderModal() {
         if (orderItemsList) orderItemsList.appendChild(div);
     });
 
-    // Добавляем блок доставки, если его ещё нет
     ensureDeliveryFields();
-
     updateOrderTotal();
 
     if (cartModal) cartModal.classList.remove('active');
@@ -1061,24 +1124,37 @@ function openOrderModal() {
 }
 
 function ensureDeliveryFields() {
-    // Проверяем, есть ли уже блок доставки
-    if (document.getElementById('deliveryBlock')) return;
+    // Полностью пересоздаём блок, чтобы обновить подпись режима
+    const existing = document.getElementById('deliveryBlock');
+    if (existing) existing.remove();
 
     const form = orderForm;
     if (!form) return;
 
+    const modeInfo = getModeInfo();
     const block = document.createElement('div');
     block.id = 'deliveryBlock';
     block.style.cssText = 'margin:16px 0;padding:16px;background:rgba(139,92,246,0.08);border-radius:12px;';
 
+    const etaHtml = modeInfo.eta
+        ? `<div style="margin-bottom:12px;padding:8px 12px;background:rgba(16,185,129,0.15);color:#34d399;border-radius:8px;font-size:13px;font-weight:600;">${modeInfo.eta}</div>`
+        : '';
+
+    const minHtml = modeInfo.min > 0
+        ? `<div style="margin-bottom:12px;font-size:12px;color:#8080a0;">Минимальная сумма для «${modeInfo.label}»: ${modeInfo.min}₽</div>`
+        : '';
+
     block.innerHTML = `
+        <div style="font-weight:600;margin-bottom:12px;">Режим: ${modeInfo.label}</div>
+        ${etaHtml}
+        ${minHtml}
         <div style="font-weight:600;margin-bottom:12px;">Способ получения</div>
-        
+
         <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;">
             <input type="radio" name="deliveryType" value="pickup" checked onchange="onDeliveryTypeChange()">
             <span>🏪 Самовывоз</span>
         </label>
-        
+
         <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer;">
             <input type="radio" name="deliveryType" value="delivery" onchange="onDeliveryTypeChange()">
             <span>🚚 Доставка</span>
@@ -1096,7 +1172,7 @@ function ensureDeliveryFields() {
 
         <div id="deliveryAddressBlock" style="display:none;">
             <label style="display:block;font-size:13px;color:#8080a0;margin-bottom:6px;">Метро / Адрес</label>
-            <input type="text" id="deliveryAddressInput" placeholder="Например: м. Сокольники" 
+            <input type="text" id="deliveryAddressInput" placeholder="Например: м. Сокольники"
                    style="width:100%;padding:12px;background:#0f0f14;border:1px solid #2a2a38;border-radius:10px;color:#e8e8ee;font-size:15px;">
             <div style="font-size:12px;color:#8080a0;margin-top:8px;">
                 Стоимость доставки уточнит менеджер после подтверждения заказа
@@ -1106,22 +1182,25 @@ function ensureDeliveryFields() {
         <div id="discountInfo" style="margin-top:12px;font-size:13px;color:#34d399;display:none;"></div>
     `;
 
-    // Вставляем перед кнопкой отправки
     const submitBtn = form.querySelector('button[type="submit"]');
     if (submitBtn) {
         form.insertBefore(block, submitBtn);
     } else {
         form.appendChild(block);
     }
+
+    // Сброс выбранной точки при пересоздании
+    deliveryType = 'pickup';
+    selectedPickupPoint = null;
 }
 
 function onDeliveryTypeChange() {
     const type = document.querySelector('input[name="deliveryType"]:checked')?.value || 'pickup';
     deliveryType = type;
-    
+
     document.getElementById('pickupPointsBlock').style.display = type === 'pickup' ? 'block' : 'none';
     document.getElementById('deliveryAddressBlock').style.display = type === 'delivery' ? 'block' : 'none';
-    
+
     updateOrderTotal();
 }
 
@@ -1132,7 +1211,6 @@ function onPickupPointChange() {
 }
 
 function updateOrderTotal() {
-    // Считаем отдельно товары из акций и обычные
     let promoTotal = 0;
     let regularTotal = 0;
 
@@ -1147,12 +1225,10 @@ function updateOrderTotal() {
 
     let discountPercent = 0;
 
-    // Скидка за точку самовывоза (на весь заказ)
     if (deliveryType === 'pickup' && selectedPickupPoint && selectedPickupPoint.discount > 0) {
         discountPercent = selectedPickupPoint.discount;
     }
 
-    // Реферальная скидка — только на обычные товары (не из акций)
     let referralDiscountAmount = 0;
     if (hasReferralDiscount && discountPercent === 0 && regularTotal > 0) {
         referralDiscountAmount = Math.round(regularTotal * 0.05);
@@ -1160,11 +1236,9 @@ function updateOrderTotal() {
 
     let total = promoTotal + regularTotal;
 
-    // Применяем скидку за точку (на весь заказ)
     if (discountPercent > 0) {
         total = Math.round(total * (1 - discountPercent / 100));
     } else {
-        // Или вычитаем реферальную скидку только с обычных товаров
         total = total - referralDiscountAmount;
     }
 
@@ -1174,12 +1248,19 @@ function updateOrderTotal() {
 
     const info = document.getElementById('discountInfo');
     if (info) {
+        const minSum = getModeMin();
+        const minWarn = (minSum > 0 && total < minSum)
+            ? `<div style="color:#ef4444;margin-top:6px;">⚠️ Минимум для режима: ${minSum}₽ (сейчас ${total}₽)</div>`
+            : '';
         if (discountPercent > 0) {
             info.style.display = 'block';
-            info.textContent = `💥 Применена скидка -${discountPercent}% (за точку самовывоза)`;
+            info.innerHTML = `💥 Применена скидка -${discountPercent}% (за точку самовывоза)${minWarn}`;
         } else if (referralDiscountAmount > 0) {
             info.style.display = 'block';
-            info.textContent = `🎁 Скидка -5% за первый заказ (не действует на товары из акций)`;
+            info.innerHTML = `🎁 Скидка -5% за первый заказ (не действует на товары из акций)${minWarn}`;
+        } else if (minWarn) {
+            info.style.display = 'block';
+            info.innerHTML = minWarn;
         } else {
             info.style.display = 'none';
         }
@@ -1225,7 +1306,6 @@ async function submitOrder(e) {
         }
     }
 
-    // Считаем итог
     let promoTotal = 0;
     let regularTotal = 0;
 
@@ -1241,15 +1321,21 @@ async function submitOrder(e) {
     let total = promoTotal + regularTotal;
     let finalDiscountPercent = discountPercent;
 
-    // Скидка за точку — на весь заказ
     if (discountPercent > 0) {
         total = Math.round(total * (1 - discountPercent / 100));
-    } 
-    // Реферальная скидка — только на обычные товары
+    }
     else if (hasReferralDiscount && regularTotal > 0) {
         const referralDiscount = Math.round(regularTotal * 0.05);
         total = total - referralDiscount;
         finalDiscountPercent = 5;
+    }
+
+    // Проверка минималки (на случай, если пользователь обошёл UI)
+    const minSum = getModeMin();
+    if (minSum > 0 && total < minSum) {
+        showToast(`⚠️ Минимум для «${getModeInfo().label}»: ${minSum}₽`, 'error');
+        window.__orderSubmitting = false;
+        return;
     }
 
     const orderNumber = generateOrderNumber();
@@ -1257,13 +1343,13 @@ async function submitOrder(e) {
 
     const order = {
         id: orderNumber,
-        customer: { 
-            name, 
-            telegram, 
-            phone, 
-            address: deliveryAddress || pickupPointName, 
-            comment, 
-            telegram_id: telegramUserId 
+        customer: {
+            name,
+            telegram,
+            phone,
+            address: deliveryAddress || pickupPointName,
+            comment,
+            telegram_id: telegramUserId
         },
         items: cart.map(i => ({
             name: i.name,
@@ -1273,7 +1359,7 @@ async function submitOrder(e) {
             total: i.price * i.quantity
         })),
         total: total,
-        mode: priceMode,
+        mode: priceMode || 'opt',
         date: new Date().toISOString(),
         delivery_type: deliveryType,
         pickup_point: pickupPointName,
@@ -1391,25 +1477,27 @@ function showToast(message, type = 'success') {
 // ===== ЗАПУСК =====
 (async function init() {
     console.log('🛍️ VAPE BOX: загружаем...');
-    
-    const [products] = await Promise.all([
-        loadAllProducts(),
+
+    // Грузим изображения, акции, реферала — параллельно.
+    // Товары — после выбора режима (или сразу, если режим сохранён).
+    await Promise.all([
         loadCategoryImages(),
         loadPromos(),
         checkReferralDiscount()
     ]);
-
-    console.log(`🛍️ Получено товаров: ${products.length}`);
-    categories = buildCategoriesFromProducts(products);
 
     if (!priceMode) {
         showModeSelection();
         return;
     }
 
+    const products = await loadAllProducts();
+    console.log(`🛍️ Получено товаров (${getModeSource()}): ${products.length}`);
+    categories = buildCategoriesFromProducts(products);
+
     createModeButton();
     renderCategoryTabs();
-    showPromos(); // при входе сразу показываем акции
+    showPromos();
     updateCartUI();
     console.log(`🛍️ VAPE BOX загружен! Режим: ${priceMode}`);
 })();
