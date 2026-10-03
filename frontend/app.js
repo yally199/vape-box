@@ -9,10 +9,6 @@ if (tg) {
 const API_URL = "https://vape-box.onrender.com";
 
 // ===== РЕЖИМЫ (4) =====
-// retail    → main    (розница, без минималки)
-// opt       → main    (опт, от 2500)
-// opt5000   → catalog2 (опт от 5000, от 4500, быстрее)
-// preorder  → catalog2 (предзаказ, без минималки, 4–5 дней)
 const MODES = {
     retail:   { label: '🛒 Розница',      short: '🛒 РОЗНИЦА',  source: 'main',     min: 0,    color: 'linear-gradient(135deg,#f59e0b,#d97706)', desc: 'Заказ до 2500₽',   eta: '' },
     opt:      { label: '📦 Опт',          short: '📦 ОПТ',      source: 'main',     min: 2500, color: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', desc: 'Заказ от 2500₽',   eta: '' },
@@ -22,7 +18,7 @@ const MODES = {
 
 // ===== РЕЖИМ ЦЕН =====
 let priceMode = localStorage.getItem('priceMode');
-if (priceMode && !MODES[priceMode]) priceMode = null; // на случай старых значений
+if (priceMode && !MODES[priceMode]) priceMode = null;
 
 function getModeInfo() {
     return MODES[priceMode] || MODES.opt;
@@ -212,10 +208,9 @@ function buildCategoriesFromProducts(products) {
     return result;
 }
 
-// ===== ЗАГРУЗКА (с учётом source режима) =====
+// ===== ЗАГРУЗКА =====
 async function loadAllProducts() {
     try {
-        // Грузим товары ТЕКУЩЕГО источника (main / catalog2)
         const source = getModeSource();
         const response = await fetch(`${API_URL}/api/products?limit=10000&offset=0&source=${source}`);
         if (!response.ok) throw new Error('Ошибка загрузки');
@@ -331,6 +326,9 @@ function showModeSelection() {
     if (pageTitle) pageTitle.style.display = 'none';
     if (backBtn) backBtn.style.display = 'none';
 
+    const modeBtn = document.getElementById('modeSwitchBtn');
+    if (modeBtn) modeBtn.style.display = 'none';
+
     const btnStyle = (mode) => `
         display:block;width:100%;max-width:340px;margin:0 auto 12px;
         padding:20px;background:${MODES[mode].color};
@@ -376,15 +374,25 @@ function showModeSelection() {
 
 async function setMode(mode) {
     const oldSource = priceMode ? getModeSource() : null;
+    const oldMode = priceMode;
     priceMode = mode;
     localStorage.setItem('priceMode', mode);
 
     const newSource = getModeSource();
 
-    // Если источник товаров изменился — перезагружаем каталог
-    if (oldSource !== newSource) {
-        cart = []; // корзина привязана к каталогу — очищаем
+    if (oldSource && oldSource !== newSource && cart.length > 0) {
+        const ok = confirm('Смена каталога очистит корзину. Продолжить?');
+        if (!ok) {
+            priceMode = oldMode;
+            if (oldMode) localStorage.setItem('priceMode', oldMode);
+            else localStorage.removeItem('priceMode');
+            return;
+        }
+        cart = [];
         updateCartUI();
+    }
+
+    if (oldSource !== newSource) {
         const products = await loadAllProducts();
         categories = buildCategoriesFromProducts(products);
     }
@@ -394,6 +402,9 @@ async function setMode(mode) {
     if (pageTitle) pageTitle.style.display = 'block';
 
     createModeButton();
+    const modeBtn = document.getElementById('modeSwitchBtn');
+    if (modeBtn) modeBtn.style.display = 'block';
+
     updateModeButton();
     renderCategoryTabs();
     showPromos();
@@ -421,7 +432,6 @@ function createModeButton() {
             box-shadow:0 4px 12px rgba(0,0,0,0.3);
         `;
         btn.addEventListener('click', () => {
-            // Возврат к экрану выбора режима
             showModeSelection();
         });
         document.body.appendChild(btn);
@@ -448,7 +458,6 @@ function showPromos() {
     productsContainer.style.display = 'block';
     productsContainer.style.gridTemplateColumns = 'none';
 
-    // Акции фильтруем по текущему источнику
     const source = getModeSource();
     const visiblePromos = promoProducts.filter(p => (p.source || 'main') === source);
 
@@ -665,7 +674,6 @@ function showFlavors(categoryId, brandId, seriesId) {
         productsContainer.appendChild(buildFlavorItem(flavor, index, categoryId, brandId));
     });
 }
-
 function buildFlavorItem(flavor, index, categoryId, brandId, isPromo = false) {
     const item = document.createElement('div');
     item.className = 'flavor-item';
@@ -721,7 +729,6 @@ function buildFlavorItem(flavor, index, categoryId, brandId, isPromo = false) {
            <span style="background:rgba(16,185,129,0.2);color:#34d399;font-size:11px;padding:2px 6px;border-radius:4px;margin-left:6px;">-10%</span>`
         : `<span class="flavor-price">${displayPrice} ₽</span>`;
 
-    // Артикул (если есть) — мелким шрифтом
     const articleHtml = flavor.article
         ? `<span style="color:#6b7280;font-size:11px;margin-left:6px;">#${flavor.article}</span>`
         : '';
@@ -791,7 +798,6 @@ async function renderSearchResults(filterType = null) {
     productsContainer.style.gridTemplateColumns = 'none';
 
     try {
-        // Передаём mode в поиск, чтобы искать только в текущем каталоге
         const response = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(query)}&limit=100&mode=${priceMode || ''}`);
         const data = await response.json();
         let results = data.products || [];
@@ -954,6 +960,7 @@ function renderCategoryTabs() {
         categoriesContainer.appendChild(btn);
     });
 }
+
 if (categoriesContainer) {
     categoriesContainer.addEventListener('click', function(e) {
         const btn = e.target.closest('.category');
@@ -1023,7 +1030,8 @@ if (searchClear) {
     searchClear.addEventListener('click', function() {
         if (searchInput) {
             searchInput.value = '';
-            currentSearch.display = 'none';
+            currentSearch = '';
+            this.style.display = 'none';
             isSearchMode = false;
             renderCatalog();
         }
@@ -1093,7 +1101,6 @@ function closeSuccessModal() { if (successModal) successModal.classList.remove('
 function openOrderModal() {
     if (cart.length === 0) { showToast('⚠️ Корзина пуста', 'error'); return; }
 
-    // Проверка минималки для текущего режима
     const minSum = getModeMin();
     if (minSum > 0) {
         const currentTotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -1122,7 +1129,6 @@ function openOrderModal() {
 }
 
 function ensureDeliveryFields() {
-    // Полностью пересоздаём блок, чтобы обновить подпись режима
     const existing = document.getElementById('deliveryBlock');
     if (existing) existing.remove();
 
@@ -1187,7 +1193,6 @@ function ensureDeliveryFields() {
         form.appendChild(block);
     }
 
-    // Сброс выбранной точки при пересоздании
     deliveryType = 'pickup';
     selectedPickupPoint = null;
 }
@@ -1328,7 +1333,6 @@ async function submitOrder(e) {
         finalDiscountPercent = 5;
     }
 
-    // Проверка минималки (на случай, если пользователь обошёл UI)
     const minSum = getModeMin();
     if (minSum > 0 && total < minSum) {
         showToast(`⚠️ Минимум для «${getModeInfo().label}»: ${minSum}₽`, 'error');
@@ -1352,6 +1356,7 @@ async function submitOrder(e) {
         items: cart.map(i => ({
             name: i.name,
             brand: i.brandName || '',
+            article: i.article || '',
             quantity: i.quantity,
             price: i.price,
             total: i.price * i.quantity
@@ -1476,8 +1481,6 @@ function showToast(message, type = 'success') {
 (async function init() {
     console.log('🛍️ VAPE BOX: загружаем...');
 
-    // Грузим изображения, акции, реферала — параллельно.
-    // Товары — после выбора режима (или сразу, если режим сохранён).
     await Promise.all([
         loadCategoryImages(),
         loadPromos(),
