@@ -21,12 +21,12 @@ app.add_middleware(
 )
 
 DB_PATH = "vape_shop.db"
-EXCEL_FILE = "prices.xlsx"
+EXCEL_FILE = "prices.xlsx"          # Розница + Опт
+EXCEL_FILE_2 = "prices2.xlsx"       # Опт от 5000 + Предзаказ
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_ADMIN_ID = os.getenv("TELEGRAM_ADMIN_ID", "")
 
-# ===== Cloudinary =====
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
     api_key=os.getenv("CLOUDINARY_API_KEY"),
@@ -57,9 +57,21 @@ def init_db():
             description TEXT,
             image TEXT,
             brand TEXT,
-            series TEXT
+            series TEXT,
+            article TEXT DEFAULT '',
+            source TEXT DEFAULT 'main'
         )
     ''')
+
+    # На случай старой БД — добавляем колонки если их нет
+    try:
+        cursor.execute("ALTER TABLE products ADD COLUMN article TEXT DEFAULT ''")
+    except Exception:
+        pass
+    try:
+        cursor.execute("ALTER TABLE products ADD COLUMN source TEXT DEFAULT 'main'")
+    except Exception:
+        pass
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
@@ -172,20 +184,40 @@ def parse_price(value):
         return 0
 
 
-def import_from_excel():
-    if not os.path.exists(EXCEL_FILE):
-        print(f"[IMPORT] Файл {EXCEL_FILE} не найден!")
+def parse_article(value):
+    if value is None:
+        return ""
+    try:
+        if pd.isna(value):
+            return ""
+    except Exception:
+        pass
+    s = str(value).strip()
+    if s.lower() == "nan":
+        return ""
+    # убираем .0 у чисел из excel
+    if s.endswith(".0"):
+        s = s[:-2]
+    return s
+
+
+def import_excel_file(filepath: str, source: str) -> int:
+    """Импорт одного Excel-файла. source = 'main' | 'catalog2'"""
+    if not os.path.exists(filepath):
+        print(f"[IMPORT] Файл {filepath} не найден!")
         return 0
 
     try:
-        df = pd.read_excel(EXCEL_FILE, header=0, engine='openpyxl')
+        df = pd.read_excel(filepath, header=0, engine='openpyxl')
         df = df.dropna(how='all')
-        print(f"[IMPORT] Строк в файле: {len(df)}")
-        print(f"[IMPORT] Колонки: {list(df.columns)}")
+        print(f"[IMPORT:{source}] Строк в файле: {len(df)}")
+        print(f"[IMPORT:{source}] Колонки: {list(df.columns)}")
 
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM products")
+
+        # Удаляем только товары этого source
+        cursor.execute("DELETE FROM products WHERE source = ?", (source,))
 
         count = 0
         skipped_no_price = 0
@@ -197,6 +229,13 @@ def import_from_excel():
             if not name or name.lower() == 'nan':
                 skipped_no_name += 1
                 continue
+
+            # Пометка "нет в наличии" в названии
+            name_lower = name.lower()
+            in_stock = 99
+            if 'нет в наличии' in name_lower:
+                in_stock = 0
+                name = name.replace(' - нет в наличии', '').replace('- нет в наличии', '').strip()
 
             category_raw = str(row.get('Группы', '')).strip()
             if not category_raw or category_raw.lower() == 'nan':
@@ -223,35 +262,42 @@ def import_from_excel():
 
             final_price = calculate_price(base_price)
             final_price_retail = calculate_price_retail(base_price)
+            article = parse_article(row.get('Артикул', ''))
 
             cursor.execute('''
-                INSERT INTO products (name, price, price_retail, stock, category, description, brand, series)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (name, final_price, final_price_retail, 99, category, '', brand, series))
+                INSERT INTO products (name, price, price_retail, stock, category, description, brand, series, article, source)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (name, final_price, final_price_retail, in_stock, category, '', brand, series, article, source))
 
             count += 1
 
         conn.commit()
         conn.close()
-        print(f"[IMPORT] Добавлено: {count}")
-        print(f"[IMPORT] Пропущено (нет цены): {skipped_no_price}")
-        print(f"[IMPORT] Пропущено (нет названия): {skipped_no_name}")
-        print(f"[IMPORT] Пропущено (Разное): {skipped_raznoe}")
+        print(f"[IMPORT:{source}] Добавлено: {count}")
+        print(f"[IMPORT:{source}] Пропущено (нет цены): {skipped_no_price}")
+        print(f"[IMPORT:{source}] Пропущено (нет названия): {skipped_no_name}")
+        print(f"[IMPORT:{source}] Пропущено (Разное): {skipped_raznoe}")
         return count
 
     except Exception as e:
-        print(f"[IMPORT] ОШИБКА: {e}")
+        print(f"[IMPORT:{source}] ОШИБКА: {e}")
         import traceback
         traceback.print_exc()
         return 0
 
 
-IMPORTED_COUNT = import_from_excel()
+def import_all():
+    c1 = import_excel_file(EXCEL_FILE, "main")
+    c2 = import_excel_file(EXCEL_FILE_2, "catalog2")
+    return c1 + c2
+
+
+IMPORTED_COUNT = import_all()
 
 
 def send_telegram_message(text, reply_markup=None):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_ADMIN_ID:
-        print("[TG] Не настроены переменные окружения — уведомление не отправлено")
+        print("[TG] Не настроены переменные окружения")
         return False
     try:
         import urllib.request
@@ -276,7 +322,6 @@ def send_telegram_message(text, reply_markup=None):
 
 def send_telegram_to_customer(chat_id, text, reply_markup=None):
     if not TELEGRAM_BOT_TOKEN or not chat_id:
-        print(f"[TG-CLIENT] Нет токена или chat_id")
         return False
     try:
         import urllib.request
@@ -292,7 +337,6 @@ def send_telegram_to_customer(chat_id, text, reply_markup=None):
         payload = urllib.parse.urlencode(data).encode("utf-8")
         req = urllib.request.Request(url, data=payload)
         with urllib.request.urlopen(req, timeout=10) as resp:
-            print(f"[TG-CLIENT] Сообщение отправлено клиенту {chat_id}")
             return True
     except Exception as e:
         print(f"[TG-CLIENT] Ошибка: {e}")
@@ -414,16 +458,34 @@ def read_root():
     return {"message": "VAPE BOX API работает!", "imported": IMPORTED_COUNT}
 
 
+def mode_to_source(mode: str) -> str:
+    """Какой каталог товаров соответствует режиму"""
+    if mode in ("opt5000", "preorder"):
+        return "catalog2"
+    return "main"
+
+
 @app.get("/api/products")
-def get_products(limit: int = 100, offset: int = 0):
+def get_products(limit: int = 100, offset: int = 0, mode: str = "", source: str = ""):
     conn = sqlite3.connect(DB_PATH)
     conn.text_factory = str
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM products")
+
+    # Определяем source
+    if mode:
+        src = mode_to_source(mode)
+    elif source:
+        src = source
+    else:
+        src = "main"
+
+    cursor.execute("SELECT COUNT(*) FROM products WHERE source = ?", (src,))
     total = cursor.fetchone()[0]
+
     cursor.execute(
-        "SELECT id, name, price, price_retail, stock, category, description, brand, series FROM products LIMIT ? OFFSET ?",
-        (limit, offset)
+        """SELECT id, name, price, price_retail, stock, category, description, brand, series, article, source
+           FROM products WHERE source = ? LIMIT ? OFFSET ?""",
+        (src, limit, offset)
     )
     rows = cursor.fetchall()
     conn.close()
@@ -431,19 +493,47 @@ def get_products(limit: int = 100, offset: int = 0):
     products = []
     for row in rows:
         products.append({
-            "id": row[0], "name": row[1], "price": row[2], "price_retail": row[3] or 0,
-            "stock": row[4], "category": row[5] or "", "description": row[6] or "",
-            "brand": row[7] or "", "series": row[8] or "",
+            "id": row[0],
+            "name": row[1],
+            "price": row[2],
+            "price_retail": row[3] or 0,
+            "stock": row[4],
+            "category": row[5] or "",
+            "description": row[6] or "",
+            "brand": row[7] or "",
+            "series": row[8] or "",
+            "article": row[9] or "",
+            "source": row[10] or "main",
         })
-    return {"products": products, "total": total, "limit": limit, "offset": offset, "has_more": offset + len(products) < total}
+
+    return {
+        "products": products,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "source": src,
+        "has_more": offset + len(products) < total
+    }
 
 
 @app.get("/api/products/by-category")
-def get_products_by_category(category: str = "", brand: str = "", series: str = "", limit: int = 100, offset: int = 0):
+def get_products_by_category(
+    category: str = "",
+    brand: str = "",
+    series: str = "",
+    mode: str = "",
+    limit: int = 100,
+    offset: int = 0
+):
     conn = sqlite3.connect(DB_PATH)
     conn.text_factory = str
     cursor = conn.cursor()
-    conditions, params = [], []
+
+    src = mode_to_source(mode) if mode else "main"
+
+    conditions = ["source = ?"]
+    params = [src]
+
     if category:
         conditions.append("category = ?")
         params.append(category)
@@ -453,42 +543,62 @@ def get_products_by_category(category: str = "", brand: str = "", series: str = 
     if series:
         conditions.append("series = ?")
         params.append(series)
-    where_sql = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    where_sql = "WHERE " + " AND ".join(conditions)
+
     cursor.execute(f"SELECT COUNT(*) FROM products {where_sql}", params)
     total = cursor.fetchone()[0]
+
     cursor.execute(
-        f"SELECT id, name, price, price_retail, stock, category, description, brand, series FROM products {where_sql} LIMIT ? OFFSET ?",
+        f"""SELECT id, name, price, price_retail, stock, category, description, brand, series, article, source
+            FROM products {where_sql} LIMIT ? OFFSET ?""",
         params + [limit, offset]
     )
     rows = cursor.fetchall()
     conn.close()
+
     products = []
     for row in rows:
         products.append({
             "id": row[0], "name": row[1], "price": row[2], "price_retail": row[3] or 0,
             "stock": row[4], "category": row[5] or "", "description": row[6] or "",
-            "brand": row[7] or "", "series": row[8] or "",
+            "brand": row[7] or "", "series": row[8] or "", "article": row[9] or "",
+            "source": row[10] or "main",
         })
-    return {"products": products, "total": total, "limit": limit, "offset": offset, "has_more": offset + len(products) < total}
+
+    return {
+        "products": products,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "has_more": offset + len(products) < total
+    }
 
 
 @app.get("/api/categories")
-def get_categories_tree():
+def get_categories_tree(mode: str = ""):
     conn = sqlite3.connect(DB_PATH)
     conn.text_factory = str
     cursor = conn.cursor()
+
+    src = mode_to_source(mode) if mode else "main"
+
     cursor.execute('''
         SELECT category, brand, series, COUNT(*) as count
-        FROM products WHERE category != '' AND category IS NOT NULL
-        GROUP BY category, brand, series ORDER BY category, brand, series
-    ''')
+        FROM products
+        WHERE source = ? AND category != '' AND category IS NOT NULL
+        GROUP BY category, brand, series
+        ORDER BY category, brand, series
+    ''', (src,))
     rows = cursor.fetchall()
     conn.close()
+
     tree = {}
     for cat, brand, series, count in rows:
         cat = cat or 'Разное'
         brand = brand or 'Разное'
         series = series or 'Основное'
+
         if cat not in tree:
             tree[cat] = {'name': cat, 'brands': {}}
         if brand not in tree[cat]['brands']:
@@ -496,71 +606,95 @@ def get_categories_tree():
         if series not in tree[cat]['brands'][brand]['series']:
             tree[cat]['brands'][brand]['series'][series] = {'name': series, 'count': 0}
         tree[cat]['brands'][brand]['series'][series]['count'] += count
+
     result = []
     for cat_name, cat_data in tree.items():
         brands_arr = []
         for brand_name, brand_data in cat_data['brands'].items():
-            series_arr = [series_data for series_data in brand_data['series'].values()]
+            series_arr = list(brand_data['series'].values())
             brands_arr.append({'name': brand_name, 'series': series_arr})
         result.append({'name': cat_name, 'brands': brands_arr})
-    return {'categories': result}
+
+    return {'categories': result, 'source': src}
 
 
 @app.get("/api/search")
-def search_products(q: str = "", limit: int = 100):
+def search_products(q: str = "", mode: str = "", limit: int = 100):
     if not q or len(q.strip()) < 2:
         return {"products": [], "query": q, "total": 0}
+
     query = q.strip().lower()
+    src = mode_to_source(mode) if mode else "main"
+
     conn = sqlite3.connect(DB_PATH)
     conn.text_factory = str
     cursor = conn.cursor()
+
     search_pattern = f"%{query}%"
     cursor.execute('''
-        SELECT id, name, price, price_retail, stock, category, description, brand, series
+        SELECT id, name, price, price_retail, stock, category, description, brand, series, article, source
         FROM products
-        WHERE LOWER(name) LIKE ? OR LOWER(brand) LIKE ? OR LOWER(series) LIKE ? OR LOWER(category) LIKE ?
+        WHERE source = ?
+          AND (LOWER(name) LIKE ?
+           OR LOWER(brand) LIKE ?
+           OR LOWER(series) LIKE ?
+           OR LOWER(category) LIKE ?
+           OR LOWER(article) LIKE ?)
         LIMIT ?
-    ''', (search_pattern, search_pattern, search_pattern, search_pattern, limit))
+    ''', (src, search_pattern, search_pattern, search_pattern, search_pattern, search_pattern, limit))
     rows = cursor.fetchall()
+
     cursor.execute('''
         SELECT COUNT(*) FROM products
-        WHERE LOWER(name) LIKE ? OR LOWER(brand) LIKE ? OR LOWER(series) LIKE ? OR LOWER(category) LIKE ?
-    ''', (search_pattern, search_pattern, search_pattern, search_pattern))
+        WHERE source = ?
+          AND (LOWER(name) LIKE ?
+           OR LOWER(brand) LIKE ?
+           OR LOWER(series) LIKE ?
+           OR LOWER(category) LIKE ?
+           OR LOWER(article) LIKE ?)
+    ''', (src, search_pattern, search_pattern, search_pattern, search_pattern, search_pattern))
     total = cursor.fetchone()[0]
     conn.close()
+
     products = []
     for row in rows:
         products.append({
             "id": row[0], "name": row[1], "price": row[2], "price_retail": row[3] or 0,
             "stock": row[4], "category": row[5] or "", "description": row[6] or "",
-            "brand": row[7] or "", "series": row[8] or "",
+            "brand": row[7] or "", "series": row[8] or "", "article": row[9] or "",
+            "source": row[10] or "main",
         })
-    return {"products": products, "query": q, "total": total}
+
+    return {"products": products, "query": q, "total": total, "source": src}
 
 
 @app.post("/api/reload")
 def reload_products():
-    count = import_from_excel()
+    count = import_all()
     return {"message": f"Товары обновлены. Всего: {count}", "count": count}
 
 
 @app.post("/api/upload-excel")
-async def upload_excel(file: UploadFile = File(...)):
+async def upload_excel(file: UploadFile = File(...), source: str = "main"):
+    """source=main → prices.xlsx, source=catalog2 → prices2.xlsx"""
     contents = await file.read()
-    with open(EXCEL_FILE, "wb") as f:
+    target = EXCEL_FILE_2 if source == "catalog2" else EXCEL_FILE
+    with open(target, "wb") as f:
         f.write(contents)
-    count = import_from_excel()
-    return {"message": f"Файл загружен. Импортировано {count} товаров", "count": count}
+    count = import_excel_file(target, "catalog2" if source == "catalog2" else "main")
+    return {"message": f"Файл загружен ({source}). Импортировано {count} товаров", "count": count, "source": source}
 
 
 @app.get("/api/count")
 def get_count():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM products")
-    count = cursor.fetchone()[0]
+    cursor.execute("SELECT source, COUNT(*) FROM products GROUP BY source")
+    rows = cursor.fetchall()
     conn.close()
-    return {"count": count}
+    result = {row[0]: row[1] for row in rows}
+    result["total"] = sum(result.values())
+    return result
 
 
 # ===== АКЦИИ =====
@@ -571,7 +705,7 @@ def get_promos():
     conn.text_factory = str
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT p.id, p.name, p.price, p.price_retail, p.stock, p.category, p.brand, p.series, pr.discount_percent
+        SELECT p.id, p.name, p.price, p.price_retail, p.stock, p.category, p.brand, p.series, pr.discount_percent, p.source
         FROM promos pr
         JOIN products p ON p.id = pr.product_id
         ORDER BY pr.id DESC
@@ -583,7 +717,7 @@ def get_promos():
         promos.append({
             "id": row[0], "name": row[1], "price": row[2], "price_retail": row[3] or 0,
             "stock": row[4], "category": row[5] or "", "brand": row[6] or "",
-            "series": row[7] or "", "discount_percent": row[8] or 10
+            "series": row[7] or "", "discount_percent": row[8] or 10, "source": row[9] or "main"
         })
     return {"promos": promos}
 
@@ -661,6 +795,21 @@ def use_referral_discount(telegram_id: int):
 
 # ===== ЗАКАЗЫ =====
 
+MODE_LABELS = {
+    "opt": "📦 ОПТ (от 2500)",
+    "retail": "🛒 РОЗНИЦА",
+    "opt5000": "📦 ОПТ от 5000",
+    "preorder": "⏳ ПРЕДЗАКАЗ (4–5 дней)",
+}
+
+MIN_ORDER = {
+    "opt": 2500,
+    "opt5000": 4500,
+    "retail": 0,
+    "preorder": 0,
+}
+
+
 @app.post("/api/orders")
 def create_order(order: OrderIn):
     conn = sqlite3.connect(DB_PATH)
@@ -671,7 +820,15 @@ def create_order(order: OrderIn):
         if cursor.fetchone():
             return {"success": False, "error": "Такой заказ уже создан"}
 
-        # Если есть реферальная скидка — отмечаем как использованную
+        # Проверка минималки
+        mode = order.mode or "opt"
+        min_sum = MIN_ORDER.get(mode, 0)
+        if min_sum > 0 and order.total < min_sum:
+            return {
+                "success": False,
+                "error": f"Минимальная сумма заказа для этого режима: {min_sum}₽"
+            }
+
         if order.customer.telegram_id and order.discount_percent and order.discount_percent > 0:
             cursor.execute(
                 "UPDATE referrals SET used_discount = 1 WHERE telegram_id = ? AND used_discount = 0",
@@ -695,7 +852,7 @@ def create_order(order: OrderIn):
             order.customer.comment,
             json.dumps([item.dict() for item in order.items], ensure_ascii=False),
             order.total,
-            order.mode or 'opt',
+            mode,
             'Новый',
             order.date or datetime.now().isoformat(),
             order.delivery_type or '',
@@ -709,7 +866,7 @@ def create_order(order: OrderIn):
             f"  • {item.name} × {item.quantity} = {item.total:.0f}₽"
             for item in order.items
         ])
-        mode_label = "🛒 РОЗНИЦА" if order.mode == "retail" else "📦 ОПТ"
+        mode_label = MODE_LABELS.get(mode, mode)
 
         delivery_text = ""
         if order.delivery_type == "delivery":
@@ -752,8 +909,11 @@ def create_order(order: OrderIn):
             client_text = (
                 f"🛍️ <b>Спасибо, {order.customer.name}!</b>\n\n"
                 f"Ваш заказ <b>№{order.id}</b> принят ✅\n\n"
+                f"Режим: <b>{mode_label}</b>\n"
                 f"Сумма: <b>{order.total:.0f}₽</b>\n\n"
             )
+            if mode == "preorder":
+                client_text += "⏳ Срок ожидания: 4–5 дней\n\n"
             if order.delivery_type == "delivery":
                 client_text += "Менеджер скоро напишет и уточнит стоимость доставки.\n\n"
             client_text += "Мы свяжемся с вами в ближайшее время."
@@ -787,7 +947,7 @@ def get_orders():
     for row in rows:
         try:
             items_parsed = json.loads(row[6]) if row[6] else []
-        except:
+        except Exception:
             items_parsed = []
         orders.append({
             "order_number": row[0], "customer_name": row[1], "customer_telegram": row[2],
@@ -845,7 +1005,6 @@ async def telegram_webhook(update: dict):
             user = message.get("from", {})
             user_id = user.get("id")
 
-            # /start
             if text.startswith("/start"):
                 inviter_id = None
                 parts = text.split()
@@ -854,7 +1013,7 @@ async def telegram_webhook(update: dict):
                         inviter_id = int(parts[1].replace("ref_", ""))
                         if inviter_id == user_id:
                             inviter_id = None
-                    except:
+                    except Exception:
                         inviter_id = None
 
                 if user_id:
@@ -876,8 +1035,7 @@ async def telegram_webhook(update: dict):
                     "Больше информации по кнопке ниже 👇"
                 )
 
-                # ВАЖНО: замени URL на реальную ссылку твоего WebApp
-                webapp_url = "https://vape-box.onrender.com"   # ← поменяй если нужно
+                webapp_url = "https://vape-box.onrender.com"
 
                 keyboard = {
                     "keyboard": [
@@ -890,7 +1048,6 @@ async def telegram_webhook(update: dict):
                 send_telegram_to_customer(chat_id, welcome_text, reply_markup=keyboard)
                 return {"ok": True}
 
-            # Кнопка Информация
             if text == "ℹ️ Информация":
                 info_text = (
                     "<b>ℹ️ О магазине Vape Box</b>\n\n"
@@ -900,13 +1057,11 @@ async def telegram_webhook(update: dict):
                     "• Самовывоз и доставка\n"
                     "• Быстрая обработка заказов\n\n"
                     "По всем вопросам пишите менеджеру:\n"
-                    "@manager_vape_box\n\n"
-                    "<i>Текст можно будет изменить позже</i>"
+                    "@manager_vape_box"
                 )
                 send_telegram_to_customer(chat_id, info_text)
                 return {"ok": True}
 
-        # Callback (статусы)
         if "callback_query" in update:
             cq = update["callback_query"]
             callback_id = cq.get("id")
