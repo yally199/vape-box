@@ -941,10 +941,9 @@ function refreshCurrentView() {
 
 // ===== КАТЕГОРИИ-ТАБЫ =====
 function renderCategoryTabs() {
- =    if (!categoriesContainer) return;
-    categoriesContainer '';
-.innerHTML = `
-        <button            class="category" data-category="prom thisos">🔥 Акции.style</button>
+    if (!categoriesContainer) return;
+    categoriesContainer.innerHTML = `
+        <button class="category" data-category="promos">🔥 Акции</button>
         <button class="category active" data-category="all">📂 Все товары</button>
     `;
     categories.forEach(cat => {
@@ -955,7 +954,6 @@ function renderCategoryTabs() {
         categoriesContainer.appendChild(btn);
     });
 }
-
 if (categoriesContainer) {
     categoriesContainer.addEventListener('click', function(e) {
         const btn = e.target.closest('.category');
