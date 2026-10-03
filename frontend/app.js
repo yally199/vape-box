@@ -10,10 +10,10 @@ const API_URL = "https://vape-box.onrender.com";
 
 // ===== РЕЖИМЫ (4) =====
 const MODES = {
-    retail:   { label: '🛒 Розница',      short: '🛒 РОЗНИЦА',  source: 'main',     min: 0,    color: 'linear-gradient(135deg,#f59e0b,#d97706)', desc: 'Заказ до 2500₽',   eta: '' },
-    opt:      { label: '📦 Опт',          short: '📦 ОПТ',      source: 'main',     min: 2500, color: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', desc: 'Заказ от 2500₽',   eta: '' },
-    opt5000:  { label: '📦 Опт от 5000',  short: '📦 ОПТ 5000', source: 'catalog2', min: 4500, color: 'linear-gradient(135deg,#0ea5e9,#0284c7)', desc: 'От 4500₽ • быстрее', eta: '⚡ Быстрая отправка' },
-    preorder: { label: '⏳ Предзаказ',     short: '⏳ ПРЕДЗАКАЗ',source: 'catalog2', min: 0,    color: 'linear-gradient(135deg,#10b981,#059669)', desc: '4–5 дней • без минималки', eta: '⏳ Срок ожидания 4–5 дней' }
+    retail:   { label: '🛒 Розница',      short: '🛒 РОЗНИЦА',  source: 'main',     min: 0,    color: 'linear-gradient(135deg,#f59e0b,#d97706)', desc: 'Заказ до 2500₽',                              eta: '' },
+    opt:      { label: '📦 Опт',          short: '📦 ОПТ',      source: 'main',     min: 2500, color: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', desc: 'Заказ от 2500₽',                              eta: '' },
+    opt5000:  { label: '📦 Опт от 5000',  short: '📦 ОПТ 5000', source: 'catalog2', min: 4500, color: 'linear-gradient(135deg,#0ea5e9,#0284c7)', desc: 'Быстрее, дешевле чем опт от 2500₽',          eta: '⚡ Быстрая отправка' },
+    preorder: { label: '⏳ Предзаказ',     short: '⏳ ПРЕДЗАКАЗ',source: 'catalog2', min: 0,    color: 'linear-gradient(135deg,#10b981,#059669)', desc: 'Ожидание 4–5 дней, без минималки, дешевле чем в рознице', eta: '⏳ Срок ожидания 4–5 дней' }
 };
 
 // ===== РЕЖИМ ЦЕН =====
