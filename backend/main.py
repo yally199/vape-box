@@ -1005,7 +1005,8 @@ async def telegram_webhook(update: dict):
             user = message.get("from", {})
             user_id = user.get("id")
 
-                        if text.startswith("/start"):
+            # /start
+            if text.startswith("/start"):
                 inviter_id = None
                 parts = text.split()
                 if len(parts) > 1 and parts[1].startswith("ref_"):
@@ -1048,7 +1049,7 @@ async def telegram_webhook(update: dict):
                 send_telegram_to_customer(chat_id, welcome_text, reply_markup=keyboard)
                 return {"ok": True}
 
-            # ----- Информация -----
+            # Информация
             if text == "ℹ️ Информация":
                 info_text = (
                     "<b>ℹ️ О магазине Vape Box</b>\n\n"
@@ -1059,7 +1060,7 @@ async def telegram_webhook(update: dict):
                     "⏳ <b>Предзаказ</b> — без минимальной суммы, срок 4–5 дней\n\n"
                     "<b>Доставка и оплата:</b>\n"
                     "• Отправляем <b>СДЭКом</b>\n"
-                    "• Отправка СДЭК <b>только по предоплате</b>\n"
+                    "• Работаем <b>только по предоплате</b>\n"
                     "• Самовывоз — по согласованным точкам\n"
                     "• Стоимость доставки уточняет менеджер\n\n"
                     "<b>Как заказать:</b>\n"
@@ -1072,14 +1073,13 @@ async def telegram_webhook(update: dict):
                 send_telegram_to_customer(chat_id, info_text)
                 return {"ok": True}
 
-            # ----- Отзывы -----
+            # Отзывы
             if text == "⭐ Отзывы":
                 reviews_text = (
                     "⭐ <b>Отзывы о Vape Box</b>\n\n"
                     "Читайте отзывы наших клиентов:\n"
                     "https://t.me/vape_box_otzv"
                 )
-                # Кнопка-ссылка
                 reviews_keyboard = {
                     "inline_keyboard": [[
                         {"text": "⭐ Открыть отзывы", "url": "https://t.me/vape_box_otzv"}
@@ -1088,20 +1088,7 @@ async def telegram_webhook(update: dict):
                 send_telegram_to_customer(chat_id, reviews_text, reply_markup=reviews_keyboard)
                 return {"ok": True}
 
-            if text == "ℹ️ Информация":
-                info_text = (
-                    "<b>ℹ️ О магазине Vape Box</b>\n\n"
-                    "Мы занимаемся продажей вейп-продукции.\n\n"
-                    "• Работаем с проверенными брендами\n"
-                    "• Есть опт и розница\n"
-                    "• Самовывоз и доставка\n"
-                    "• Быстрая обработка заказов\n\n"
-                    "По всем вопросам пишите менеджеру:\n"
-                    "@manager_vape_box"
-                )
-                send_telegram_to_customer(chat_id, info_text)
-                return {"ok": True}
-
+        # Callback (статусы заказов)
         if "callback_query" in update:
             cq = update["callback_query"]
             callback_id = cq.get("id")
@@ -1113,14 +1100,19 @@ async def telegram_webhook(update: dict):
                     _, order_number, new_status = parts
                     conn = sqlite3.connect(DB_PATH)
                     cursor = conn.cursor()
-                    cursor.execute("UPDATE orders SET status = ? WHERE order_number = ?", (new_status, order_number))
+                    cursor.execute(
+                        "UPDATE orders SET status = ? WHERE order_number = ?",
+                        (new_status, order_number)
+                    )
                     updated = cursor.rowcount
                     conn.commit()
                     conn.close()
 
                     if updated:
                         answer_callback(callback_id, f"✅ {new_status}")
-                        send_telegram_message(f"📝 Заказ <b>{order_number}</b> — статус изменён на <b>{new_status}</b>")
+                        send_telegram_message(
+                            f"📝 Заказ <b>{order_number}</b> — статус изменён на <b>{new_status}</b>"
+                        )
                         notify_customer_status(order_number, new_status)
                     else:
                         answer_callback(callback_id, "❌ Заказ не найден")
@@ -1131,8 +1123,7 @@ async def telegram_webhook(update: dict):
         import traceback
         traceback.print_exc()
         return {"ok": True}
-
-
+        
 @app.get("/api/telegram/set-webhook")
 def set_telegram_webhook():
     if not TELEGRAM_BOT_TOKEN:
