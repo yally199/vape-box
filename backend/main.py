@@ -6,6 +6,20 @@ from typing import List, Optional
 import pandas as pd
 import os
 import sqlite3
+import secrets
+from fastapi import Header, HTTPException, Depends
+
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+ADMIN_TOKENS = set()
+
+
+def check_admin(authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Нет токена")
+    token = authorization.replace("Bearer ", "")
+    if token not in ADMIN_TOKENS:
+        raise HTTPException(status_code=401, detail="Неверный токен")
+    return True
 import json
 from datetime import datetime
 import cloudinary
@@ -722,8 +736,8 @@ def get_promos():
     return {"promos": promos}
 
 
-@app.post("/api/promos")
-def add_promo(payload: PromoIn):
+@app.post("/api/promos", dependencies=[Depends(check_admin)])
+def add_promo(payload: Promo):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     try:
@@ -742,7 +756,7 @@ def add_promo(payload: PromoIn):
         conn.close()
 
 
-@app.delete("/api/promos/{product_id}")
+@app.delete("/api/promos/{product_id}", dependencies=[Depends(check_admin)])
 def delete_promo(product_id: int):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -960,7 +974,7 @@ def get_orders():
     return {"orders": orders}
 
 
-@app.post("/api/orders/{order_number}/status")
+@app.post("/api/orders/{order_number}/status", dependencies=[Depends(check_admin)])
 def update_order_status(order_number: str, payload: OrderStatusUpdate):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -977,7 +991,7 @@ def update_order_status(order_number: str, payload: OrderStatusUpdate):
         conn.close()
 
 
-@app.delete("/api/orders/{order_number}")
+@app.delete("/api/orders/{order_number}", dependencies=[Depends(check_admin)])
 def delete_order(order_number: str):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -1144,7 +1158,7 @@ def set_telegram_webhook():
 
 # ===== CLOUDINARY =====
 
-@app.post("/api/upload-image")
+@app.post("/api/upload-image", dependencies=[Depends(check_admin)])
 async def upload_image(file: UploadFile = File(...), category: str = ""):
     try:
         contents = await file.read()
@@ -1176,7 +1190,7 @@ def get_images():
     return {"images": images}
 
 
-@app.delete("/api/images/{image_id}")
+@app.delete("/api/images/{image_id}", dependencies=[Depends(check_admin)])
 def delete_image(image_id: int):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -1190,3 +1204,15 @@ def delete_image(image_id: int):
         return {"success": False, "error": str(e)}
     finally:
         conn.close()
+
+
+@app.post("/api/admin/login")
+def admin_login(payload: dict):
+    password = (payload or {}).get("password", "")
+    if not ADMIN_PASSWORD:
+        return {"success": False, "error": "ADMIN_PASSWORD не задан на сервере"}
+    if not secrets.compare_digest(password, ADMIN_PASSWORD):
+        return {"success": False, "error": "Неверный пароль"}
+    token = secrets.token_urlsafe(32)
+    ADMIN_TOKENS.add(token)
+    return {"success": True, "token": token}
