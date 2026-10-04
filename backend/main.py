@@ -1005,7 +1005,7 @@ async def telegram_webhook(update: dict):
             user = message.get("from", {})
             user_id = user.get("id")
 
-            if text.startswith("/start"):
+                        if text.startswith("/start"):
                 inviter_id = None
                 parts = text.split()
                 if len(parts) > 1 and parts[1].startswith("ref_"):
@@ -1040,12 +1040,52 @@ async def telegram_webhook(update: dict):
                 keyboard = {
                     "keyboard": [
                         [{"text": "🛒 Открыть магазин", "web_app": {"url": webapp_url}}],
-                        [{"text": "ℹ️ Информация"}]
+                        [{"text": "ℹ️ Информация"}, {"text": "⭐ Отзывы"}]
                     ],
                     "resize_keyboard": True
                 }
 
                 send_telegram_to_customer(chat_id, welcome_text, reply_markup=keyboard)
+                return {"ok": True}
+
+            # ----- Информация -----
+            if text == "ℹ️ Информация":
+                info_text = (
+                    "<b>ℹ️ О магазине Vape Box</b>\n\n"
+                    "<b>Режимы заказа:</b>\n"
+                    "🛒 <b>Розница</b> — заказ до 2500₽\n"
+                    "📦 <b>Опт</b> — от 2500₽\n"
+                    "📦 <b>Опт от 5000</b> — от 4500₽, быстрее по срокам\n"
+                    "⏳ <b>Предзаказ</b> — без минимальной суммы, срок 4–5 дней\n\n"
+                    "<b>Доставка и оплата:</b>\n"
+                    "• Отправляем <b>СДЭКом</b>\n"
+                    "• Отправка СДЭК <b>только по предоплате</b>\n"
+                    "• Самовывоз — по согласованным точкам\n"
+                    "• Стоимость доставки уточняет менеджер\n\n"
+                    "<b>Как заказать:</b>\n"
+                    "1. Открой магазин кнопкой ниже\n"
+                    "2. Выбери режим и товары\n"
+                    "3. Оформи заказ\n"
+                    "4. Напиши менеджеру — @manager_vape_box\n\n"
+                    "По всем вопросам: @manager_vape_box"
+                )
+                send_telegram_to_customer(chat_id, info_text)
+                return {"ok": True}
+
+            # ----- Отзывы -----
+            if text == "⭐ Отзывы":
+                reviews_text = (
+                    "⭐ <b>Отзывы о Vape Box</b>\n\n"
+                    "Читайте отзывы наших клиентов:\n"
+                    "https://t.me/vape_box_otzv"
+                )
+                # Кнопка-ссылка
+                reviews_keyboard = {
+                    "inline_keyboard": [[
+                        {"text": "⭐ Открыть отзывы", "url": "https://t.me/vape_box_otzv"}
+                    ]]
+                }
+                send_telegram_to_customer(chat_id, reviews_text, reply_markup=reviews_keyboard)
                 return {"ok": True}
 
             if text == "ℹ️ Информация":
