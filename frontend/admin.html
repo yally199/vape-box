@@ -423,31 +423,51 @@
 
 <script>
 const API_URL = "https://vape-box.onrender.com";
-const ADMIN_PASSWORD = "TV12131415";
 
 let allOrders = [];
 let currentFilter = 'all';
 let currentModeFilter = 'all';
 let refreshInterval = null;
 let promoSearchTimeout = null;
+function authHeaders(extra = {}) {
+  const token = localStorage.getItem('vapebox_token') || '';
+  return { ...extra, 'Authorization': 'Bearer ' + token };
+}
 
 // ===== ВХОД =====
-function tryLogin() {
-    const input = document.getElementById('passwordInput').value;
-    if (input === ADMIN_PASSWORD) {
-        localStorage.setItem('vapebox_admin', '1');
-        showPanel();
-    } else {
-        document.getElementById('loginError').textContent = '❌ Неверный пароль';
+async function tryLogin() {
+  const password = document.getElementById('passwordInput').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+
+  try {
+    const resp = await fetch(`${API_URL}/api/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await resp.json();
+
+    if (!data.success) {
+      errEl.textContent = data.error || 'Неверный пароль';
+      return;
     }
+
+    localStorage.setItem('vapebox_token', data.token);
+    localStorage.setItem('vapebox_admin', '1');
+    showPanel();
+  } catch (err) {
+    errEl.textContent = 'Ошибка сети';
+  }
 }
 
 function logout() {
-    localStorage.removeItem('vapebox_admin');
-    if (refreshInterval) clearInterval(refreshInterval);
-    document.getElementById('adminPanel').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
-    document.getElementById('passwordInput').value = '';
+  if (refreshInterval) clearInterval(refreshInterval);
+  localStorage.removeItem('vapebox_token');
+  localStorage.removeItem('vapebox_admin');
+  document.getElementById('adminPanel').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('passwordInput').value = '';
 }
 
 function showPanel() {
@@ -584,7 +604,7 @@ async function setStatus(orderNumber, status) {
     try {
         const resp = await fetch(`${API_URL}/api/orders/${orderNumber}/status`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ status })
         });
         const data = await resp.json();
@@ -598,7 +618,10 @@ async function setStatus(orderNumber, status) {
 async function deleteOrder(orderNumber) {
     if (!confirm('Удалить заказ ' + orderNumber + '?')) return;
     try {
-        const resp = await fetch(`${API_URL}/api/orders/${orderNumber}`, { method: 'DELETE' });
+        const resp = await fetch(`${API_URL}/api/orders/${orderNumber}`, {
+  method: 'DELETE',
+  headers: authHeaders()
+});
         const data = await resp.json();
         if (data.success) loadOrders();
         else alert('Ошибка: ' + (data.error || 'не удалось'));
@@ -684,7 +707,7 @@ async function addPromo(productId) {
     try {
         const resp = await fetch(`${API_URL}/api/promos`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ product_id: productId, discount_percent: 10 })
         });
         const data = await resp.json();
@@ -704,7 +727,10 @@ async function addPromo(productId) {
 async function removePromo(productId) {
     if (!confirm('Убрать товар из акций?')) return;
     try {
-        const resp = await fetch(`${API_URL}/api/promos/${productId}`, { method: 'DELETE' });
+        const resp = await fetch(`${API_URL}/api/promos/${productId}`, {
+  method: 'DELETE',
+  headers: authHeaders()
+});
         const data = await resp.json();
         if (data.success) loadPromos();
         else alert('Ошибка: ' + (data.error || 'не удалось'));
@@ -729,9 +755,10 @@ async function uploadImage() {
 
     try {
         const resp = await fetch(`${API_URL}/api/upload-image?category=${encodeURIComponent(category)}`, {
-            method: 'POST',
-            body: formData
-        });
+  method: 'POST',
+  headers: authHeaders(),
+  body: formData
+});
         const data = await resp.json();
         if (data.success) {
             alert('✅ Картинка загружена!');
@@ -776,7 +803,10 @@ async function loadImages() {
 async function deleteImage(id) {
     if (!confirm('Удалить картинку?')) return;
     try {
-        const resp = await fetch(`${API_URL}/api/images/${id}`, { method: 'DELETE' });
+        const resp = await fetch(`${API_URL}/api/images/${id}`, {
+  method: 'DELETE',
+  headers: authHeaders()
+});
         const data = await resp.json();
         if (data.success) loadImages();
         else alert('Ошибка: ' + (data.error || 'не удалось'));
@@ -786,8 +816,8 @@ async function deleteImage(id) {
 }
 
 // ===== СТАРТ =====
-if (localStorage.getItem('vapebox_admin') === '1') {
-    showPanel();
+if (localStorage.getItem('vapebox_admin') === '1' && localStorage.getItem('vapebox_token')) {
+  showPanel();
 }
 
 document.getElementById('passwordInput').addEventListener('keydown', e => {
