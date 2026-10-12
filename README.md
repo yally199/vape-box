@@ -19,4 +19,4 @@
 Рекомендуется Render (backend) + Cloudflare Pages / GitHub Pages (frontend).
 
 ## Поддержка
-По вопросам запуска — @yally1
+По вопросам запуска в тг — @yally1
